@@ -90,7 +90,20 @@ export function SeamlessVideo({ src }: SeamlessVideoProps) {
   };
 
   return (
-    <div className="absolute inset-0 w-full h-full bg-black">
+    <div className="absolute inset-0 w-full h-full bg-[#030206] overflow-hidden">
+      
+      {/* INSTANT HIGH-END COSMIC AMBIENT BACKDROP (0kb / 0ms delay) */}
+      <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none select-none z-0">
+        {/* Deep Violet Blob */}
+        <div className="absolute -top-[10%] -left-[10%] w-[70%] h-[70%] rounded-full bg-purple-950/30 filter blur-[120px] sm:blur-[160px] animate-drift-slow" />
+        
+        {/* Celestial Blue Blob */}
+        <div className="absolute -bottom-[10%] -right-[10%] w-[65%] h-[65%] rounded-full bg-blue-950/35 filter blur-[120px] sm:blur-[170px] animate-drift-slower" />
+        
+        {/* Dark Vignette Overlay */}
+        <div className="absolute inset-0 bg-radial from-transparent via-transparent to-black/80" />
+      </div>
+
       {/* Video Buffer 1 */}
       <video
         ref={videoRef1}
@@ -98,10 +111,12 @@ export function SeamlessVideo({ src }: SeamlessVideoProps) {
         autoPlay
         muted
         playsInline
+        preload="auto"
         onCanPlay={handleCanPlay}
+        onLoadedData={() => setIsReady(true)}
         referrerPolicy="no-referrer"
-        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-          activeVideo === 'v1' ? 'opacity-90' : 'opacity-0'
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1500ms] pointer-events-none select-none z-10 ${
+          isReady && activeVideo === 'v1' ? 'opacity-[0.85]' : 'opacity-0'
         }`}
       />
       {/* Video Buffer 2 */}
@@ -111,12 +126,17 @@ export function SeamlessVideo({ src }: SeamlessVideoProps) {
         autoPlay
         muted
         playsInline
+        preload="auto"
         onCanPlay={handleCanPlay}
+        onLoadedData={() => setIsReady(true)}
         referrerPolicy="no-referrer"
-        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-          activeVideo === 'v2' ? 'opacity-90' : 'opacity-0'
+        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1500ms] pointer-events-none select-none z-10 ${
+          isReady && activeVideo === 'v2' ? 'opacity-[0.85]' : 'opacity-0'
         }`}
       />
+
+      {/* Subtle overlay to integrate video and background style perfectly */}
+      <div className="absolute inset-0 bg-black/5 backdrop-blur-[0.5px] z-20 pointer-events-none select-none" />
     </div>
   );
 }

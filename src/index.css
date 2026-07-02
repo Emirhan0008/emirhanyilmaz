@@ -181,3 +181,41 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
+
+/* GORGEOUS AMBIENT DRIFTING BLOBS FOR INSTANT PREMIUM LOOK */
+@keyframes drift-slow {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(8%, -12%) scale(1.15);
+  }
+  66% {
+    transform: translate(-12%, 8%) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+@keyframes drift-slower {
+  0% {
+    transform: translate(0px, 0px) scale(1.1);
+  }
+  50% {
+    transform: translate(-8%, 12%) scale(0.95);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1.1);
+  }
+}
+
+.animate-drift-slow {
+  animation: drift-slow 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-drift-slower {
+  animation: drift-slower 24s ease-in-out infinite;
+  will-change: transform;
+}
