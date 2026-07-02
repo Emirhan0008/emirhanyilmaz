@@ -1,4 +1,4 @@
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent, UIEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, 
@@ -20,19 +20,44 @@ import {
   CheckCircle2, 
   Send,
   Upload
-} from 'lucide-react';
-
-import { profileData, projects } from './data';
-import { Project } from './types';
-import { SeamlessVideo } from './components/SeamlessVideo';
-
-export default function App() {
-  const [activeTab, setActiveTab] = useState<'profile' | 'projects' | 'contact'>('profile');
-  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [projectFilter, setProjectFilter] = useState<string>('Tümü');
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [formSubmitted, setFormSubmitted] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+ } from 'lucide-react';
+ 
+ import { profileData, projects } from './data';
+ import { Project } from './types';
+ import { SeamlessVideo } from './components/SeamlessVideo';
+ 
+ export default function App() {
+   const [activeTab, setActiveTab] = useState<'profile' | 'projects' | 'contact'>('profile');
+   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+   const [projectFilter, setProjectFilter] = useState<string>('Tümü');
+   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+   const [formSubmitted, setFormSubmitted] = useState(false);
+   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+ 
+   const [showDesktopScrollIndicator, setShowDesktopScrollIndicator] = useState(true);
+   const [showMobileScrollIndicator, setShowMobileScrollIndicator] = useState(true);
+ 
+   // Reset scroll indicator visibility when filter or activeTab changes
+   useEffect(() => {
+     setShowDesktopScrollIndicator(true);
+     setShowMobileScrollIndicator(true);
+   }, [projectFilter, activeTab]);
+ 
+   const handleProjectsScroll = (e: UIEvent<HTMLDivElement>) => {
+     if (e.currentTarget.scrollTop > 30) {
+       setShowDesktopScrollIndicator(false);
+     } else {
+       setShowDesktopScrollIndicator(true);
+     }
+   };
+ 
+   const handleMobileProjectsScroll = (e: UIEvent<HTMLDivElement>) => {
+     if (e.currentTarget.scrollTop > 30) {
+       setShowMobileScrollIndicator(false);
+     } else {
+       setShowMobileScrollIndicator(true);
+     }
+   };
 
   // Local persistence for custom project photos
   const [projectImages, setProjectImages] = useState<Record<string, string>>(() => {
@@ -147,10 +172,10 @@ export default function App() {
                     setActiveTab(item.id);
                     setMobileMenuOpen(false);
                   }}
-                  className={`px-4 py-1.5 rounded-full transition-all duration-300 font-medium ${
+                  className={`px-4 py-1.5 rounded-full transition-all duration-300 font-bold ${
                     activeTab === item.id 
                       ? 'bg-white/15 text-white shadow-xs' 
-                      : 'text-white/60 hover:text-white hover:bg-white/5'
+                      : 'text-white/85 hover:text-white hover:bg-white/10'
                   }`}
                   id={`nav-btn-${item.id}`}
                 >
@@ -188,8 +213,8 @@ export default function App() {
                     }}
                     className={`w-full py-2.5 px-4 rounded-xl text-left text-sm transition-all ${
                       activeTab === item.id 
-                        ? 'bg-white/10 text-white font-medium' 
-                        : 'text-white/60 hover:text-white hover:bg-white/5'
+                        ? 'bg-white/10 text-white font-bold' 
+                        : 'text-white/85 hover:text-white hover:bg-white/10 font-semibold'
                     }`}
                   >
                     {item.label}
@@ -230,26 +255,26 @@ export default function App() {
                       Ruh Sağlığı & <br />
                       <span className="font-serif italic text-white">Yapay Zeka</span>
                     </h1>
-                    <p className="text-sm sm:text-base text-white font-medium leading-relaxed">
+                    <p className="text-sm sm:text-base text-white font-semibold leading-relaxed">
                       Teknolojiyi psikolojiyle harmanlayarak, zihinsel süreçleri veri biliminin ve algoritmanın gücüyle yeniden şekillendiriyorum.
                     </p>
                   </div>
 
                   <div className="flex flex-wrap gap-2.5">
-                    <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-medium text-white">
+                    <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-bold text-white">
                       Psikolojik Danışmanlık
                     </span>
-                    <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-medium text-white">
+                    <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-bold text-white">
                       Yapay Zeka (AI)
                     </span>
-                    <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-medium text-white">
+                    <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-bold text-white">
                       Python Geliştirme
                     </span>
                   </div>
 
                   <button 
                     onClick={() => setActiveTab('projects')}
-                    className="inline-flex items-center gap-3.5 pl-6 pr-2 py-2 liquid-glass-strong hover:bg-white/5 rounded-full text-sm font-medium transition-all group hover:scale-105 active:scale-95"
+                    className="inline-flex items-center gap-3.5 pl-6 pr-2 py-2 liquid-glass-strong hover:bg-white/5 rounded-full text-sm font-bold transition-all group hover:scale-105 active:scale-95"
                     id="cta-explore-projects"
                   >
                     <span>Projelerimi Keşfet</span>
@@ -265,11 +290,11 @@ export default function App() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="lg:hidden flex flex-col gap-6"
+                  className="lg:hidden flex flex-col gap-6 relative"
                 >
                   <div className="space-y-1">
                     <h2 className="text-3xl font-extrabold tracking-tight text-white">Projelerim</h2>
-                    <p className="text-xs text-white/95 font-medium">Yapay Zeka, Python ve Psikoloji odaklı yenilikçi çalışmalarım</p>
+                    <p className="text-xs text-white font-semibold">Yapay Zeka, Python ve Psikoloji odaklı yenilikçi çalışmalarım</p>
                   </div>
                   
                   {/* Filters */}
@@ -278,10 +303,10 @@ export default function App() {
                       <button
                         key={filter}
                         onClick={() => setProjectFilter(filter)}
-                        className={`px-3 py-1 rounded-full text-xs transition-all ${
+                        className={`px-3 py-1 rounded-full text-xs transition-all font-bold ${
                           projectFilter === filter 
-                            ? 'bg-white/20 text-white' 
-                            : 'bg-white/5 text-white/50 hover:bg-white/10'
+                            ? 'bg-white/20 text-white font-extrabold' 
+                            : 'bg-white/5 text-white/80 hover:bg-white/10'
                         }`}
                       >
                         {filter}
@@ -290,12 +315,15 @@ export default function App() {
                   </div>
 
                   {/* Projects List */}
-                  <div className="grid grid-cols-1 gap-4 max-h-[45vh] overflow-y-auto pr-1">
+                  <div 
+                    onScroll={handleMobileProjectsScroll}
+                    className="grid grid-cols-1 gap-4 max-h-[45vh] overflow-y-auto pr-1 relative"
+                  >
                     {filteredProjects.map(project => (
                       <div 
                         key={project.id}
                         onClick={() => setSelectedProject(project)}
-                        className="p-3.5 liquid-glass rounded-2xl flex gap-4 cursor-pointer hover:bg-white/5 transition-all"
+                        className="p-3.5 liquid-glass rounded-2xl flex gap-4 cursor-pointer hover:bg-white/5 transition-all shrink-0 min-h-[90px] items-center"
                       >
                         <div className="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-zinc-900 border border-white/10">
                           <img 
@@ -306,13 +334,28 @@ export default function App() {
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <span className="text-[10px] uppercase tracking-wider text-white/85 font-bold">{project.category}</span>
-                          <h3 className="text-sm font-bold truncate text-white">{project.title}</h3>
-                          <p className="text-xs text-white/95 line-clamp-1 mt-0.5">{project.description}</p>
+                          <span className="text-[10px] uppercase tracking-wider text-white/90 font-extrabold">{project.category}</span>
+                          <h3 className="text-sm font-extrabold truncate text-white">{project.title}</h3>
+                          <p className="text-xs text-white line-clamp-1 mt-0.5 font-semibold">{project.description}</p>
                         </div>
                       </div>
                     ))}
                   </div>
+
+                  {/* Floating Scroll Down Indicator for Mobile */}
+                  <AnimatePresence>
+                    {filteredProjects.length > 3 && showMobileScrollIndicator && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5, x: "-50%" }}
+                        animate={{ opacity: 1, y: 0, x: "-50%" }}
+                        exit={{ opacity: 0, y: 5, x: "-50%" }}
+                        className="absolute bottom-4 left-1/2 px-3.5 py-1.5 bg-black/90 backdrop-blur-md rounded-full border border-white/10 shadow-lg flex items-center gap-1.5 text-[9px] text-white font-extrabold tracking-wider uppercase animate-bounce pointer-events-none z-20"
+                      >
+                        <span>DEVAMI İÇİN AŞAĞI KAYDIRIN</span>
+                        <span className="text-xs">↕</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.div>
               ) : (
                 // Render contact inside left panel on mobile only
@@ -566,15 +609,15 @@ export default function App() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.4 }}
-                  className="flex-1 flex flex-col gap-6 min-h-0"
+                  className="flex-1 flex flex-col gap-6 min-h-0 relative"
                 >
-                  <div className="p-6 liquid-glass spinning-glow-border rounded-3xl flex flex-col gap-4 min-h-0 flex-1">
+                  <div className="p-6 liquid-glass spinning-glow-border rounded-3xl flex flex-col gap-4 min-h-0 flex-1 relative">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <span className="text-[10px] uppercase tracking-wider text-white/95 font-bold">GALERİ & DETAYLAR</span>
+                        <span className="text-[10px] uppercase tracking-wider text-white font-extrabold">GALERİ & DETAYLAR</span>
                         <h2 className="text-xl font-extrabold text-white">Yenilikçi Projelerim</h2>
                       </div>
-                      <span className="text-xs text-white/95 font-bold">{filteredProjects.length} Proje Listelendi</span>
+                      <span className="text-xs text-white font-bold">{filteredProjects.length} Proje Listelendi</span>
                     </div>
 
                     {/* Filter Pills */}
@@ -583,10 +626,10 @@ export default function App() {
                         <button
                           key={filter}
                           onClick={() => setProjectFilter(filter)}
-                          className={`px-3 py-1 rounded-md transition-all font-medium ${
+                          className={`px-3 py-1 rounded-md transition-all font-bold ${
                             projectFilter === filter 
-                              ? 'bg-white/15 text-white font-semibold' 
-                              : 'text-white/70 hover:text-white hover:bg-white/5'
+                              ? 'bg-white/15 text-white font-extrabold' 
+                              : 'text-white/80 hover:text-white hover:bg-white/10'
                           }`}
                         >
                           {filter}
@@ -595,7 +638,10 @@ export default function App() {
                     </div>
 
                     {/* Projects Grid Scroll Area */}
-                    <div className="flex-1 overflow-y-auto pr-1 grid grid-cols-2 gap-4">
+                    <div 
+                      onScroll={handleProjectsScroll}
+                      className="flex-1 overflow-y-auto pr-1 grid grid-cols-2 gap-4"
+                    >
                       {filteredProjects.map((project, idx) => (
                         <motion.div
                           key={project.id}
@@ -603,9 +649,9 @@ export default function App() {
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: idx * 0.08 }}
                           onClick={() => setSelectedProject(project)}
-                          className="group cursor-pointer p-3 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3 hover:bg-white/5 transition-all"
+                          className="group cursor-pointer p-3 liquid-glass spinning-glow-border rounded-2xl flex flex-col h-[280px] shrink-0 justify-between hover:bg-white/5 transition-all"
                         >
-                          <div className="relative aspect-4/3 w-full rounded-xl overflow-hidden bg-zinc-900 border border-white/10">
+                          <div className="relative h-[135px] w-full rounded-xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0">
                             <img 
                               src={project.image} 
                               alt={project.title} 
@@ -613,20 +659,36 @@ export default function App() {
                               referrerPolicy="no-referrer"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                              <span className="text-[10px] text-white/80 font-medium inline-flex items-center gap-1">
+                              <span className="text-[10px] text-white font-bold inline-flex items-center gap-1">
                                 Detayları Gör <ChevronRight size={10} />
                               </span>
                             </div>
                           </div>
 
-                          <div className="space-y-1 px-1">
-                            <span className="text-[10px] uppercase tracking-wider text-white/70 font-bold">{project.category}</span>
-                            <h3 className="text-sm font-bold text-white group-hover:text-white/95 truncate leading-snug">{project.title}</h3>
-                            <p className="text-xs text-white/80 line-clamp-2 leading-relaxed font-normal">{project.description}</p>
+                          <div className="space-y-1 px-1 flex-1 flex flex-col justify-center">
+                            <span className="text-[10px] uppercase tracking-wider text-white/90 font-extrabold">{project.category}</span>
+                            <h3 className="text-sm font-extrabold text-white group-hover:text-white truncate leading-snug">{project.title}</h3>
+                            <p className="text-xs text-white/95 line-clamp-2 leading-relaxed font-semibold">{project.description}</p>
                           </div>
                         </motion.div>
                       ))}
                     </div>
+
+                    {/* Floating Scroll Down Indicator */}
+                    <AnimatePresence>
+                      {filteredProjects.length > 4 && showDesktopScrollIndicator && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10, x: "-50%" }}
+                          animate={{ opacity: 1, y: 0, x: "-50%" }}
+                          exit={{ opacity: 0, y: 10, x: "-50%" }}
+                          className="absolute bottom-6 left-1/2 px-4 py-2 bg-black/90 backdrop-blur-md rounded-full border border-white/10 shadow-xl flex items-center gap-2 text-[10px] text-white font-extrabold tracking-wider uppercase animate-bounce pointer-events-none z-20"
+                        >
+                          <span>DAHA FAZLA PROJE İÇİN AŞAĞI KAYDIRIN</span>
+                          <span className="text-sm">↕</span>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
                   </div>
                 </motion.div>
               )}
