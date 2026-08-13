@@ -6,7 +6,6 @@ import {
   Wand2, 
   BookOpen, 
   ArrowRight, 
-  Linkedin, 
   Instagram, 
   Menu, 
   X, 
@@ -28,27 +27,35 @@ import {
   AlertTriangle,
   Trash2,
   Inbox,
-  ExternalLink
+  ExternalLink,
+  Search,
+  FileText,
+  MessageSquare,
+  Phone
  } from 'lucide-react';
  
- import { profileData, projects } from './data';
- import { Project } from './types';
+ import { profileData, projects, articles } from './data';
+ import { Project, Article } from './types';
  import { SeamlessVideo } from './components/SeamlessVideo';
  
  export interface ContactMessage {
    id: string;
    name: string;
    email: string;
+   subject?: string;
    message: string;
    date: string;
    timestamp: number;
  }
  
  export default function App() {
-   const [activeTab, setActiveTab] = useState<'profile' | 'projects' | 'contact'>('profile');
+   const [activeTab, setActiveTab] = useState<'profile' | 'projects' | 'articles' | 'contact'>('profile');
    const [activeLightboxImage, setActiveLightboxImage] = useState<string | null>(null);
    const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
    const [projectFilter, setProjectFilter] = useState<string>('Tümü');
+   const [searchQuery, setSearchQuery] = useState<string>('');
+   const [contactSubject, setContactSubject] = useState<string>('Proje Teklifi / Danışmanlık');
    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
    const [formSubmitted, setFormSubmitted] = useState(false);
    const [isSubmitting, setIsSubmitting] = useState(false);
@@ -307,15 +314,26 @@ import {
     image: projectImages[project.id] || project.image
   }));
 
-  // Filter projects based on selected filter
+  // Filter projects based on selected filter pill and search query
   const filteredProjects = mappedProjects.filter(project => {
-    if (projectFilter === 'Tümü') return true;
-    if (projectFilter === 'Mobil') return project.category.includes('Mobil') || project.tech.includes('React Native') || project.tech.includes('Expo');
-    if (projectFilter === 'Yapay Zeka') return project.category.includes('Yapay Zeka') || project.title.includes('Yapay Zeka') || project.tech.includes('Gemini API') || project.tech.includes('AI Studio') || project.tech.includes('Google AI Studio');
-    if (projectFilter === 'Python') return project.tech.includes('Python');
-    if (projectFilter === 'Özel Eğitim') return project.category.includes('Özel Eğitim');
-    if (projectFilter === 'Otomasyon & Analitik') return project.category.includes('Otomasyon') || project.category.includes('Analitik') || project.category.includes('Kazıma');
-    return true;
+    let matchesCategory = true;
+    if (projectFilter === 'Mobil') matchesCategory = project.category.includes('Mobil') || project.tech.includes('React Native') || project.tech.includes('Expo');
+    else if (projectFilter === 'Yapay Zeka') matchesCategory = project.category.includes('Yapay Zeka') || project.title.includes('Yapay Zeka') || project.tech.includes('Gemini API') || project.tech.includes('AI Studio') || project.tech.includes('Google AI Studio');
+    else if (projectFilter === 'Python') matchesCategory = project.tech.includes('Python');
+    else if (projectFilter === 'Özel Eğitim') matchesCategory = project.category.includes('Özel Eğitim');
+    else if (projectFilter === 'Otomasyon & Analitik') matchesCategory = project.category.includes('Otomasyon') || project.category.includes('Analitik') || project.category.includes('Kazıma');
+
+    if (!matchesCategory) return false;
+    if (!searchQuery.trim()) return true;
+
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      project.title.toLowerCase().includes(q) ||
+      project.description.toLowerCase().includes(q) ||
+      project.longDescription.toLowerCase().includes(q) ||
+      project.category.toLowerCase().includes(q) ||
+      project.tech.some(t => t.toLowerCase().includes(q))
+    );
   });
 
   // Track currently selected project with up-to-date image reference
@@ -340,6 +358,7 @@ import {
       id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
       name: formData.name,
       email: formData.email,
+      subject: contactSubject,
       message: formData.message,
       date: new Date().toLocaleString('tr-TR'),
       timestamp: Date.now()
@@ -363,6 +382,7 @@ import {
   const navItems = [
     { id: 'profile', label: 'Profil' },
     { id: 'projects', label: 'Projeler' },
+    { id: 'articles', label: 'Yayınlar' },
     { id: 'contact', label: 'İletişim' }
   ] as const;
 
@@ -726,6 +746,43 @@ import {
                     )}
                   </AnimatePresence>
                 </motion.div>
+              ) : activeTab === 'articles' ? (
+                // Render articles view inside left panel on mobile only
+                <motion.div 
+                  key="mobile-articles"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="lg:hidden flex flex-col gap-5 relative"
+                >
+                  <div className="space-y-1">
+                    <h2 className="text-3xl font-extrabold tracking-tight text-white">Yayınlar</h2>
+                    <p className="text-xs text-white/90 font-medium">Makaleler ve teknik incelemelerim</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 max-h-[50vh] overflow-y-auto pr-1">
+                    {articles.map((article) => (
+                      <div 
+                        key={article.id}
+                        onClick={() => setSelectedArticle(article)}
+                        className="p-4 liquid-glass rounded-2xl flex flex-col gap-2 cursor-pointer hover:bg-white/5 transition-all"
+                      >
+                        <div className="flex items-center justify-between text-[10px] text-white/60 font-mono">
+                          <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-white font-bold font-sans">
+                            {article.category}
+                          </span>
+                          <span>{article.readTime}</span>
+                        </div>
+                        <h3 className="text-sm font-extrabold text-white leading-snug">{article.title}</h3>
+                        <p className="text-xs text-white/80 line-clamp-2">{article.summary}</p>
+                        <div className="flex items-center justify-between pt-1 border-t border-white/5 text-[10px] text-white/90 font-bold">
+                          <span>{article.date}</span>
+                          <span className="flex items-center gap-1">Oku <ArrowRight size={10} /></span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
               ) : (
                 // Render contact inside left panel on mobile only
                 <motion.div 
@@ -814,15 +871,6 @@ import {
           {/* Top Bar (Socials & CTA Button) */}
           <div className="flex items-center justify-between gap-4 mb-6">
             <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-full">
-              <a 
-                href="https://linkedin.com/in/emirhanyilmaz" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
-                title="LinkedIn"
-              >
-                <Linkedin size={14} />
-              </a>
               <a 
                 href="https://github.com" 
                 target="_blank" 
@@ -1073,71 +1121,115 @@ import {
                   className="flex-1 flex flex-col gap-6 min-h-0 relative"
                 >
                   <div className="p-6 liquid-glass spinning-glow-border rounded-3xl flex flex-col gap-4 min-h-0 flex-1 relative">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="space-y-0.5">
                         <span className="text-[10px] uppercase tracking-wider text-white font-extrabold">GALERİ & DETAYLAR</span>
                         <h2 className="text-xl font-extrabold text-white">Yenilikçi Projelerim</h2>
                       </div>
-                      <span className="text-xs text-white font-bold">{filteredProjects.length} Proje Listelendi</span>
+                      <span className="text-xs text-white font-bold bg-white/10 px-3 py-1 rounded-full border border-white/10 w-fit">
+                        {filteredProjects.length} Proje Listelendi
+                      </span>
                     </div>
 
-                    {/* Filter Pills */}
-                    <div className="flex flex-wrap gap-2 p-1.5 liquid-glass spinning-glow-border rounded-xl w-fit text-[11px]">
-                      {['Tümü', 'Mobil', 'Yapay Zeka', 'Python', 'Özel Eğitim', 'Otomasyon & Analitik'].map(filter => (
-                        <button
-                          key={filter}
-                          onClick={() => setProjectFilter(filter)}
-                          className={`px-3 py-1 rounded-md transition-all font-bold ${
-                            projectFilter === filter 
-                              ? 'bg-white/15 text-white font-extrabold' 
-                              : 'text-white/80 hover:text-white hover:bg-white/10'
-                          }`}
-                        >
-                          {filter}
-                        </button>
-                      ))}
+                    {/* Search Bar & Category Filter Pills */}
+                    <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                      {/* Search Input Bar */}
+                      <div className="relative flex-1 max-w-md">
+                        <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/50" />
+                        <input
+                          type="text"
+                          placeholder="Proje, teknoloji veya içerik ara (örn: Python, Gemini)..."
+                          value={searchQuery}
+                          onChange={e => setSearchQuery(e.target.value)}
+                          className="w-full py-2 pl-9 pr-8 rounded-xl bg-white/5 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-white/30 text-xs text-white placeholder-white/40 font-medium transition-all"
+                        />
+                        {searchQuery && (
+                          <button
+                            onClick={() => setSearchQuery('')}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
+                          >
+                            <X size={13} />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Filter Pills */}
+                      <div className="flex flex-wrap gap-1.5 p-1 liquid-glass spinning-glow-border rounded-xl text-[10px]">
+                        {['Tümü', 'Mobil', 'Yapay Zeka', 'Python', 'Özel Eğitim', 'Otomasyon & Analitik'].map(filter => (
+                          <button
+                            key={filter}
+                            onClick={() => setProjectFilter(filter)}
+                            className={`px-2.5 py-1 rounded-md transition-all font-bold cursor-pointer ${
+                              projectFilter === filter 
+                                ? 'bg-white/20 text-white font-extrabold shadow-xs' 
+                                : 'text-white/75 hover:text-white hover:bg-white/10'
+                            }`}
+                          >
+                            {filter}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     {/* Projects Grid Scroll Area */}
-                    <div 
-                      onScroll={handleProjectsScroll}
-                      className="flex-1 overflow-y-auto pr-1 grid grid-cols-2 gap-4"
-                    >
-                      {filteredProjects.map((project, idx) => (
-                        <motion.div
-                          key={project.id}
-                          initial={{ opacity: 0, y: 15 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: idx * 0.08 }}
-                          onClick={() => setSelectedProject(project)}
-                          className="group cursor-pointer p-3 liquid-glass spinning-glow-border rounded-2xl flex flex-col h-[280px] shrink-0 justify-between hover:bg-white/5 transition-all"
+                    {filteredProjects.length === 0 ? (
+                      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-3 liquid-glass rounded-2xl border border-white/5 my-auto">
+                        <Search size={32} className="text-white/30 animate-bounce" />
+                        <h3 className="text-sm font-bold text-white">Aradığınız kriterlere uygun proje bulunamadı</h3>
+                        <p className="text-xs text-white/60 max-w-xs">
+                          Farklı bir arama kelimesi yazabilir veya kategori filtrelerini sıfırlayabilirsiniz.
+                        </p>
+                        <button
+                          onClick={() => {
+                            setSearchQuery('');
+                            setProjectFilter('Tümü');
+                          }}
+                          className="px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-xs text-white font-bold transition-all cursor-pointer mt-1"
                         >
-                          <div className="relative h-[135px] w-full rounded-xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0">
-                            <img 
-                              src={project.image} 
-                              alt={project.title} 
-                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                              referrerPolicy="no-referrer"
-                              onError={(e) => {
-                                const original = projects.find(p => p.id === project.id);
-                                if (original) e.currentTarget.src = original.image;
-                              }}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
-                              <span className="text-[10px] text-white font-bold inline-flex items-center gap-1">
-                                Detayları Gör <ChevronRight size={10} />
-                              </span>
+                          Filtreleri Temizle
+                        </button>
+                      </div>
+                    ) : (
+                      <div 
+                        onScroll={handleProjectsScroll}
+                        className="flex-1 overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-4"
+                      >
+                        {filteredProjects.map((project, idx) => (
+                          <motion.div
+                            key={project.id}
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            onClick={() => setSelectedProject(project)}
+                            className="group cursor-pointer p-3 liquid-glass spinning-glow-border rounded-2xl flex flex-col h-[280px] shrink-0 justify-between hover:bg-white/5 transition-all"
+                          >
+                            <div className="relative h-[135px] w-full rounded-xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0">
+                              <img 
+                                src={project.image} 
+                                alt={project.title} 
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  const original = projects.find(p => p.id === project.id);
+                                  if (original) e.currentTarget.src = original.image;
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                                <span className="text-[10px] text-white font-bold inline-flex items-center gap-1">
+                                  Detayları Gör <ChevronRight size={10} />
+                                </span>
+                              </div>
                             </div>
-                          </div>
 
-                          <div className="space-y-1 px-1 flex-1 flex flex-col justify-center">
-                            <span className="text-[10px] uppercase tracking-wider text-white/90 font-extrabold">{project.category}</span>
-                            <h3 className="text-sm font-extrabold text-white group-hover:text-white truncate leading-snug">{project.title}</h3>
-                            <p className="text-xs text-white/95 line-clamp-2 leading-relaxed font-semibold">{project.description}</p>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </div>
+                            <div className="space-y-1 px-1 flex-1 flex flex-col justify-center">
+                              <span className="text-[10px] uppercase tracking-wider text-white/90 font-extrabold">{project.category}</span>
+                              <h3 className="text-sm font-extrabold text-white group-hover:text-white truncate leading-snug">{project.title}</h3>
+                              <p className="text-xs text-white/95 line-clamp-2 leading-relaxed font-semibold">{project.description}</p>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Floating Scroll Down Indicator */}
                     <AnimatePresence>
@@ -1158,7 +1250,71 @@ import {
                 </motion.div>
               )}
 
-              {/* TAB 3: CONTACT FORM */}
+              {/* TAB 3: ARTICLES & PUBLICATIONS (BLOG) */}
+              {activeTab === 'articles' && (
+                <motion.div
+                  key="tab-articles"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.4 }}
+                  className="flex-1 flex flex-col gap-6 min-h-0 relative"
+                >
+                  <div className="p-6 liquid-glass spinning-glow-border rounded-3xl flex flex-col gap-4 min-h-0 flex-1 relative overflow-y-auto pr-1">
+                    <div className="space-y-1">
+                      <span className="text-[10px] uppercase tracking-wider text-white/90 font-extrabold">YAYINLAR & DÜŞÜNCELER</span>
+                      <h2 className="text-xl font-extrabold text-white">Makaleler ve Teknik İncelemeler</h2>
+                      <p className="text-xs text-white/70 leading-relaxed max-w-xl">
+                        Psikolojik danışmanlık kuramları, özel eğitim teknolojileri, büyük dil modelleri (LLM) ve Python otomasyonları üzerine kaleme aldığım makaleler.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 pt-2">
+                      {articles.map((article, idx) => (
+                        <motion.div
+                          key={article.id}
+                          initial={{ opacity: 0, y: 15 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.1 }}
+                          onClick={() => setSelectedArticle(article)}
+                          className="p-5 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3 group cursor-pointer hover:bg-white/5 transition-all"
+                        >
+                          <div className="flex items-center justify-between text-[10px] text-white/60 font-mono">
+                            <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-white font-bold font-sans">
+                              {article.category}
+                            </span>
+                            <span>{article.date} • {article.readTime}</span>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <h3 className="text-base font-extrabold text-white group-hover:text-emerald-300 transition-colors">
+                              {article.title}
+                            </h3>
+                            <p className="text-xs text-white/80 leading-relaxed line-clamp-2">
+                              {article.summary}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                            <div className="flex flex-wrap gap-1.5">
+                              {article.tags.map(tag => (
+                                <span key={tag} className="text-[9px] px-2 py-0.5 rounded-md bg-white/5 text-white/60">
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+                            <span className="text-xs font-bold text-white/90 group-hover:translate-x-1 transition-transform flex items-center gap-1">
+                              Oku <ArrowRight size={12} />
+                            </span>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* TAB 4: CONTACT FORM & INFRASTRUCTURE */}
               {activeTab === 'contact' && (
                 <motion.div
                   key="tab-contact"
@@ -1168,46 +1324,66 @@ import {
                   transition={{ duration: 0.4 }}
                   className="flex-1 flex flex-col gap-6 overflow-y-auto pr-1 min-h-0"
                 >
-                  <div className="p-8 liquid-glass spinning-glow-border rounded-[2.5rem] flex-1 flex flex-col gap-6 justify-start lg:justify-center">
+                  <div className="p-6 lg:p-8 liquid-glass spinning-glow-border rounded-[2.5rem] flex-1 flex flex-col gap-6 justify-start">
                     <div className="space-y-2">
-                      <span className="text-[10px] uppercase tracking-wider text-white/95 font-bold">İLETİŞİM</span>
+                      <span className="text-[10px] uppercase tracking-wider text-white/95 font-bold">İLETİŞİM ALTYAPISI</span>
                       <h2 className="text-2xl font-extrabold text-white">Birlikte Çalışalım</h2>
-                      <p className="text-sm text-white font-semibold leading-relaxed">
+                      <p className="text-xs sm:text-sm text-white font-semibold leading-relaxed">
                         Akademik projeler, psikolojik danışmanlık süreçlerinde teknoloji entegrasyonu, Python otomasyonları veya vaka analizi üzerine iş birlikleri için yazabilirsiniz.
                       </p>
+                    </div>
+
+                    {/* Quick Contact Action Pills */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText('emirhan0008@gmail.com');
+                          setCopiedEmail(true);
+                          setTimeout(() => setCopiedEmail(false), 2500);
+                        }}
+                        className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2.5 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer"
+                      >
+                        <Copy size={14} className="text-white/70 shrink-0" />
+                        <span className="truncate">{copiedEmail ? 'E-posta Kopyalandı!' : 'emirhan0008@gmail.com'}</span>
+                      </button>
+
+                      <a
+                        href={`mailto:emirhan0008@gmail.com?subject=${encodeURIComponent(contactSubject)}&body=${encodeURIComponent(formData.message || 'Merhaba Emirhan Bey,')}`}
+                        className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2.5 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer"
+                      >
+                        <Mail size={14} className="text-white/70 shrink-0" />
+                        <span className="truncate">E-Posta İstemcisi İle Gönder</span>
+                      </a>
+
+                      <a
+                        href="https://wa.me/?text=Merhaba%20Emirhan%20Bey,%20sitenizden%20ulaşıyorum."
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 rounded-2xl bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-500/20 flex items-center gap-2.5 text-xs text-emerald-300 font-bold transition-all hover:scale-102 cursor-pointer"
+                      >
+                        <Phone size={14} className="text-emerald-400 shrink-0" />
+                        <span className="truncate">WhatsApp Mesajı</span>
+                      </a>
                     </div>
 
                     {formSubmitted ? (
                       <motion.div 
                         initial={{ scale: 0.95, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="p-8 liquid-glass spinning-glow-border rounded-3xl flex flex-col items-center justify-center text-center gap-4 border border-white/10"
+                        className="p-8 liquid-glass spinning-glow-border rounded-3xl flex flex-col items-center justify-center text-center gap-4 border border-white/10 my-auto"
                       >
-                        <CheckCircle2 size={48} className="text-white/95 animate-pulse" />
+                        <CheckCircle2 size={48} className="text-emerald-400 animate-pulse" />
                         <div className="space-y-1">
-                          <h3 className="text-lg font-bold">Mesajınız Alındı</h3>
-                          <p className="text-xs text-white/75 leading-relaxed">
-                            Emirhan Yılmaz en kısa sürede sizinle iletişime geçecektir.
+                          <h3 className="text-lg font-bold text-white">Mesajınız Başarıyla Alındı!</h3>
+                          <p className="text-xs text-white/80 leading-relaxed max-w-sm">
+                            Geliştirici paneli mesaj kutusuna kaydedildi. En kısa sürede e-posta adresiniz üzerinden dönüş yapılacaktır.
                           </p>
-                          <div className="pt-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigator.clipboard.writeText('emirhan0008@gmail.com');
-                                setCopiedEmail(true);
-                                setTimeout(() => setCopiedEmail(false), 2500);
-                              }}
-                              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-white/5 border border-white/10 text-[10px] text-white/80 hover:text-white hover:bg-white/10 hover:scale-102 active:scale-98 transition-all cursor-pointer font-bold uppercase"
-                            >
-                              <Copy size={11} />
-                              {copiedEmail ? 'E-posta Kopyalandı!' : 'emirhan0008@gmail.com\'u Kopyala'}
-                            </button>
-                          </div>
                         </div>
                       </motion.div>
                     ) : (
                       <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
-                        {/* Honeypot Spam Trap (Invisible to humans, triggers automatic silent reject on bots) */}
+                        {/* Honeypot Spam Trap */}
                         <input 
                           type="text" 
                           name="website_trap" 
@@ -1218,17 +1394,17 @@ import {
                           autoComplete="off" 
                         />
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="space-y-1.5">
                             <label className="text-[10px] uppercase tracking-wider text-white/95 font-bold px-1">Ad Soyad</label>
                             <input 
                               type="text" 
                               required
                               maxLength={100}
-                              placeholder="Emre Yılmaz"
+                              placeholder="Adınız ve Soyadınız"
                               value={formData.name}
                               onChange={e => setFormData({ ...formData, name: e.target.value })}
-                              className="w-full py-3 px-4 rounded-xl liquid-glass spinning-glow-border border-none focus:outline-hidden focus:ring-1 focus:ring-white/35 text-xs text-white placeholder-white/80 font-medium"
+                              className="w-full py-2.5 px-4 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-white/35 text-xs text-white placeholder-white/40 font-medium"
                               disabled={isSubmitting}
                             />
                           </div>
@@ -1241,22 +1417,36 @@ import {
                               placeholder="ornek@domain.com"
                               value={formData.email}
                               onChange={e => setFormData({ ...formData, email: e.target.value })}
-                              className="w-full py-3 px-4 rounded-xl liquid-glass spinning-glow-border border-none focus:outline-hidden focus:ring-1 focus:ring-white/35 text-xs text-white placeholder-white/80 font-medium"
+                              className="w-full py-2.5 px-4 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-white/35 text-xs text-white placeholder-white/40 font-medium"
                               disabled={isSubmitting}
                             />
                           </div>
                         </div>
 
                         <div className="space-y-1.5">
+                          <label className="text-[10px] uppercase tracking-wider text-white/95 font-bold px-1">Konu / Kategori</label>
+                          <select
+                            value={contactSubject}
+                            onChange={e => setContactSubject(e.target.value)}
+                            className="w-full py-2.5 px-4 rounded-xl bg-black/60 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-white/35 text-xs text-white font-medium"
+                          >
+                            <option value="Proje Teklifi / Danışmanlık" className="bg-zinc-900">Proje Teklifi / Danışmanlık</option>
+                            <option value="Akademik & PDR Çalışması" className="bg-zinc-900">Akademik & PDR Çalışması</option>
+                            <option value="Yazılım & Yapay Zeka Entegrasyonu" className="bg-zinc-900">Yazılım & Yapay Zeka Entegrasyonu</option>
+                            <option value="Genel İletişim / Soru" className="bg-zinc-900">Genel İletişim / Soru</option>
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
                           <label className="text-[10px] uppercase tracking-wider text-white/95 font-bold px-1">Mesajınız</label>
                           <textarea 
                             required
-                            rows={4}
+                            rows={3}
                             maxLength={1000}
-                            placeholder="Zihin sağlığı ve yapay zeka entegrasyonu projeniz hakkında..."
+                            placeholder="İş birliği veya proje detaylarınızı buraya yazabilirsiniz..."
                             value={formData.message}
                             onChange={e => setFormData({ ...formData, message: e.target.value })}
-                            className="w-full py-3 px-4 rounded-xl liquid-glass spinning-glow-border border-none focus:outline-hidden focus:ring-1 focus:ring-white/35 text-xs text-white placeholder-white/50 resize-none"
+                            className="w-full py-2.5 px-4 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-white/35 text-xs text-white placeholder-white/40 resize-none"
                             disabled={isSubmitting}
                           />
                         </div>
@@ -1273,7 +1463,7 @@ import {
                           {isSubmitting ? (
                             <>
                               <div className="w-3 h-3 rounded-full border-2 border-t-transparent border-white/80 animate-spin shrink-0" />
-                              <span>Gönderiliyor...</span>
+                              <span>İletiliyor...</span>
                             </>
                           ) : (
                             <>
@@ -1691,6 +1881,65 @@ import {
           </motion.button>
         </div>
       )}
+
+      {/* Article Reader Modal Overlay */}
+      <AnimatePresence>
+        {selectedArticle && (
+          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-2xl max-h-[85vh] liquid-glass-strong border border-white/15 rounded-[2.5rem] shadow-2xl p-6 sm:p-8 flex flex-col gap-6 overflow-y-auto text-left"
+            >
+              <button
+                onClick={() => setSelectedArticle(null)}
+                className="absolute top-6 right-6 text-white/60 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full cursor-pointer border-none"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 text-[10px] text-white/60 font-mono">
+                  <span className="px-3 py-1 rounded-full bg-white/10 text-white font-bold font-sans">
+                    {selectedArticle.category}
+                  </span>
+                  <span>{selectedArticle.date}</span>
+                  <span>•</span>
+                  <span>{selectedArticle.readTime}</span>
+                </div>
+
+                <h2 className="text-xl sm:text-2xl font-extrabold text-white leading-snug">
+                  {selectedArticle.title}
+                </h2>
+              </div>
+
+              <div className="space-y-4 text-xs sm:text-sm text-white/90 leading-relaxed font-normal border-t border-b border-white/10 py-5 select-text">
+                {selectedArticle.content.split('\n\n').map((paragraph, idx) => (
+                  <p key={idx}>{paragraph}</p>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedArticle.tags.map(tag => (
+                    <span key={tag} className="text-[10px] px-2.5 py-1 rounded-md bg-white/5 text-white/70">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => setSelectedArticle(null)}
+                  className="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition-all cursor-pointer"
+                >
+                  Kapat
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Lightbox Overlay */}
       <AnimatePresence>

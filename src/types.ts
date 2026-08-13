@@ -27,3 +27,14 @@ export interface Certification {
   institution: string;
   credentialId?: string;
 }
+
+export interface Article {
+  id: string;
+  title: string;
+  category: string;
+  date: string;
+  readTime: string;
+  summary: string;
+  content: string[];
+  tags: string[];
+}

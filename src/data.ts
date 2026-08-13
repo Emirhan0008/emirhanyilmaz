@@ -1,4 +1,4 @@
-import { Project, Education, Experience } from './types';
+import { Project, Education, Experience, Article } from './types';
 
 // Import local image assets for correct bundler resolution
 import projectMindflow from './assets/images/project_mindflow_1782982454856.jpg';
@@ -233,7 +233,53 @@ export const projects: Project[] = [
     highlights: [
       "Şablonlar üzerindeki milimetrik piksel kayması ve hizalama sorunlarının giderilmesi",
       "İletişim bilgilerini ve portfolyoyu içeren dinamik olarak üretilen QR kod modülü",
-      "Farklı kariyer alanları için tasarlanmış şık ve modern CV şablonu seçenekleri"
+      "Farklı kariyer alanları için tasarlanmış şık me modern CV şablonu seçenekleri"
     ]
   }
 ];
+
+export const articles: Article[] = [
+  {
+    id: "ozel-egitimde-llm-bep",
+    title: "Özel Eğitimde Büyük Dil Modelleri (LLM) ve Bireyselleştirilmiş Eğitim Planları",
+    category: "Özel Eğitim & AI",
+    date: "Temmuz 2026",
+    readTime: "5 dk okuma",
+    summary: "Saha deneyimlerim ışığında, Gemini API gibi gelişmiş LLM mimarilerinin otizm ve gelişimsel yetersizliği olan bireyler için nasıl adaptif BEP içeriği ve materyal üretebildiğini inceliyorum.",
+    content: [
+      "3 yıllık özel eğitim öğretmenliği saha tecrübem boyunca karşılaştığım en büyük zorluklardan biri, her bir çocuğun öğrenme hızının ve algılama biçiminin tamamen benzersiz olmasıydı. Standart müfredatlar ve tek tip ders materyalleri özel gereksinimli çocuklarda sıklıkla yetersiz kalıyor.",
+      "Geliştirdiğim 'Hece Çizme & ForKids' uygulamasında Gemini API entegrasyonu kullanarak çocukların çizimlerini ve okuma denemelerini anlık olarak analiz eden yapay zeka modülleri kurguladık. Yapay zeka, çocuğun ince motor beceri seviyesine göre çizgi kalıplarını dinamik olarak esnetiyor.",
+      "Yapay zeka sadece bir otomasyon aracı değil, öğretmen ve uzman için güçlü bir pedagojik asistandır. BEP (Bireyselleştirilmiş Eğitim Planı) hazırlama sürecinde öğrencinin güçlü yönlerini ve kaba değerlendirme verilerini girdi olarak alıp dakikalar içinde kişiselleştirilmiş kazanım haritaları sunabilmektedir."
+    ],
+    tags: ["Özel Eğitim", "Gemini API", "BEP", "PDR", "Erişilebilirlik"]
+  },
+  {
+    id: "pdr-ve-yapay-zeka-etik",
+    title: "Psikolojik Danışmanlıkta Yapay Zeka Entegrasyonu ve Veri Etiği",
+    category: "PDR & Teknoloji",
+    date: "Haziran 2026",
+    readTime: "4 dk okuma",
+    summary: "Terapötik ilişki, empatik bağ ve danışan mahremiyeti ekseninde yapay zekanın sınırlılıkları ve doğru entegrasyon sınırları üzerine analitik bir inceleme.",
+    content: [
+      "Psikolojik danışmanlık uygulamalarında yapay zekanın rolü giderek tartışılan bir konu haline geliyor. Bir PDR uzmanı olarak vurgulamak isterim ki; yapay zeka hiçbir zaman insan empati gücünün ve terapötik ittifakın yerini alamaz.",
+      "Ancak yapay zeka, danışan takibi, ruh hali (mood) günlüklerinin analizi, bilişsel çarpıtmaların tespiti ve danışma seansları arasındaki psikoeğitim süreçlerinde mükemmel bir destek mekanizmasıdır.",
+      "Kişisel verilerin gizliliği (KVKK/GDPR) ve uçtan uca şifreleme yöntemleri, ruh sağlığı teknolojilerinde birinci kuraldır. Algoritmalar geliştirilirken danışan verilerinin asla izin alınmaksızın model eğitiminde kullanılmaması garanti altına alınmalıdır."
+    ],
+    tags: ["PDR", "Terapötik Süreç", "Etik", "Veri Gizliliği", "NLP"]
+  },
+  {
+    id: "python-otomasyon-rehberlik",
+    title: "Python ile Rehberlik Servislerinde ve Okullarda Evrak Otomasyonu",
+    category: "Python & Otomasyon",
+    date: "Mayıs 2026",
+    readTime: "6 dk okuma",
+    summary: "Okul ve rehberlik servislerindeki manuel evrak yükünü %90 azaltan Python scriptlerinin ve akıllı arşivleme algoritmalarının teknik anatomisi.",
+    content: [
+      "Okul ortamlarında rehberlik öğretmenlerinin ve özel eğitimcilerin en çok zamanını alan hususlardan biri, yüzlerce belgenin, resmi raporun ve tarihsel evrakın düzenlenmesidir.",
+      "Geliştirdiğim 'Evrak_Düzenleyici.py' projesinde, karmaşık ve düzensiz klasörlerdeki dosya isimlerini ve içeriklerini Gemini LLM ve Python `os/shutil` modülleri ile tarayarak otonom bir arşiv hiyerarşisi oluşturduk.",
+      "Bu sayede normalde günler süren evrak tasnifi birkaç saniye içerisinde sıfır insan hatasıyla tamamlanıyor. Öğretmenler ve uzmanlar bürokratik iş yükünden kurtularak doğrudan öğrencilerle ilgilenebilecek zamana kavuşuyor."
+    ],
+    tags: ["Python", "Otomasyon", "LLM", "Verimlilik", "Dosya Yönetimi"]
+  }
+];
+
