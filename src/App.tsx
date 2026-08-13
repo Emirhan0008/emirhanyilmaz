@@ -6,6 +6,7 @@ import {
   Wand2, 
   BookOpen, 
   ArrowRight, 
+  ArrowLeft,
   Instagram, 
   Menu, 
   X, 
@@ -13,7 +14,8 @@ import {
   Brain, 
   Code2, 
   Briefcase, 
-  ChevronRight, 
+  ChevronRight,
+  ChevronLeft, 
   Mail, 
   Github, 
   CheckCircle2, 
@@ -31,14 +33,26 @@ import {
   Search,
   FileText,
   MessageSquare,
-  Phone
+  Phone,
+  Volume2,
+  VolumeX,
+  Music,
+  Cpu,
+  Terminal,
+  Layers
  } from 'lucide-react';
  
  import { profileData, projects, articles } from './data';
  import { Project, Article } from './types';
  import { SeamlessVideo } from './components/SeamlessVideo';
  
- export interface ContactMessage {
+ import { AiAssistantDrawer } from './components/AiAssistantDrawer';
+import { ProjectEstimator } from './components/ProjectEstimator';
+import { TechRadar } from './components/TechRadar';
+import { DeveloperTerminalModal } from './components/DeveloperTerminalModal';
+import { soundEngine } from './utils/audioSynth';
+
+export interface ContactMessage {
    id: string;
    name: string;
    email: string;
@@ -52,6 +66,7 @@ import {
    const [activeTab, setActiveTab] = useState<'profile' | 'projects' | 'articles' | 'contact'>('profile');
    const [activeLightboxImage, setActiveLightboxImage] = useState<string | null>(null);
    const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+   const [activeGalleryIndex, setActiveGalleryIndex] = useState<number>(0);
    const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
    const [projectFilter, setProjectFilter] = useState<string>('Tümü');
    const [searchQuery, setSearchQuery] = useState<string>('');
@@ -86,6 +101,25 @@ import {
    const [showDesktopScrollIndicator, setShowDesktopScrollIndicator] = useState(true);
    const [showMobileScrollIndicator, setShowMobileScrollIndicator] = useState(true);
    const [profileViewMode, setProfileViewMode] = useState<'summary' | 'timeline'>('summary');
+
+   // Innovative Modals & Audio States
+   const [showTerminal, setShowTerminal] = useState(false);
+   const [showEstimatorModal, setShowEstimatorModal] = useState(false);
+   const [showTechRadarModal, setShowTechRadarModal] = useState(false);
+   const [isMuted, setIsMuted] = useState(false);
+   const [isAmbientPlaying, setIsAmbientPlaying] = useState(false);
+
+   useEffect(() => {
+     const handleKeyDown = (e: KeyboardEvent) => {
+       if (e.ctrlKey && (e.key === '`' || e.key === '~')) {
+         e.preventDefault();
+         setShowTerminal(prev => !prev);
+         soundEngine.playGlassClick();
+       }
+     };
+     window.addEventListener('keydown', handleKeyDown);
+     return () => window.removeEventListener('keydown', handleKeyDown);
+   }, []);
  
    // Helper function for secure SHA-256 browser hashing
    const sha256 = async (str: string): Promise<string> => {
@@ -226,6 +260,44 @@ import {
      setShowDesktopScrollIndicator(true);
      setShowMobileScrollIndicator(true);
    }, [projectFilter, activeTab]);
+
+   const isDetailActive = Boolean(selectedProject || selectedArticle);
+
+   const handleNextProject = () => {
+     if (!selectedProject) return;
+     const currentIndex = mappedProjects.findIndex(p => p.id === selectedProject.id);
+     const nextIndex = (currentIndex + 1) % mappedProjects.length;
+     setSelectedProject(mappedProjects[nextIndex]);
+     setActiveGalleryIndex(0);
+   };
+
+   const handlePrevProject = () => {
+     if (!selectedProject) return;
+     const currentIndex = mappedProjects.findIndex(p => p.id === selectedProject.id);
+     const prevIndex = (currentIndex - 1 + mappedProjects.length) % mappedProjects.length;
+     setSelectedProject(mappedProjects[prevIndex]);
+     setActiveGalleryIndex(0);
+   };
+
+   useEffect(() => {
+     setActiveGalleryIndex(0);
+   }, [selectedProject]);
+
+   useEffect(() => {
+     if (!selectedProject) return;
+     const handleModalKeyDown = (e: KeyboardEvent) => {
+       if (e.key === 'ArrowLeft') {
+         setActiveGalleryIndex((prev) => (prev > 0 ? prev - 1 : 10));
+       } else if (e.key === 'ArrowRight') {
+         setActiveGalleryIndex((prev) => prev + 1);
+       } else if (e.key === 'Escape') {
+         setSelectedProject(null);
+         setSelectedArticle(null);
+       }
+     };
+     window.addEventListener('keydown', handleModalKeyDown);
+     return () => window.removeEventListener('keydown', handleModalKeyDown);
+   }, [selectedProject]);
  
    const handleProjectsScroll = (e: UIEvent<HTMLDivElement>) => {
      if (e.currentTarget.scrollTop > 30) {
@@ -308,10 +380,30 @@ import {
     }
   };
 
-  // Map custom uploaded photos onto existing project structures
+  const [projectDemoUrls, setProjectDemoUrls] = useState<Record<string, string>>(() => {
+    try {
+      const saved = localStorage.getItem('emirhan_project_demo_urls');
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+
+  const handleSaveDemoUrl = (projectId: string, url: string) => {
+    const updated = { ...projectDemoUrls, [projectId]: url };
+    setProjectDemoUrls(updated);
+    try {
+      localStorage.setItem('emirhan_project_demo_urls', JSON.stringify(updated));
+    } catch (e) {
+      console.error("Storage error:", e);
+    }
+  };
+
+  // Map custom uploaded photos & custom demo URLs onto existing project structures
   const mappedProjects = projects.map(project => ({
     ...project,
-    image: projectImages[project.id] || project.image
+    image: projectImages[project.id] || project.image,
+    demoUrl: projectDemoUrls[project.id] !== undefined ? projectDemoUrls[project.id] : project.demoUrl
   }));
 
   // Filter projects based on selected filter pill and search query
@@ -517,16 +609,24 @@ import {
       {/* MAIN CONTAINER */}
       <div className="relative z-10 h-auto lg:h-screen lg:max-h-screen w-full flex flex-col lg:flex-row p-4 lg:p-6 gap-6 lg:overflow-hidden">
         
-        {/* LEFT PANEL (Branding Anchor & Core Profile Header) */}
-        <div className="w-full lg:w-[52%] h-auto lg:h-full lg:max-h-full relative flex flex-col rounded-3xl p-6 lg:p-8 liquid-glass-clear spinning-glow-border overflow-hidden select-text">
+        {/* LEFT PANEL (Branding Anchor & Core Profile Header - Collapses when detail view is active) */}
+        <motion.div 
+          layout
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className={`w-full ${isDetailActive ? 'lg:w-[28%]' : 'lg:w-[52%]'} h-auto lg:h-full lg:max-h-full relative flex flex-col rounded-3xl p-5 lg:p-7 liquid-glass-clear spinning-glow-border overflow-hidden select-text transition-all duration-500 ease-out`}
+        >
           
           {/* Left Panel Header / Navigation */}
-          <header className="flex items-center justify-between z-10 mb-8 lg:mb-12">
+          <header className="flex items-center justify-between z-10 mb-6 lg:mb-8 shrink-0">
             <div 
               className="flex items-center gap-3 cursor-pointer group"
-              onClick={() => setActiveTab('profile')}
+              onClick={() => {
+                setSelectedProject(null);
+                setSelectedArticle(null);
+                setActiveTab('profile');
+              }}
             >
-              <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 transition-transform duration-300 group-hover:scale-110">
+              <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 transition-transform duration-300 group-hover:scale-110 shrink-0">
                 <img 
                   src={profileData.avatar} 
                   alt="Emirhan Yılmaz" 
@@ -534,31 +634,33 @@ import {
                   referrerPolicy="no-referrer"
                 />
               </div>
-              <span className="text-xl font-semibold tracking-tight text-white transition-opacity duration-300 group-hover:opacity-95">
+              <span className="text-xl font-semibold tracking-tight text-white transition-opacity duration-300 group-hover:opacity-95 truncate">
                 Emirhan <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-white/95 to-white/80">YILMAZ</span>
               </span>
             </div>
 
             {/* Desktop Navigation Tabs */}
-            <nav className="hidden md:flex items-center gap-1.5 p-1 liquid-glass rounded-full text-xs">
-              {navItems.map(item => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    setActiveTab(item.id);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`px-4 py-1.5 rounded-full transition-all duration-300 font-bold ${
-                    activeTab === item.id 
-                      ? 'bg-white/15 text-white shadow-xs' 
-                      : 'text-white/85 hover:text-white hover:bg-white/10'
-                  }`}
-                  id={`nav-btn-${item.id}`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
+            {!isDetailActive && (
+              <nav className="hidden md:flex items-center gap-1.5 p-1 liquid-glass rounded-full text-xs shrink-0">
+                {navItems.map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`px-4 py-1.5 rounded-full transition-all duration-300 font-bold ${
+                      activeTab === item.id 
+                        ? 'bg-white/15 text-white shadow-xs' 
+                        : 'text-white/85 hover:text-white hover:bg-white/10'
+                    }`}
+                    id={`nav-btn-${item.id}`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </nav>
+            )}
 
             {/* Mobile Navigation Button */}
             <button 
@@ -863,20 +965,24 @@ import {
             </div>
           </footer>
 
-        </div>
+        </motion.div>
 
-        {/* RIGHT PANEL (Desktop only, interactive viewport switching profiles, certificates, and project gallery) */}
-        <div className="hidden lg:flex w-[48%] h-full flex-col min-h-0 relative select-text">
+        {/* RIGHT PANEL / MAIN CONTENT VIEWPORT (Expands dynamically when detail view is active) */}
+        <motion.div 
+          layout
+          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          className={`w-full ${isDetailActive ? 'lg:w-[72%]' : 'lg:w-[48%]'} h-full flex flex-col min-h-0 relative select-text transition-all duration-500 ease-out`}
+        >
           
-          {/* Top Bar (Socials & CTA Button) */}
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-full">
+          {/* Top Bar (Socials, Innovative Actions & Audio Controls) */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+            <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-full overflow-x-auto">
               <a 
                 href="https://github.com" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
-                title="GitHub"
+                className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
+                title="GitHub Profile"
               >
                 <Github size={14} />
               </a>
@@ -884,38 +990,408 @@ import {
                 href="https://instagram.com" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
+                className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
                 title="Instagram"
               >
                 <Instagram size={14} />
               </a>
-              <div className="w-[1px] h-4 bg-white/10 mx-1" />
-              <button 
-                onClick={() => setActiveTab('contact')}
-                className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors"
-                title="E-posta Gönder"
+              <div className="w-[1px] h-4 bg-white/10 mx-0.5 shrink-0" />
+              
+              {/* Sound FX Toggle */}
+              <button
+                onClick={() => {
+                  const muted = soundEngine.toggleMute();
+                  setIsMuted(muted);
+                }}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
+                  isMuted ? 'text-red-400 hover:bg-red-500/10' : 'text-emerald-400 hover:bg-emerald-500/10'
+                }`}
+                title={isMuted ? "Ses Efektlerini Aç" : "Ses Efektlerini Kapat"}
               >
-                <Mail size={14} />
+                {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+              </button>
+
+              {/* Ambient Focus Generator */}
+              <button
+                onClick={() => {
+                  const playing = soundEngine.toggleAmbientFocusSoundscape();
+                  setIsAmbientPlaying(playing);
+                }}
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
+                  isAmbientPlaying ? 'text-emerald-400 bg-emerald-500/20 animate-pulse' : 'text-white/70 hover:bg-white/10'
+                }`}
+                title={isAmbientPlaying ? "Sıvı Odaklanma Sesini Durdur" : "Sıvı Odaklanma Sesini Başlat"}
+              >
+                <Music size={14} />
+              </button>
+
+              {/* Developer Terminal Mode */}
+              <button
+                onClick={() => {
+                  soundEngine.playGlassClick();
+                  setShowTerminal(true);
+                }}
+                className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-emerald-400 font-mono text-xs font-bold transition-colors cursor-pointer shrink-0"
+                title="Terminal Modu (Ctrl + ~)"
+              >
+                &gt;_
               </button>
             </div>
 
-            <button 
-              onClick={() => setActiveTab('contact')}
-              className="inline-flex items-center gap-2 px-4 py-1.5 liquid-glass hover:bg-white/5 rounded-full text-xs font-medium transition-all group hover:scale-105"
-            >
-              <Sparkles size={12} className="text-white/80 group-hover:animate-pulse" />
-              <span>İletişime Geç</span>
-            </button>
+            {/* Innovative Feature Quick Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  soundEngine.playGlassClick();
+                  setSelectedProject(null);
+                  setSelectedArticle(null);
+                  setShowTechRadarModal(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 liquid-glass hover:bg-white/10 rounded-full text-xs font-bold text-white/90 hover:text-white transition-all cursor-pointer border border-white/10 hover:border-emerald-400/40"
+              >
+                <Cpu size={13} className="text-emerald-400" />
+                <span className="hidden sm:inline">Teknoloji Radarı</span>
+              </button>
+
+              <button
+                onClick={() => {
+                  soundEngine.playGlassClick();
+                  setSelectedProject(null);
+                  setSelectedArticle(null);
+                  setShowEstimatorModal(true);
+                }}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-full text-xs font-extrabold text-white transition-all cursor-pointer shadow-lg hover:scale-105 border border-emerald-300/30"
+              >
+                <Wand2 size={13} />
+                <span>Proje Mimarisi Oluştur</span>
+              </button>
+            </div>
           </div>
 
           {/* DYNAMIC CONTENT SWITCHER */}
           <div className="flex-1 flex flex-col min-h-0">
             <AnimatePresence mode="wait">
               
-              {/* TAB 1: PROFILE OVERVIEW (HOME) */}
-              {activeTab === 'profile' && (
+              {/* VIEW 1: SELECTED PROJECT DETAIL VIEW (Dynamic layout shift inside right column) */}
+              {currentSelectedProject ? (
                 <motion.div
-                  key="tab-profile"
+                  key={`project-detail-${currentSelectedProject.id}`}
+                  initial={{ opacity: 0, scale: 0.98, x: 20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.98, x: -20 }}
+                  transition={{ duration: 0.35 }}
+                  className="flex-1 flex flex-col gap-6 overflow-y-auto pr-1.5 min-h-0 liquid-glass-strong rounded-[2.5rem] p-6 lg:p-8 border border-white/10 shadow-2xl relative select-text"
+                >
+                  {/* Top Bar Navigation for Project Detail View */}
+                  <div className="flex items-center justify-between gap-3 pb-4 border-b border-white/10 shrink-0">
+                    <button
+                      onClick={() => setSelectedProject(null)}
+                      className="flex items-center gap-2 px-3.5 py-1.5 rounded-full liquid-glass hover:bg-white/15 text-white/90 hover:text-white text-xs font-bold transition-all border border-white/10 cursor-pointer"
+                    >
+                      <ArrowLeft size={14} />
+                      <span>Projeler Listesine Dön</span>
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 bg-black/40 p-1 rounded-full border border-white/10">
+                        <button
+                          onClick={handlePrevProject}
+                          className="w-7 h-7 rounded-full hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                          title="Önceki Proje (Sol Ok)"
+                        >
+                          <ChevronLeft size={16} />
+                        </button>
+                        <span className="text-[10px] font-mono font-extrabold text-emerald-400 px-1">
+                          {projects.findIndex(p => p.id === currentSelectedProject.id) + 1} / {projects.length}
+                        </span>
+                        <button
+                          onClick={handleNextProject}
+                          className="w-7 h-7 rounded-full hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                          title="Sonraki Proje (Sağ Ok)"
+                        >
+                          <ChevronRight size={16} />
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => setSelectedProject(null)}
+                        className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all border border-white/10 cursor-pointer"
+                        title="Kapat"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Body Grid: Responsive Split layout for gallery and descriptions */}
+                  <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+                    
+                    {/* Left/Top Section: Carousel Slider & Tech Badges */}
+                    <div className="xl:col-span-6 space-y-4">
+                      {(() => {
+                        const currentImages = [
+                          currentSelectedProject.image,
+                          ...(currentSelectedProject.galleryImages || []),
+                          ...(projectDetailedImages[currentSelectedProject.id] || [])
+                        ].filter((img, idx, self) => self.indexOf(img) === idx && Boolean(img));
+
+                        const safeIndex = activeGalleryIndex >= currentImages.length ? 0 : activeGalleryIndex;
+                        const activeImage = currentImages[safeIndex] || currentSelectedProject.image;
+
+                        return (
+                          <div className="space-y-3">
+                            {/* Main Display Frame */}
+                            <div className="relative aspect-16/10 w-full rounded-2xl overflow-hidden bg-zinc-950 border border-white/20 shadow-2xl group/img">
+                              <motion.img 
+                                key={activeImage}
+                                initial={{ opacity: 0.4, scale: 0.98 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ duration: 0.25 }}
+                                src={activeImage} 
+                                alt={`${currentSelectedProject.title} Ekran ${safeIndex + 1}`} 
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  const original = projects.find(p => p.id === currentSelectedProject.id);
+                                  if (original) e.currentTarget.src = original.image;
+                                }}
+                              />
+
+                              {/* Navigation Controls Overlay */}
+                              {currentImages.length > 1 && (
+                                <>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setActiveGalleryIndex((prev) => (prev > 0 ? prev - 1 : currentImages.length - 1));
+                                    }}
+                                    className="absolute left-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/90 hover:bg-emerald-500 hover:text-black text-emerald-400 flex items-center justify-center transition-all border border-emerald-500/50 shadow-xl cursor-pointer z-10 hover:scale-110 active:scale-95"
+                                    title="Önceki Ekran (Sol Ok)"
+                                  >
+                                    <ChevronLeft size={18} />
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setActiveGalleryIndex((prev) => (prev < currentImages.length - 1 ? prev + 1 : 0));
+                                    }}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/90 hover:bg-emerald-500 hover:text-black text-emerald-400 flex items-center justify-center transition-all border border-emerald-500/50 shadow-xl cursor-pointer z-10 hover:scale-110 active:scale-95"
+                                    title="Sonraki Ekran (Sağ Ok)"
+                                  >
+                                    <ChevronRight size={18} />
+                                  </button>
+                                </>
+                              )}
+
+                              {/* Counter & Fullscreen Zoom */}
+                              <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10">
+                                {currentImages.length > 1 && (
+                                  <span className="px-2.5 py-0.5 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-[10px] text-emerald-300 font-extrabold font-mono shadow-md">
+                                    {safeIndex + 1} / {currentImages.length}
+                                  </span>
+                                )}
+                                <button
+                                  onClick={() => setActiveLightboxImage(activeImage)}
+                                  className="p-1.5 rounded-full bg-black/80 hover:bg-emerald-500 hover:text-black text-white border border-white/20 transition-all cursor-pointer shadow-md"
+                                  title="Ekranı Büyüt (Tam Ekran)"
+                                >
+                                  <Eye size={12} />
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Thumbnails Row */}
+                            {currentImages.length > 1 && (
+                              <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-thin">
+                                {currentImages.map((img, idx) => (
+                                  <button
+                                    key={idx}
+                                    onClick={() => setActiveGalleryIndex(idx)}
+                                    className={`relative w-12 h-12 rounded-xl overflow-hidden border-2 transition-all cursor-pointer shrink-0 ${
+                                      idx === safeIndex 
+                                        ? 'border-emerald-400 scale-105 shadow-md shadow-emerald-500/25 ring-2 ring-emerald-400/30' 
+                                        : 'border-white/10 opacity-50 hover:opacity-100 hover:border-white/30'
+                                    }`}
+                                  >
+                                    <img src={img} alt={`Küçük Ekran ${idx + 1}`} className="w-full h-full object-cover" />
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      {/* Admin Photo Editor */}
+                      {isAdmin && (
+                        <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2.5">
+                          <span className="text-[10px] text-white tracking-wider uppercase font-bold flex items-center gap-1.5">
+                            <Upload size={11} className="text-white/80" /> FOTOĞRAF YÖNETİMİ (ADMIN)
+                          </span>
+                          <div className="grid grid-cols-2 gap-2">
+                            <label className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer text-center group transition-all">
+                              <Upload size={12} className="text-white/60 group-hover:text-white transition-all mb-0.5" />
+                              <span className="text-[9px] text-white font-bold">Görsel Yükle</span>
+                              <input 
+                                type="file" 
+                                accept="image/*" 
+                                className="hidden" 
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    const reader = new FileReader();
+                                    reader.onloadend = () => {
+                                      if (typeof reader.result === 'string') {
+                                        handleSaveDetailedImage(currentSelectedProject.id, reader.result);
+                                      }
+                                    };
+                                    reader.readAsDataURL(file);
+                                  }
+                                }}
+                              />
+                            </label>
+                            <button
+                              onClick={() => {
+                                const url = prompt("Görsel Web URL adresi:");
+                                if (url) handleSaveDetailedImage(currentSelectedProject.id, url);
+                              }}
+                              className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-center group transition-all cursor-pointer"
+                            >
+                              <span className="text-xs mb-0.5">🔗</span>
+                              <span className="text-[9px] text-white font-bold">URL Ekle</span>
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Tech Stack */}
+                      <div className="space-y-2 pt-2">
+                        <span className="text-[10px] text-white/75 tracking-wider uppercase font-bold">GELİŞTİRME TEKNOLOJİLERİ</span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {currentSelectedProject.tech.map(tech => (
+                            <span key={tech} className="px-2.5 py-1 liquid-glass rounded-md text-[10px] text-white font-semibold font-mono">
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right/Bottom Section: Descriptions & CTA */}
+                    <div className="xl:col-span-6 space-y-5">
+                      <div>
+                        <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold">{currentSelectedProject.category}</span>
+                        <h2 className="text-2xl font-extrabold tracking-tight mt-0.5 text-white">{currentSelectedProject.title}</h2>
+                      </div>
+
+                      <div className="space-y-3">
+                        <p className="text-sm text-white font-semibold leading-relaxed">
+                          {currentSelectedProject.description}
+                        </p>
+                        <p className="text-xs text-white/90 leading-relaxed font-normal">
+                          {currentSelectedProject.longDescription}
+                        </p>
+                      </div>
+
+                      {/* Highlights */}
+                      <div className="space-y-2.5 pt-2 border-t border-white/10">
+                        <span className="text-[10px] uppercase tracking-wider text-white/75 font-bold">ÖNE ÇIKAN KAZANIMLAR & ÖZELLİKLER</span>
+                        <ul className="space-y-2">
+                          {currentSelectedProject.highlights.map((highlight, index) => (
+                            <li key={index} className="flex items-start gap-2 text-xs text-white/95 font-medium leading-relaxed">
+                              <CheckCircle2 size={13} className="text-emerald-400 shrink-0 mt-0.5" />
+                              <span>{highlight}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* Live Demo CTA Button */}
+                      <div className="pt-4 border-t border-white/10 space-y-2">
+                        {currentSelectedProject.demoUrl ? (
+                          <a
+                            href={currentSelectedProject.demoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-400 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xl hover:shadow-emerald-500/25 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer border border-emerald-300/40 group/demobtn"
+                          >
+                            <ExternalLink size={16} className="group-hover/demobtn:translate-x-0.5 group-hover/demobtn:-translate-y-0.5 transition-transform" />
+                            <span>Canlı Uygulamayı İncele</span>
+                          </a>
+                        ) : (
+                          <div className="p-3.5 rounded-2xl bg-white/5 border border-white/5 text-center flex flex-col sm:flex-row items-center justify-between gap-2">
+                            <span className="text-xs text-white/60 font-medium">Bu proje yerel masaüstü / otomasyon çalışmasıdır.</span>
+                            {isAdmin && (
+                              <button
+                                onClick={() => {
+                                  const url = prompt("Canlı demo URL adresi:");
+                                  if (url) handleSaveDemoUrl(currentSelectedProject.id, url);
+                                }}
+                                className="text-[10px] font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-2.5 py-1 rounded-lg cursor-pointer"
+                              >
+                                + URL Ekle
+                              </button>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                  </div>
+                </motion.div>
+              ) : selectedArticle ? (
+                /* VIEW 2: SELECTED ARTICLE DETAIL VIEW */
+                <motion.div
+                  key={`article-detail-${selectedArticle.id}`}
+                  initial={{ opacity: 0, scale: 0.98, x: 20 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.98, x: -20 }}
+                  transition={{ duration: 0.35 }}
+                  className="flex-1 flex flex-col gap-6 overflow-y-auto pr-1.5 min-h-0 liquid-glass-strong rounded-[2.5rem] p-6 lg:p-8 border border-white/10 shadow-2xl relative select-text"
+                >
+                  <div className="flex items-center justify-between gap-3 pb-4 border-b border-white/10 shrink-0">
+                    <button
+                      onClick={() => setSelectedArticle(null)}
+                      className="flex items-center gap-2 px-3.5 py-1.5 rounded-full liquid-glass hover:bg-white/15 text-white/90 hover:text-white text-xs font-bold transition-all border border-white/10 cursor-pointer"
+                    >
+                      <ArrowLeft size={14} />
+                      <span>Yazılara Dön</span>
+                    </button>
+                    <button
+                      onClick={() => setSelectedArticle(null)}
+                      className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all border border-white/10 cursor-pointer"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wider font-mono">
+                        {selectedArticle.category}
+                      </span>
+                      <span className="text-xs text-white/60 font-mono">{selectedArticle.date}</span>
+                      <span className="text-xs text-white/60 font-mono">• {selectedArticle.readTime}</span>
+                    </div>
+
+                    <h1 className="text-2xl lg:text-3xl font-extrabold text-white leading-tight">
+                      {selectedArticle.title}
+                    </h1>
+
+                    <p className="text-sm font-semibold text-white/90 leading-relaxed p-4 rounded-2xl bg-white/5 border border-white/10 italic">
+                      "{selectedArticle.excerpt}"
+                    </p>
+
+                    <div className="text-sm text-white/90 leading-relaxed space-y-4 pt-2">
+                      <p>{selectedArticle.content}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <>
+                  {activeTab === 'profile' && (
+                    <motion.div
+                      key="tab-profile"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
@@ -1201,7 +1677,7 @@ import {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
                             onClick={() => setSelectedProject(project)}
-                            className="group cursor-pointer p-3 liquid-glass spinning-glow-border rounded-2xl flex flex-col h-[280px] shrink-0 justify-between hover:bg-white/5 transition-all"
+                            className="group cursor-pointer p-3 liquid-glass spinning-glow-border rounded-2xl flex flex-col h-[285px] shrink-0 justify-between hover:bg-white/5 transition-all relative overflow-hidden"
                           >
                             <div className="relative h-[135px] w-full rounded-xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0">
                               <img 
@@ -1214,16 +1690,40 @@ import {
                                   if (original) e.currentTarget.src = original.image;
                                 }}
                               />
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                              {project.demoUrl && (
+                                <div className="absolute top-2 right-2 bg-emerald-950/90 backdrop-blur-md text-emerald-300 border border-emerald-500/40 text-[9px] font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md z-10">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                  <span>CANLI YAYINDA</span>
+                                </div>
+                              )}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3">
                                 <span className="text-[10px] text-white font-bold inline-flex items-center gap-1">
-                                  Detayları Gör <ChevronRight size={10} />
+                                  Detaylar <ChevronRight size={10} />
                                 </span>
+                                {project.demoUrl && (
+                                  <a
+                                    href={project.demoUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-[10px] flex items-center gap-1 shadow-md transition-transform hover:scale-105"
+                                  >
+                                    <ExternalLink size={10} /> Denemeye Git
+                                  </a>
+                                )}
                               </div>
                             </div>
 
                             <div className="space-y-1 px-1 flex-1 flex flex-col justify-center">
-                              <span className="text-[10px] uppercase tracking-wider text-white/90 font-extrabold">{project.category}</span>
-                              <h3 className="text-sm font-extrabold text-white group-hover:text-white truncate leading-snug">{project.title}</h3>
+                              <div className="flex items-center justify-between gap-1">
+                                <span className="text-[10px] uppercase tracking-wider text-white/90 font-extrabold">{project.category}</span>
+                                {project.demoUrl && (
+                                  <span className="text-[9px] text-emerald-400 font-bold flex items-center gap-0.5">
+                                    <ExternalLink size={8} /> Yayında
+                                  </span>
+                                )}
+                              </div>
+                              <h3 className="text-sm font-extrabold text-white group-hover:text-emerald-300 transition-colors truncate leading-snug">{project.title}</h3>
                               <p className="text-xs text-white/95 line-clamp-2 leading-relaxed font-semibold">{project.description}</p>
                             </div>
                           </motion.div>
@@ -1477,291 +1977,16 @@ import {
                   </div>
                 </motion.div>
               )}
+                </>
+              )}
 
             </AnimatePresence>
           </div>
-        </div>
+        </motion.div>
 
       </div>
 
-      {/* PROJECT DETAILS MODAL OVERLAY */}
-      <AnimatePresence>
-        {currentSelectedProject && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 lg:p-6 bg-black/85 backdrop-blur-md select-text">
-            
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="relative w-full max-w-3xl rounded-[2.5rem] liquid-glass-strong overflow-hidden flex flex-col md:flex-row shadow-2xl border border-white/5 max-h-[95vh] md:max-h-[90vh]"
-            >
-              
-              {/* Close Button */}
-              <button 
-                onClick={() => setSelectedProject(null)}
-                className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 text-white/80 hover:text-white flex items-center justify-center transition-all border border-white/15"
-                id="close-modal-btn"
-              >
-                <X size={16} />
-              </button>
 
-              {/* Left Column: Image, Upload & Tech tags */}
-              <div className="w-full md:w-[45%] bg-black/40 p-6 flex flex-col justify-between shrink-0 border-r border-white/10 overflow-y-auto">
-                <div className="space-y-4">
-                  <div className="relative aspect-4/3 w-full rounded-2xl overflow-hidden bg-zinc-950 border border-white/20 shadow-inner group/img">
-                    <img 
-                      src={currentSelectedProject.image} 
-                      alt={currentSelectedProject.title} 
-                      className="w-full h-full object-cover"
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        const original = projects.find(p => p.id === currentSelectedProject.id);
-                        if (original) e.currentTarget.src = original.image;
-                      }}
-                    />
-                  </div>
-
-                  {/* Dynamic Photo Uploader Panel (Only visible in secret Admin Mode) */}
-                  {isAdmin && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2.5 overflow-hidden"
-                    >
-                      <span className="text-[10px] text-white tracking-wider uppercase font-bold flex items-center gap-1.5">
-                        <Upload size={11} className="text-white/80" /> FOTOĞRAF EKLE & DÜZENLE
-                      </span>
-                      
-                      <div className="grid grid-cols-2 gap-2">
-                        <label className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer text-center group transition-all">
-                          <Upload size={14} className="text-white/60 group-hover:text-white group-hover:scale-110 transition-all mb-1" />
-                          <span className="text-[10px] text-white font-bold">Dosya Yükle</span>
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            className="hidden" 
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                  if (typeof reader.result === 'string') {
-                                    handleSaveImage(currentSelectedProject.id, reader.result);
-                                  }
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                          />
-                        </label>
-
-                        <button
-                          onClick={() => {
-                            const url = prompt("Lütfen fotoğrafın web URL adresini yapıştırın:");
-                            if (url) {
-                              handleSaveImage(currentSelectedProject.id, url);
-                            }
-                          }}
-                          className="flex flex-col items-center justify-center p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-center group transition-all cursor-pointer"
-                        >
-                          <span className="text-xs mb-1">🔗</span>
-                          <span className="text-[10px] text-white font-bold">URL Yapıştır</span>
-                        </button>
-                      </div>
-
-                      <div className="flex items-center justify-between text-[9px] px-1 pb-1.5 border-b border-white/5">
-                        <span className="text-white/60">
-                          {projectImages[currentSelectedProject.id] ? (
-                            <span className="text-emerald-400 font-bold">● Özel Görsel Yüklü</span>
-                          ) : (
-                            <span className="text-white/40">Varsayılan Görsel</span>
-                          )}
-                        </span>
-                        {projectImages[currentSelectedProject.id] && (
-                          <button
-                            onClick={() => handleResetImage(currentSelectedProject.id)}
-                            className="text-red-400 hover:text-red-300 font-bold cursor-pointer"
-                          >
-                            Sıfırla
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Detailed Screenshots Manager */}
-                      <div className="pt-1.5 space-y-2">
-                        <span className="text-[10px] text-white/70 tracking-wider uppercase font-bold flex items-center gap-1.5">
-                          📸 DETAYLI GÖRSELLER ({projectDetailedImages[currentSelectedProject.id]?.length || 0})
-                        </span>
-                        <div className="grid grid-cols-2 gap-2">
-                          <label className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer text-center group transition-all">
-                            <Upload size={12} className="text-white/60 group-hover:text-white group-hover:scale-110 transition-all mb-0.5" />
-                            <span className="text-[9px] text-white font-bold">Dosya Yükle</span>
-                            <input 
-                              type="file" 
-                              accept="image/*" 
-                              className="hidden" 
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  const reader = new FileReader();
-                                  reader.onloadend = () => {
-                                    if (typeof reader.result === 'string') {
-                                      handleSaveDetailedImage(currentSelectedProject.id, reader.result);
-                                    }
-                                  };
-                                  reader.readAsDataURL(file);
-                                }
-                              }}
-                            />
-                          </label>
-
-                          <button
-                            onClick={() => {
-                              const url = prompt("Lütfen detaylı görselin web URL adresini yapıştırın:");
-                              if (url) {
-                                handleSaveDetailedImage(currentSelectedProject.id, url);
-                              }
-                            }}
-                            className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-center group transition-all cursor-pointer"
-                          >
-                            <span className="text-xs mb-0.5">🔗</span>
-                            <span className="text-[9px] text-white font-bold">URL Yapıştır</span>
-                          </button>
-                        </div>
-
-                        {(projectDetailedImages[currentSelectedProject.id] || []).length > 0 && (
-                          <div className="flex gap-1.5 overflow-x-auto py-1 max-h-[60px] scrollbar-thin">
-                            {(projectDetailedImages[currentSelectedProject.id] || []).map((img, idx) => (
-                              <div key={idx} className="relative w-10 h-10 rounded-lg border border-white/10 overflow-hidden bg-black shrink-0 group/img-item">
-                                <img src={img} className="w-full h-full object-cover" />
-                                <button
-                                  onClick={() => handleDeleteDetailedImage(currentSelectedProject.id, idx)}
-                                  className="absolute inset-0 bg-red-600/80 text-white flex items-center justify-center opacity-0 group-hover/img-item:opacity-100 transition-opacity cursor-pointer border-none"
-                                >
-                                  <Trash2 size={12} />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-
-                  <div className="space-y-2">
-                    <span className="text-[10px] text-white/75 tracking-wider uppercase font-bold">GELİŞTİRME ARAÇLARI</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {currentSelectedProject.tech.map(tech => (
-                        <span key={tech} className="px-2.5 py-1 liquid-glass rounded-md text-[10px] text-white font-semibold font-mono">
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-6 mt-6 border-t border-white/10 text-center md:text-left">
-                  <span className="text-[9px] uppercase tracking-widest text-white/60 font-semibold">Kategori</span>
-                  <div className="text-xs font-bold text-white mt-0.5">{currentSelectedProject.category}</div>
-                </div>
-              </div>
-
-              {/* Right Column: Descriptions & Highlights */}
-              <div className="flex-1 p-6 lg:p-8 overflow-y-auto flex flex-col justify-between gap-6">
-                <div className="space-y-4">
-                  <div>
-                    <span className="text-[10px] uppercase tracking-wider text-white/70 font-bold">{currentSelectedProject.category}</span>
-                    <h2 className="text-2xl font-extrabold tracking-tight mt-0.5 text-white">{currentSelectedProject.title}</h2>
-                  </div>
-
-                  <div className="space-y-3">
-                    <p className="text-sm text-white font-semibold leading-relaxed">
-                      {currentSelectedProject.description}
-                    </p>
-                    <p className="text-xs text-white/90 leading-relaxed font-normal">
-                      {currentSelectedProject.longDescription}
-                    </p>
-                  </div>
-
-                  {/* Highlights section */}
-                  <div className="space-y-2.5 pt-2">
-                    <span className="text-[10px] uppercase tracking-wider text-white/75 font-bold">ÖNE ÇIKAN KAZANIMLAR</span>
-                    <ul className="space-y-2">
-                      {currentSelectedProject.highlights.map((highlight, index) => (
-                        <li key={index} className="flex items-start gap-2 text-xs text-white/95 font-medium leading-relaxed">
-                          <CheckCircle2 size={12} className="text-white shrink-0 mt-0.5" />
-                          <span>{highlight}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Detailed Application Screenshots Section */}
-                  <div className="space-y-3 pt-4 border-t border-white/10">
-                    <span className="text-[10px] uppercase tracking-wider text-white/75 font-bold flex items-center gap-1.5">
-                      📸 UYGULAMA EKRAN GÖRÜNTÜLERİ
-                    </span>
-
-                    {(projectDetailedImages[currentSelectedProject.id] || []).length > 0 ? (
-                      <div className="grid grid-cols-2 gap-2 max-h-[220px] overflow-y-auto pr-1 scrollbar-thin">
-                        {(projectDetailedImages[currentSelectedProject.id] || []).map((img, index) => (
-                          <motion.div
-                            key={index}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => setActiveLightboxImage(img)}
-                            className="aspect-video rounded-xl border border-white/10 overflow-hidden bg-zinc-950 cursor-pointer shadow-lg hover:border-white/30 transition-all group/screengrab relative"
-                          >
-                            <img
-                              src={img}
-                              alt={`${currentSelectedProject.title} Ekran ${index + 1}`}
-                              className="w-full h-full object-cover"
-                              referrerPolicy="no-referrer"
-                            />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/screengrab:opacity-100 transition-opacity flex items-center justify-center">
-                              <span className="text-[10px] text-white font-bold bg-black/60 px-2 py-1 rounded-full flex items-center gap-1">
-                                <Eye size={10} /> Büyüt
-                              </span>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="p-5 rounded-2xl bg-white/5 border border-white/5 text-center space-y-2">
-                        <div className="text-lg">🖼️</div>
-                        <p className="text-xs text-white/60 leading-relaxed font-medium">
-                          Bu projeye ait detaylı ekran görüntüleri henüz eklenmemiş.
-                        </p>
-                        {isAdmin ? (
-                          <p className="text-[9px] text-emerald-400 font-bold uppercase tracking-wider">
-                            Sol taraftaki yönetim panelinden hemen detay görselleri ekleyebilirsiniz!
-                          </p>
-                        ) : (
-                          <p className="text-[9px] text-white/30 italic">
-                            Yönetici panelinden yeni ekran görüntüleri yüklenebilir.
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Back Button inside modal */}
-                <button 
-                  onClick={() => setSelectedProject(null)}
-                  className="w-full py-2.5 rounded-xl liquid-glass hover:bg-white/5 font-medium text-xs border-none cursor-pointer text-white/80 transition-all hover:text-white"
-                >
-                  Galeriye Geri Dön
-                </button>
-
-              </div>
-
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* SECURE ADMIN INBOX PANEL OVERLAY */}
       {isAdmin && (
@@ -1973,6 +2198,86 @@ import {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Project Estimator Modal Overlay */}
+      <AnimatePresence>
+        {showEstimatorModal && (
+          <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-3xl my-8"
+            >
+              <ProjectEstimator
+                onClose={() => setShowEstimatorModal(false)}
+                onApplyToContact={(msg) => {
+                  setFormData(prev => ({ ...prev, message: msg }));
+                  setShowEstimatorModal(false);
+                  setActiveTab('contact');
+                }}
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Tech Radar Modal Overlay */}
+      <AnimatePresence>
+        {showTechRadarModal && (
+          <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="w-full max-w-4xl my-8 relative"
+            >
+              <button
+                onClick={() => setShowTechRadarModal(false)}
+                className="absolute top-6 right-6 z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer border border-white/15"
+              >
+                <X size={16} />
+              </button>
+              <TechRadar
+                onSelectProject={(id) => {
+                  const proj = projects.find(p => p.id === id);
+                  if (proj) {
+                    setSelectedProject(proj);
+                    setShowTechRadarModal(false);
+                  }
+                }}
+              />
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Developer Terminal Console Modal */}
+      <DeveloperTerminalModal
+        isOpen={showTerminal}
+        onClose={() => setShowTerminal(false)}
+        onNavigateTab={(tab) => {
+          setActiveTab(tab);
+          setShowTerminal(false);
+        }}
+        onSelectProject={(id) => {
+          const proj = projects.find(p => p.id === id);
+          if (proj) {
+            setSelectedProject(proj);
+            setShowTerminal(false);
+          }
+        }}
+      />
+
+      {/* Floating Gemini AI Twin Assistant Drawer */}
+      <AiAssistantDrawer
+        onNavigateToTab={(tab) => setActiveTab(tab)}
+        onOpenEstimator={() => setShowEstimatorModal(true)}
+        onFillContactMessage={(msg) => {
+          setFormData(prev => ({ ...prev, message: msg }));
+          setActiveTab('contact');
+        }}
+      />
 
     </div>
   );

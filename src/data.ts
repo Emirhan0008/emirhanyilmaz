@@ -52,6 +52,10 @@ export const projects: Project[] = [
       "Pil optimizasyonu ve gelişmiş yerel bildirim yönetimi süreçleri",
       "Fotoğrafları kalitesini bozmadan sıkıştıran özel görüntü işleme algoritmaları",
       "PowerShell tabanlı otomatik Git entegrasyon ve hızlı CI/CD scriptleri"
+    ],
+    galleryImages: [
+      "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&q=80",
+      "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=800&q=80"
     ]
   },
   {
@@ -66,6 +70,10 @@ export const projects: Project[] = [
       "Gemini API ile çocukların çizimlerini ve okuma süreçlerini anlık analiz eden yapay zeka modülleri",
       "Özel gereksinimli çocukların dil, iletişim ve motor becerilerine yönelik özel metodoloji",
       "EAS Cloud entegrasyonu sayesinde otonom APK derleme ve sürekli dağıtım"
+    ],
+    galleryImages: [
+      "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80",
+      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80"
     ]
   },
   {
@@ -80,6 +88,10 @@ export const projects: Project[] = [
       "Anatomi ve medikal terimler için optimize edilmiş veritabanı yapısı ve günlük akış",
       "Kullanıcıların odaklanma sürelerini anlık takip eden zamanlayıcı (Timer) modülleri",
       "Dinamik olarak tutulan çalışma istatistikleri ve performans takip grafikleri"
+    ],
+    galleryImages: [
+      "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80",
+      "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?w=800&q=80"
     ]
   },
   {
@@ -94,7 +106,13 @@ export const projects: Project[] = [
       "Mobil uygulamalarla kusursuz çalışan anlık (real-time) senkronizasyon altyapısı",
       "Firebase Realtime Database entegrasyonu ile sıfıra yakın veri gecikmesi",
       "Firebase Hosting sayesinde ultra hızlı ve kararlı canlı dağıtım (deployment) süreci"
-    ]
+    ],
+    galleryImages: [
+      "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80",
+      "https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=800&q=80"
+    ],
+    demoUrl: "https://dersgezgin.web.app",
+    isLive: true
   },
   {
     id: "zit-kelime-harf",
@@ -108,7 +126,13 @@ export const projects: Project[] = [
       "Çocukların bilişsel gelişimini destekleyici interaktif oyun kurguları",
       "Harf eşleme ve zıt kelime tespiti yapan dinamik JavaScript algoritmaları",
       "Vercel entegrasyonu ile kesintisiz ve yüksek performanslı bulut barındırma"
-    ]
+    ],
+    galleryImages: [
+      "https://images.unsplash.com/photo-1596464716127-f2a82984de30?w=800&q=80",
+      "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=800&q=80"
+    ],
+    demoUrl: "https://zit-kelime-harf.vercel.app",
+    isLive: true
   },
   {
     id: "evrak-duzenleyici",
@@ -122,6 +146,10 @@ export const projects: Project[] = [
       "Düzensiz ve dağınık dökümanları akıllıca sınıflandıran Gemini LLM analiz motoru",
       "İsim ve tarih eşleştirmesine dayalı otonom klasör hiyerarşisi oluşturma",
       "Dosya yönetim operasyonlarında insan hatasını tamamen sıfıra indiren kararlılık"
+    ],
+    galleryImages: [
+      "https://images.unsplash.com/photo-1568667256549-094345857637?w=800&q=80",
+      "https://images.unsplash.com/photo-1450133064473-71024230f91b?w=800&q=80"
     ]
   },
   {
@@ -234,7 +262,14 @@ export const projects: Project[] = [
       "Şablonlar üzerindeki milimetrik piksel kayması ve hizalama sorunlarının giderilmesi",
       "İletişim bilgilerini ve portfolyoyu içeren dinamik olarak üretilen QR kod modülü",
       "Farklı kariyer alanları için tasarlanmış şık me modern CV şablonu seçenekleri"
-    ]
+    ],
+    galleryImages: [
+      "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800&q=80",
+      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800&q=80",
+      "https://images.unsplash.com/photo-1517842645767-c639042777db?w=800&q=80"
+    ],
+    demoUrl: "https://ais-pre-4g4f3cmapq75z63jgvnl6j-140000227047.europe-west2.run.app/",
+    isLive: true
   }
 ];
 

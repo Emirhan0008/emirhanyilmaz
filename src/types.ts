@@ -5,8 +5,12 @@ export interface Project {
   description: string;
   longDescription: string;
   image: string;
+  galleryImages?: string[];
   tech: string[];
   highlights: string[];
+  demoUrl?: string;
+  githubUrl?: string;
+  isLive?: boolean;
 }
 
 export interface Education {
