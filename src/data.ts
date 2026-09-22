@@ -9,8 +9,8 @@ import projectSpecialEdu from './assets/images/project_special_edu_1782982504669
 export const profileData = {
   name: "Emirhan YILMAZ",
   title: "Psikolojik Danışman & Yazılımcı",
-  avatar: "https://ymszciupoambjhyagmzt.supabase.co/storage/v1/object/public/media/Gemini_Generated_Image_nzgrsrnzgrsrnzgr.png",
-  about: "Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık mezunu bir profesyonel olarak, insan psikolojisini yenilikçi teknolojilerle birleştiriyorum. Marmara Üniversitesi Yapay Zeka ve Makine Öğrenmesi eğitimiyle pekiştirdiğim teorik bilgimi, 3 yıllık özel eğitim öğretmenliği saha deneyimim ve Python geliştirme becerilerimle harmanlayarak yenilikçi, insan odaklı dijital çözümler üretiyorum.",
+  avatar: "/profile-photo.jpg",
+  about: "Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık mezunuyum. İnsan psikolojisini ve 3 yıllık özel eğitim öğretmenliği saha tecrübemi, yaklaşık 1-2 yıldır aktif olarak geliştirdiğim yapay zeka, Python otomasyonları ve mobil yazılım becerilerimle harmanlayarak yenilikçi ve insan odaklı dijital çözümler üretiyorum.",
   education: {
     school: "Aksaray Üniversitesi",
     degree: "Rehberlik ve Psikolojik Danışmanlık (PDR)",
@@ -18,14 +18,15 @@ export const profileData = {
   } as Education,
   softwareProfile: {
     language: "Python & React Native",
-    level: "Yazılım Geliştirici & Entegrasyon Uzmanı",
-    skills: ["Python (Demet/Pandas/NumPy)", "React Native / Expo", "Gemini API & AI Studio", "Firebase & Cloud NoSQL", "Masaüstü Otomasyonları"]
+    level: "Yazılım Geliştirici (1-2 Yıllık Pratik & Aktif Gelişim)",
+    skills: ["Python (Otomasyon/Pandas)", "React Native / Expo", "Gemini API & AI Studio", "Firebase & Cloud NoSQL", "Masaüstü & Sistem Otomasyonları"]
   },
   aiProfile: {
-    title: "Yapay Zeka (AI) Entegrasyon Uzmanı",
+    title: "Yapay Zeka (AI) & LLM Entegrasyonu",
     certification: "Marmara Üniversitesi Yapay Zeka ve Makine Öğrenmesi Başarı Sertifikası",
-    details: "Büyük Dil Modelleri (LLM), Doğal Dil İşleme (NLP) uygulamaları ve makine öğrenmesi algoritmaları üzerine uzmanlaşmış sertifikasyon eğitimi."
+    details: "1-2 yıldır aktif olarak Büyük Dil Modelleri (LLM), Gemini API istem mühendisliği, Doğal Dil İşleme (NLP) ve makine öğrenmesi uygulamaları üzerinde çalışıyor ve kendimi geliştiriyorum."
   },
+  github: "https://github.com/Emirhan0008",
   experience: {
     title: "Özel Eğitim Öğretmenliği",
     period: "3 Yıl Saha Deneyimi",

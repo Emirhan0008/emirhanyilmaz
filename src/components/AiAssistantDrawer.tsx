@@ -52,7 +52,7 @@ export function AiAssistantDrawer({ onNavigateToTab, onOpenEstimator, onFillCont
     const query = textToSend || input.trim();
     if (!query || isLoading) return;
 
-    soundEngine.playGlassClick();
+    soundEngine.playAiSparkle();
     const userMsg: Message = {
       id: Date.now().toString(),
       sender: 'user',
@@ -72,7 +72,7 @@ export function AiAssistantDrawer({ onNavigateToTab, onOpenEstimator, onFillCont
       });
 
       const data = await res.json();
-      soundEngine.playSwoosh();
+      soundEngine.playSuccessChime();
 
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),

@@ -16,23 +16,23 @@ interface SkillNode {
 
 const SKILL_NODES: SkillNode[] = [
   // AI & ML
-  { id: 'pytorch', name: 'PyTorch / Deep Learning', category: 'ai', level: 92, experience: '3+ Yıl', description: 'Derin sinir ağları, evrişimli ağlar (CNN) ve doğal dil işleme modelleri mimarisi', relatedProjectIds: ['1', '2'] },
-  { id: 'llm', name: 'LLM & Autonomous Agents', category: 'ai', level: 95, experience: '2+ Yıl', description: 'Otonom yapay zeka ajanları, RAG (Retrieval-Augmented Generation) ve istem mühendisliği', relatedProjectIds: ['3', '1'] },
-  { id: 'nlp', name: 'NLP & Duygu Analizi', category: 'ai', level: 90, experience: '3+ Yıl', description: 'Metin analizi, semantik arama ve duygu durumu sınıflandırma sistemleri', relatedProjectIds: ['1', '4'] },
-  { id: 'cv', name: 'Computer Vision & OpenCV', category: 'ai', level: 85, experience: '2+ Yıl', description: 'Görüntü işleme, yüz ve duygu tespiti, nesne tanıma algoritmaları', relatedProjectIds: ['2'] },
+  { id: 'pytorch', name: 'PyTorch / Deep Learning', category: 'ai', level: 75, experience: '1-2 Yıl', description: 'Derin sinir ağları, evrişimli ağlar (CNN) ve model temelleri üzerinde 1-2 yıldır aktif çalışma', relatedProjectIds: ['hece-cizme-forkids', 'ruh-sagligi-portali'] },
+  { id: 'llm', name: 'LLM & Gemini API', category: 'ai', level: 82, experience: '1-2 Yıl', description: 'Büyük Dil Modelleri, Gemini API istem mühendisliği, AI Studio ve akıllı otomasyon ajanları', relatedProjectIds: ['evrak-duzenleyici', 'hece-cizme-forkids', 'ruh-sagligi-portali'] },
+  { id: 'nlp', name: 'NLP & Metin Analitiği', category: 'ai', level: 74, experience: '1-2 Yıl', description: 'Metin işleme, semantik analiz ve rehberlik dökümanları sınıflandırma algoritmaları', relatedProjectIds: ['evrak-duzenleyici', 'meb-ags-yks'] },
+  { id: 'cv', name: 'Görüntü İşleme & OCR', category: 'ai', level: 70, experience: '1 Yıl', description: 'Görüntü optimizasyonu, çizim analizi ve eğitim materyali işleme pratikleri', relatedProjectIds: ['hece-cizme-forkids', 'meb-ags-yks'] },
 
   // Web & Mobile
-  { id: 'python', name: 'Python (FastAPI & Flask)', category: 'web', level: 96, experience: '4+ Yıl', description: 'Yüksek performanslı, asenkron REST & WebSocket API mimarileri', relatedProjectIds: ['1', '3', '4'] },
-  { id: 'react', name: 'React & TypeScript', category: 'web', level: 92, experience: '3+ Yıl', description: 'Sıvı cam (Liquid Glass) tasarımlar, modüler ön yüzler ve asenkron durum yönetimi', relatedProjectIds: ['1', '2', '3', '5'] },
-  { id: 'tailwind', name: 'Tailwind CSS & Motion', category: 'web', level: 95, experience: '3+ Yıl', description: 'Gelişmiş akıcı arayüzler, mikrobileşen animasyonları ve duyarlı tasarım', relatedProjectIds: ['1', '2', '3', '4', '5'] },
+  { id: 'python', name: 'Python (Otomasyon & Script)', category: 'web', level: 80, experience: '1-2 Yıl', description: '1-2 yıldır aktif Python: Masaüstü GUI otomasyonları, dosya tasnifi ve veri kazıma araçları', relatedProjectIds: ['evrak-duzenleyici', 'ide-yonetici', 'otonom-yedekleme', 'simcompanies-market'] },
+  { id: 'react', name: 'React Native & React', category: 'web', level: 78, experience: '1-2 Yıl', description: 'React Native / Expo ile mobil asistanlar ve React ile web tabanlı yönetim portalları', relatedProjectIds: ['meb-ags-yks', 'hece-cizme-forkids', 'medprep', 'dersgezgin'] },
+  { id: 'tailwind', name: 'Tailwind CSS & Tasarım', category: 'web', level: 82, experience: '1-2 Yıl', description: 'Sıvı cam (Liquid Glass) modern arayüzler, mikrobileşenler ve responsive tasarım', relatedProjectIds: ['cv-master', 'dersgezgin', 'zit-kelime-harf'] },
 
   // Data & Cloud
-  { id: 'docker', name: 'Docker & Cloud Run', category: 'data', level: 88, experience: '2+ Yıl', description: 'Konteynerleştirme, sunucusuz dağıtım ve mikroservis yönetimi', relatedProjectIds: ['3', '5'] },
-  { id: 'postgres', name: 'PostgreSQL & MongoDB', category: 'data', level: 85, experience: '3+ Yıl', description: 'İlişkisel ve NoSQL veritabanı modellemesi, indeksleme ve optimize sorgular', relatedProjectIds: ['1', '3'] },
+  { id: 'docker', name: 'Bulut Dağıtım & Hosting', category: 'data', level: 72, experience: '1-2 Yıl', description: 'EAS Cloud APK derleme, Firebase Hosting ve Vercel bulut dağıtım süreçleri', relatedProjectIds: ['dersgezgin', 'zit-kelime-harf', 'hece-cizme-forkids'] },
+  { id: 'postgres', name: 'Firebase & Realtime DB', category: 'data', level: 76, experience: '1-2 Yıl', description: 'Firebase Realtime Database ve mobil veri senkronizasyonu mimarisi', relatedProjectIds: ['dersgezgin', 'medprep'] },
 
   // Psy & UX
-  { id: 'cogpsy', name: 'Bilişsel Psikoloji (PDR)', category: 'psy', level: 98, experience: 'Lisans & Uzmanlık', description: 'Bilişsel davranışçı yaklaşım, duygu düzenleme ve insan odaklı etkileşim tasarımı', relatedProjectIds: ['1', '2'] },
-  { id: 'neuromorphic', name: 'Nöromorfik & Stres Takibi', category: 'psy', level: 88, experience: 'Araştırma', description: 'Biyometrik verilerin ve stres parametrelerinin yapay zeka ile analizi', relatedProjectIds: ['2'] }
+  { id: 'cogpsy', name: 'Bilişsel Psikoloji (PDR)', category: 'psy', level: 96, experience: 'Lisans Derecesi', description: 'Bilişsel davranışçı yaklaşım, duygu düzenleme ve insan odaklı pedagojik tasarım', relatedProjectIds: ['hece-cizme-forkids', 'ruh-sagligi-portali'] },
+  { id: 'neuromorphic', name: 'Özel Eğitim Metodolojisi', category: 'psy', level: 92, experience: '3 Yıl Saha Deneyimi', description: '1. ve 2. kademe özel eğitim sınıflarında teknoloji destekli BEP uygulamaları', relatedProjectIds: ['hece-cizme-forkids', 'zit-kelime-harf'] }
 ];
 
 const CATEGORIES = [

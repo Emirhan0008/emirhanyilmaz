@@ -74,6 +74,7 @@ export function ProjectEstimator({ onApplyToContact, onClose }: ProjectEstimator
 
       const data = await res.json();
       setResult(data);
+      soundEngine.playSuccessChime();
     } catch (err) {
       setResult({
         summary: `${selectedType} projeniz için ${selectedScale} ölçeğinde ve modern mimaride çözümler hazırlanabilir.`,

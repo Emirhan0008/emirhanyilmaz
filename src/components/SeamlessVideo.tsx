@@ -110,13 +110,15 @@ export function SeamlessVideo({ src }: SeamlessVideoProps) {
         src={src}
         autoPlay
         muted
+        loop
         playsInline
         preload="auto"
         onCanPlay={handleCanPlay}
         onLoadedData={() => setIsReady(true)}
+        onError={() => setIsReady(true)}
         referrerPolicy="no-referrer"
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1500ms] pointer-events-none select-none z-10 ${
-          isReady && activeVideo === 'v1' ? 'opacity-[0.85]' : 'opacity-0'
+          activeVideo === 'v1' ? 'opacity-[0.85]' : 'opacity-0'
         }`}
       />
       {/* Video Buffer 2 */}
@@ -125,13 +127,15 @@ export function SeamlessVideo({ src }: SeamlessVideoProps) {
         src={src}
         autoPlay
         muted
+        loop
         playsInline
         preload="auto"
         onCanPlay={handleCanPlay}
         onLoadedData={() => setIsReady(true)}
+        onError={() => setIsReady(true)}
         referrerPolicy="no-referrer"
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-[1500ms] pointer-events-none select-none z-10 ${
-          isReady && activeVideo === 'v2' ? 'opacity-[0.85]' : 'opacity-0'
+          activeVideo === 'v2' ? 'opacity-[0.85]' : 'opacity-0'
         }`}
       />
 

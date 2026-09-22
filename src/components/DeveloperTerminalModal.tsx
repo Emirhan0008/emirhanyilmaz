@@ -77,13 +77,14 @@ export function DeveloperTerminalModal({ isOpen, onClose, onNavigateTab, onSelec
     } else if (cmd === 'skills') {
       responseLines = [
         { id: 's1', type: 'output', text: `Primary Stack: ${profileData.softwareProfile.language}` },
-        { id: 's2', type: 'output', text: `Level: ${profileData.softwareProfile.level}` },
-        { id: 's3', type: 'output', text: `Skills: ${profileData.softwareProfile.skills.join(', ')}` }
+        { id: 's2', type: 'output', text: `Experience: ${profileData.softwareProfile.level}` },
+        { id: 's3', type: 'output', text: `Skills: ${profileData.softwareProfile.skills.join(', ')}` },
+        { id: 's4', type: 'output', text: `GitHub Repo & Code: https://github.com/Emirhan0008` }
       ];
     } else if (cmd === 'contact') {
       responseLines = [
         { id: 'c1', type: 'output', text: 'Email: emirhan0008@gmail.com' },
-        { id: 'c2', type: 'output', text: 'GitHub: https://github.com' },
+        { id: 'c2', type: 'output', text: 'GitHub: https://github.com/Emirhan0008' },
         { id: 'c3', type: 'output', text: 'Instagram: https://instagram.com' }
       ];
     } else if (cmd === 'matrix') {
@@ -202,6 +203,11 @@ export function DeveloperTerminalModal({ isOpen, onClose, onNavigateTab, onSelec
               type="text"
               value={command}
               onChange={(e) => setCommand(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key.length === 1 || e.key === 'Backspace') {
+                  soundEngine.playTerminalKey();
+                }
+              }}
               placeholder="Type a command (e.g. 'help', 'projects', 'ai ...')"
               className="flex-1 bg-transparent text-xs text-white focus:outline-hidden font-mono placeholder-white/20"
               autoFocus

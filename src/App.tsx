@@ -37,6 +37,9 @@ import {
   Volume2,
   VolumeX,
   Music,
+  SkipForward,
+  Pause,
+  Play,
   Cpu,
   Terminal,
   Layers
@@ -50,7 +53,9 @@ import {
 import { ProjectEstimator } from './components/ProjectEstimator';
 import { TechRadar } from './components/TechRadar';
 import { DeveloperTerminalModal } from './components/DeveloperTerminalModal';
-import { soundEngine } from './utils/audioSynth';
+import { soundEngine, PEACEFUL_TRACKS, MusicTrack } from './utils/audioSynth';
+import { ThemeToggle, AppTheme } from './components/ThemeToggle';
+import { PowerShellTerminalWorkspace } from './components/PowerShellTerminalWorkspace';
 
 export interface ContactMessage {
    id: string;
@@ -108,6 +113,40 @@ export interface ContactMessage {
    const [showTechRadarModal, setShowTechRadarModal] = useState(false);
    const [isMuted, setIsMuted] = useState(false);
    const [isAmbientPlaying, setIsAmbientPlaying] = useState(false);
+   const [currentMusicTrack, setCurrentMusicTrack] = useState<MusicTrack>(PEACEFUL_TRACKS[0]);
+
+   // Dual-Theme System: Normal (Modern Liquid Glass) vs Terminal (Hacker CLI)
+   const [theme, setTheme] = useState<AppTheme>(() => {
+     try {
+       const saved = localStorage.getItem('portfolio_theme');
+       return (saved === 'terminal' || saved === 'normal') ? saved : 'normal';
+     } catch {
+       return 'normal';
+     }
+   });
+
+   useEffect(() => {
+     try {
+       localStorage.setItem('portfolio_theme', theme);
+     } catch {}
+     if (theme === 'terminal') {
+       document.documentElement.classList.add('theme-terminal');
+     } else {
+       document.documentElement.classList.remove('theme-terminal');
+     }
+   }, [theme]);
+
+   const toggleTheme = () => {
+     setTheme(prev => (prev === 'normal' ? 'terminal' : 'normal'));
+   };
+
+   useEffect(() => {
+     const unsubscribe = soundEngine.subscribe((playing, track) => {
+       setIsAmbientPlaying(playing);
+       setCurrentMusicTrack(track);
+     });
+     return unsubscribe;
+   }, []);
 
    useEffect(() => {
      const handleKeyDown = (e: KeyboardEvent) => {
@@ -479,14 +518,21 @@ export interface ContactMessage {
   ] as const;
 
   return (
-    <div className="relative min-h-screen w-full bg-black text-white font-sans overflow-x-hidden antialiased select-none">
+    <div className={`relative min-h-screen w-full bg-black text-white ${theme === 'terminal' ? 'theme-terminal font-mono' : 'theme-normal font-sans'} overflow-x-hidden antialiased select-none`}>
       
-      {/* BACKGROUND VIDEO */}
+      {/* BACKGROUND VIDEO & CRT SCANLINE EFFECTS */}
       <div className="fixed inset-0 w-full h-full z-0 overflow-hidden select-none pointer-events-none">
-        <SeamlessVideo src="https://ymszciupoambjhyagmzt.supabase.co/storage/v1/object/public/media/upscaled-video%20(1).mp4" />
+        <SeamlessVideo src="/background.mp4" />
         {/* Subtle vignette to preserve soft depth and text clarity, without stripping video colors */}
         <div className="absolute inset-0 bg-radial from-transparent via-black/10 to-black/60 z-1" />
         <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] z-2" />
+        {/* Terminal CRT Scanlines Overlay when Terminal Mode is active */}
+        {theme === 'terminal' && (
+          <>
+            <div className="absolute inset-0 bg-emerald-950/30 mix-blend-screen z-3" />
+            <div className="absolute inset-0 terminal-scanlines opacity-75 z-4" />
+          </>
+        )}
       </div>
 
       {/* Floating Admin Mode Notification Toast */}
@@ -617,6 +663,21 @@ export interface ContactMessage {
         >
           
           {/* Left Panel Header / Navigation */}
+          {theme === 'terminal' && (
+            <div className="w-full bg-emerald-950/40 border border-emerald-500/40 px-3 py-1.5 flex items-center justify-between text-[11px] font-mono text-emerald-400 mb-4 rounded-xl select-none shadow-[0_0_12px_rgba(16,185,129,0.12)] shrink-0">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block shadow-[0_0_5px_rgba(239,68,68,0.5)]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80 inline-block shadow-[0_0_5px_rgba(234,179,8,0.5)]" />
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
+                <span className="ml-2 text-emerald-300 font-bold tracking-tight">emirhan@portfolio: ~ (bash 80x24)</span>
+              </div>
+              <span className="text-[9px] text-emerald-400 font-mono tracking-wider flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                TTY1_ONLINE
+              </span>
+            </div>
+          )}
+
           <header className="flex items-center justify-between z-10 mb-6 lg:mb-8 shrink-0">
             <div 
               className="flex items-center gap-3 cursor-pointer group"
@@ -646,17 +707,22 @@ export interface ContactMessage {
                   <button
                     key={item.id}
                     onClick={() => {
+                      soundEngine.playTabSwitch();
                       setActiveTab(item.id);
                       setMobileMenuOpen(false);
                     }}
                     className={`px-4 py-1.5 rounded-full transition-all duration-300 font-bold ${
                       activeTab === item.id 
-                        ? 'bg-white/15 text-white shadow-xs' 
-                        : 'text-white/85 hover:text-white hover:bg-white/10'
+                        ? (theme === 'terminal'
+                            ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/60 shadow-[0_0_12px_rgba(52,211,153,0.35)]'
+                            : 'bg-white/15 text-white shadow-xs')
+                        : (theme === 'terminal'
+                            ? 'text-emerald-400/70 hover:text-emerald-300 hover:bg-emerald-950/30'
+                            : 'text-white/85 hover:text-white hover:bg-white/10')
                     }`}
                     id={`nav-btn-${item.id}`}
                   >
-                    {item.label}
+                    {theme === 'terminal' ? `> ${item.label.toUpperCase()}_` : item.label}
                   </button>
                 ))}
               </nav>
@@ -686,18 +752,31 @@ export interface ContactMessage {
                   <button
                     key={item.id}
                     onClick={() => {
+                      soundEngine.playTabSwitch();
                       setActiveTab(item.id);
                       setMobileMenuOpen(false);
                     }}
                     className={`w-full py-2.5 px-4 rounded-xl text-left text-sm transition-all ${
                       activeTab === item.id 
-                        ? 'bg-white/10 text-white font-bold' 
-                        : 'text-white/85 hover:text-white hover:bg-white/10 font-semibold'
+                        ? (theme === 'terminal'
+                            ? 'bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/40'
+                            : 'bg-white/10 text-white font-bold')
+                        : (theme === 'terminal'
+                            ? 'text-emerald-400/80 font-mono hover:bg-emerald-950/20'
+                            : 'text-white/85 hover:text-white hover:bg-white/10 font-semibold')
                     }`}
                   >
-                    {item.label}
+                    {theme === 'terminal' ? `> ${item.label.toUpperCase()}` : item.label}
                   </button>
                 ))}
+
+                {/* Mobile Theme Toggle Section */}
+                <div className="pt-2 mt-1 border-t border-white/10 flex items-center justify-between px-2">
+                  <span className="text-xs font-mono text-white/70">
+                    {theme === 'terminal' ? 'CLI Terminal Modu' : 'Modern Cam UI'}
+                  </span>
+                  <ThemeToggle theme={theme} onToggle={toggleTheme} />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
@@ -759,16 +838,30 @@ export interface ContactMessage {
                     </span>
                   </div>
 
-                  <button 
-                    onClick={() => setActiveTab('projects')}
-                    className="inline-flex items-center gap-3.5 pl-6 pr-2 py-2 liquid-glass-strong hover:bg-white/5 rounded-full text-sm font-bold transition-all group hover:scale-105 active:scale-95"
-                    id="cta-explore-projects"
-                  >
-                    <span>Projelerimi Keşfet</span>
-                    <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-white transition-transform duration-300 group-hover:translate-x-1">
-                      <ArrowRight size={14} />
-                    </div>
-                  </button>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button 
+                      onClick={() => setActiveTab('projects')}
+                      className="inline-flex items-center gap-3.5 pl-6 pr-2 py-2 liquid-glass-strong hover:bg-white/5 rounded-full text-sm font-bold transition-all group hover:scale-105 active:scale-95"
+                      id="cta-explore-projects"
+                    >
+                      <span>Projelerimi Keşfet</span>
+                      <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-white transition-transform duration-300 group-hover:translate-x-1">
+                        <ArrowRight size={14} />
+                      </div>
+                    </button>
+
+                    <a
+                      href="https://github.com/Emirhan0008"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2.5 px-4 py-2 liquid-glass-strong hover:bg-white/15 rounded-full text-xs sm:text-sm font-semibold font-mono text-white transition-all hover:scale-105 active:scale-95 border border-white/20 hover:border-emerald-400/50 shadow-md group"
+                      title="GitHub: Emirhan0008"
+                    >
+                      <Github size={15} className="text-white group-hover:text-emerald-400 transition-colors" />
+                      <span>github.com/Emirhan0008</span>
+                      <ExternalLink size={12} className="opacity-60 group-hover:opacity-100 transition-opacity" />
+                    </a>
+                  </div>
                 </motion.div>
               ) : activeTab === 'projects' ? (
                 // Render project view inside left panel on mobile only
@@ -953,15 +1046,23 @@ export interface ContactMessage {
             <blockquote className="text-sm md:text-base font-normal italic leading-relaxed text-white">
               "Zihnin derinliklerini, algoritmanın <span className="font-serif text-white font-medium">gücüyle anlamak</span>."
             </blockquote>
-            <div className="flex items-center gap-3 w-full">
-              <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-white/20" />
+            <div className="flex items-center justify-between gap-3 w-full pt-1">
               <span 
                 onClick={handleFooterClick}
                 className="text-[10px] tracking-widest text-white/90 uppercase font-bold select-none cursor-default"
               >
                 EMİRHAN YILMAZ
               </span>
-              <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-white/20" />
+              <a 
+                href="https://github.com/Emirhan0008" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="inline-flex items-center gap-1.5 text-[11px] font-mono text-white/80 hover:text-emerald-400 transition-colors font-bold px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10"
+              >
+                <Github size={12} />
+                <span>github.com/Emirhan0008</span>
+                <ExternalLink size={10} className="opacity-60" />
+              </a>
             </div>
           </footer>
 
@@ -973,18 +1074,25 @@ export interface ContactMessage {
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className={`w-full ${isDetailActive ? 'lg:w-[72%]' : 'lg:w-[48%]'} h-full flex flex-col min-h-0 relative select-text transition-all duration-500 ease-out`}
         >
-          
+
           {/* Top Bar (Socials, Innovative Actions & Audio Controls) */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-full overflow-x-auto">
+              {/* Dual-Theme Skeuomorphic Switch (Normal vs Terminal Mode) */}
+              <ThemeToggle theme={theme} onToggle={toggleTheme} className="shrink-0" />
+              <div className="w-[1px] h-5 bg-white/15 mx-0.5 shrink-0" />
+
               <a 
-                href="https://github.com" 
+                href="https://github.com/Emirhan0008" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
-                title="GitHub Profile"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full hover:bg-white/15 text-white font-mono text-xs font-bold transition-all shrink-0 bg-white/5 border border-white/10 hover:border-emerald-400/40 group"
+                title="GitHub: Emirhan0008"
               >
-                <Github size={14} />
+                <Github size={13} className="text-white group-hover:text-emerald-400 transition-colors" />
+                <span className="hidden sm:inline">github.com/Emirhan0008</span>
+                <span className="sm:hidden">GitHub</span>
+                <ExternalLink size={10} className="opacity-60 group-hover:opacity-100" />
               </a>
               <a 
                 href="https://instagram.com" 
@@ -1011,18 +1119,23 @@ export interface ContactMessage {
                 {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
               </button>
 
-              {/* Ambient Focus Generator */}
+              {/* Cyber/Tech Background Music Player Toggle */}
               <button
                 onClick={() => {
-                  const playing = soundEngine.toggleAmbientFocusSoundscape();
-                  setIsAmbientPlaying(playing);
+                  soundEngine.toggleAmbientFocusSoundscape();
                 }}
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
-                  isAmbientPlaying ? 'text-emerald-400 bg-emerald-500/20 animate-pulse' : 'text-white/70 hover:bg-white/10'
+                className={`relative w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                  isAmbientPlaying ? 'text-emerald-400 bg-emerald-500/20 shadow-[0_0_12px_rgba(52,211,153,0.4)]' : 'text-white/70 hover:bg-white/10'
                 }`}
-                title={isAmbientPlaying ? "Sıvı Odaklanma Sesini Durdur" : "Sıvı Odaklanma Sesini Başlat"}
+                title={isAmbientPlaying ? `Siber & Teknoloji Fon Müziğini Durdur (${currentMusicTrack.title})` : "Fütüristik Siber Fon Müziğini Başlat (Cyber Synthwave / Cyberspace Drift)"}
               >
-                <Music size={14} />
+                <Music size={14} className={isAmbientPlaying ? 'animate-pulse' : ''} />
+                {isAmbientPlaying && (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                )}
               </button>
 
               {/* Developer Terminal Mode */}
@@ -1070,6 +1183,24 @@ export interface ContactMessage {
 
           {/* DYNAMIC CONTENT SWITCHER */}
           <div className="flex-1 flex flex-col min-h-0">
+            {theme === 'terminal' ? (
+              <PowerShellTerminalWorkspace
+                onSwitchToNormal={() => {
+                  setTheme('normal');
+                  setActiveTab('projects');
+                }}
+                onOpenProjectModal={(p) => {
+                  setTheme('normal');
+                  setActiveTab('projects');
+                  setSelectedProject(p);
+                }}
+                onOpenArticleModal={(a) => {
+                  setTheme('normal');
+                  setActiveTab('articles');
+                  setSelectedArticle(a);
+                }}
+              />
+            ) : (
             <AnimatePresence mode="wait">
               
               {/* VIEW 1: SELECTED PROJECT DETAIL VIEW (Dynamic layout shift inside right column) */}
@@ -1488,16 +1619,16 @@ export interface ContactMessage {
                             </div>
                           </div>
 
-                          {/* Python Card */}
+                          {/* Python & AI Card */}
                           <div className="p-5 liquid-glass spinning-glow-border rounded-3xl flex flex-col gap-3 group transition-all hover:bg-white/5">
                             <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white transition-transform group-hover:scale-110">
                               <BookOpen size={16} />
                             </div>
                             <div>
-                              <h4 className="text-xs text-white/95 uppercase tracking-widest font-bold">YAZILIM PROFİLİ</h4>
-                              <span className="text-sm font-extrabold text-white block mt-0.5">{profileData.softwareProfile.language} Geliştirici</span>
+                              <h4 className="text-xs text-white/95 uppercase tracking-widest font-bold">YAZILIM & YAPAY ZEKA</h4>
+                              <span className="text-sm font-extrabold text-white block mt-0.5">1-2 Yıllık Pratik Gelişim</span>
                               <p className="text-[11px] text-white font-medium mt-1.5 leading-relaxed">
-                                Başlangıç seviyesinde Python, klinik veri analizleri, yapay zeka entegrasyonu ve otomasyonlar.
+                                Yaklaşık 1-2 yıldır aktif olarak Python otomasyonları, Gemini API entegrasyonu ve mobil yazılım geliştirerek üretiyorum.
                               </p>
                             </div>
                           </div>
@@ -1516,9 +1647,9 @@ export interface ContactMessage {
                           <div className="flex gap-3 relative pl-4 border-l border-white/10">
                             <div className="absolute -left-[4.5px] top-1.5 w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
                             <div className="space-y-0.5">
-                              <span className="text-[9px] font-extrabold text-emerald-400 font-mono">ŞİMDİ</span>
-                              <h4 className="text-xs font-bold text-white">Yapay Zeka Entegratörü & Mobil Geliştirici</h4>
-                              <p className="text-[10px] text-white/75 leading-relaxed">Python asistanları, Gemini API & React Native mobil çözümleri.</p>
+                              <span className="text-[9px] font-extrabold text-emerald-400 font-mono">GÜNCEL (1-2 YILDIR GELİŞİM)</span>
+                              <h4 className="text-xs font-bold text-white">Yazılım & Yapay Zeka Geliştiricisi (1-2 Yıl)</h4>
+                              <p className="text-[10px] text-white/75 leading-relaxed">1-2 yıldır Python otomasyonları, Gemini API istem mühendisliği ve React Native mobil projeleri üzerine yoğunlaşıyorum.</p>
                             </div>
                           </div>
                           {/* Node 2 */}
@@ -1834,7 +1965,19 @@ export interface ContactMessage {
                     </div>
 
                     {/* Quick Contact Action Pills */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                      <a
+                        href="https://github.com/Emirhan0008"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2.5 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer group"
+                        title="GitHub Profili: Emirhan0008"
+                      >
+                        <Github size={14} className="text-white/70 group-hover:text-emerald-400 shrink-0 transition-colors" />
+                        <span className="truncate font-mono">Emirhan0008</span>
+                        <ExternalLink size={11} className="text-white/40 ml-auto shrink-0 group-hover:text-white" />
+                      </a>
+
                       <button
                         type="button"
                         onClick={() => {
@@ -1853,7 +1996,7 @@ export interface ContactMessage {
                         className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2.5 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer"
                       >
                         <Mail size={14} className="text-white/70 shrink-0" />
-                        <span className="truncate">E-Posta İstemcisi İle Gönder</span>
+                        <span className="truncate">E-Posta İstemcisi</span>
                       </a>
 
                       <a
@@ -1981,6 +2124,7 @@ export interface ContactMessage {
               )}
 
             </AnimatePresence>
+            )}
           </div>
         </motion.div>
 
@@ -2268,6 +2412,61 @@ export interface ContactMessage {
           }
         }}
       />
+
+      {/* Floating Cybernetic Music Mini-Player Pill */}
+      <AnimatePresence>
+        {isAmbientPlaying && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            className="fixed bottom-6 left-6 z-[140] flex items-center gap-3 px-4 py-2.5 rounded-full liquid-glass-strong border border-emerald-500/30 shadow-[0_0_24px_rgba(16,185,129,0.2)] backdrop-blur-xl"
+          >
+            {/* Animated Equalizer Wave */}
+            <div className="flex items-end gap-0.5 h-3.5 w-4 shrink-0">
+              <span className="w-0.5 bg-emerald-400 rounded-full animate-[bounce_0.8s_infinite]" style={{ height: '70%' }} />
+              <span className="w-0.5 bg-emerald-400 rounded-full animate-[bounce_1.1s_infinite_0.2s]" style={{ height: '100%' }} />
+              <span className="w-0.5 bg-emerald-400 rounded-full animate-[bounce_0.9s_infinite_0.4s]" style={{ height: '50%' }} />
+            </div>
+
+            <div className="flex flex-col text-left">
+              <span className="text-[10px] font-extrabold text-white tracking-wide flex items-center gap-1.5">
+                {currentMusicTrack.title}
+                <span className="px-1.5 py-0.5 text-[8px] bg-emerald-500/20 text-emerald-300 rounded font-mono font-bold tracking-tight uppercase">
+                  {currentMusicTrack.genre || 'CYBER'}
+                </span>
+              </span>
+              <span className="text-[9px] text-white/50 font-medium truncate max-w-[150px]">
+                {currentMusicTrack.subtitle}
+              </span>
+            </div>
+
+            {/* Next Track Button */}
+            <button
+              onClick={() => {
+                soundEngine.playGlassClick();
+                soundEngine.nextTrack();
+              }}
+              className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+              title="Sonraki Siber Parçaya Geç"
+            >
+              <SkipForward size={12} />
+            </button>
+
+            {/* Pause / Stop */}
+            <button
+              onClick={() => {
+                soundEngine.playGlassClick();
+                soundEngine.toggleAmbientFocusSoundscape();
+              }}
+              className="w-7 h-7 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 flex items-center justify-center transition-all cursor-pointer"
+              title="Müziği Durdur"
+            >
+              <Pause size={12} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Floating Gemini AI Twin Assistant Drawer */}
       <AiAssistantDrawer
