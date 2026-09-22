@@ -413,58 +413,6 @@ class SoundEngine {
     } catch {}
   }
 
-  /**
-   * Synthesized Toy Ball Bouncing / Swat sound effect
-   */
-  public playBallBounce() {
-    if (this.isMuted) return;
-    try {
-      this.initCtx();
-      if (!this.ctx) return;
-      const t = this.ctx.currentTime;
-
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(320, t);
-      osc.frequency.exponentialRampToValueAtTime(140, t + 0.12);
-
-      gain.gain.setValueAtTime(0.08, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
-
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.13);
-    } catch {}
-  }
-
-  /**
-   * Synthesized playful cat jump / pounce sound
-   */
-  public playCatPounce() {
-    if (this.isMuted) return;
-    try {
-      this.initCtx();
-      if (!this.ctx) return;
-      const t = this.ctx.currentTime;
-
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(220, t);
-      osc.frequency.exponentialRampToValueAtTime(480, t + 0.15);
-
-      gain.gain.setValueAtTime(0.05, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
-
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.19);
-    } catch {}
-  }
-
   private getOrCreateAudio(): HTMLAudioElement | null {
     if (typeof window === 'undefined') return null;
     if (!this.audioElement) {
