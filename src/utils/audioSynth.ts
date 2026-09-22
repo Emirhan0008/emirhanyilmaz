@@ -340,6 +340,79 @@ class SoundEngine {
     } catch {}
   }
 
+  /**
+   * Synthesized Cute Cat Meow Sound Effect
+   */
+  public playCatMeow() {
+    if (this.isMuted) return;
+    try {
+      this.initCtx();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+
+      // Frequency glide: starts at 480Hz, glides up to 780Hz, gently drops to 520Hz
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(1600, t);
+      filter.frequency.exponentialRampToValueAtTime(800, t + 0.35);
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(460, t);
+      osc.frequency.linearRampToValueAtTime(740, t + 0.12);
+      osc.frequency.exponentialRampToValueAtTime(510, t + 0.32);
+
+      gain.gain.setValueAtTime(0.001, t);
+      gain.gain.linearRampToValueAtTime(0.09, t + 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.ctx.destination);
+
+      osc.start(t);
+      osc.stop(t + 0.36);
+    } catch {}
+  }
+
+  /**
+   * Synthesized Cute Cat Purr Sound Effect
+   */
+  public playCatPurr() {
+    if (this.isMuted) return;
+    try {
+      this.initCtx();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+
+      const osc = this.ctx.createOscillator();
+      const lfo = this.ctx.createOscillator();
+      const lfoGain = this.ctx.createGain();
+      const mainGain = this.ctx.createGain();
+
+      lfo.frequency.setValueAtTime(26, t); // 26Hz purr vibration
+      lfoGain.gain.setValueAtTime(0.04, t);
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(75, t);
+
+      mainGain.gain.setValueAtTime(0.04, t);
+      mainGain.gain.linearRampToValueAtTime(0.06, t + 0.3);
+      mainGain.gain.exponentialRampToValueAtTime(0.001, t + 0.9);
+
+      lfo.connect(lfoGain.gain);
+      osc.connect(mainGain);
+      mainGain.connect(this.ctx.destination);
+
+      lfo.start(t);
+      osc.start(t);
+      lfo.stop(t + 0.9);
+      osc.stop(t + 0.9);
+    } catch {}
+  }
+
   private getOrCreateAudio(): HTMLAudioElement | null {
     if (typeof window === 'undefined') return null;
     if (!this.audioElement) {

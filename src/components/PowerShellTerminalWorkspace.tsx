@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { Terminal, Send, HelpCircle, CornerDownLeft, Sparkles, Folder, FileText, ArrowRight, RefreshCw, Layers } from 'lucide-react';
+import { Terminal, Send, HelpCircle, CornerDownLeft, Sparkles, Folder, FileText, ArrowRight, RefreshCw, Layers, Maximize2, Minimize2, ExternalLink } from 'lucide-react';
 import { profileData, projects, articles } from '../data';
 import { soundEngine } from '../utils/audioSynth';
 import { Project, Article } from '../types';
@@ -12,10 +12,37 @@ interface TerminalLine {
 }
 
 interface PowerShellTerminalWorkspaceProps {
-  onSwitchToNormal: () => void;
+  onSwitchToNormal: (tab?: 'profile' | 'projects' | 'articles' | 'contact') => void;
   onOpenProjectModal?: (project: Project) => void;
   onOpenArticleModal?: (article: Article) => void;
 }
+
+export const PulsingNormalOpenButton: React.FC<{
+  onClick: () => void;
+  label?: string;
+  tooltip?: string;
+}> = ({
+  onClick,
+  label = "Normal Pencerede Aç",
+  tooltip = "Bu içeriği görsel cam arayüzde zengin kart görünümünde inceleyin"
+}) => {
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        soundEngine.playGlassClick();
+        onClick();
+      }}
+      className="relative inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 text-black font-extrabold text-[10px] tracking-wide shadow-[0_0_18px_rgba(52,211,153,0.7)] animate-pulse hover:scale-105 active:scale-95 transition-all cursor-pointer hover:brightness-110 shrink-0 border border-emerald-200 select-none group"
+      title={tooltip}
+    >
+      <span className="w-2 h-2 rounded-full bg-emerald-950 animate-ping absolute -top-1 -right-1" />
+      <Sparkles size={11} className="text-black animate-spin" style={{ animationDuration: '3.5s' }} />
+      <span>{label}</span>
+      <ExternalLink size={10} className="text-black ml-0.5" />
+    </button>
+  );
+};
 
 export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspaceProps> = ({
   onSwitchToNormal,
@@ -27,8 +54,9 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
   const [history, setHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
   
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Initial PowerShell Welcome Lines
@@ -60,14 +88,22 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
     }
   ]);
 
-  // Always keep terminal scrolled to latest line
+  // Keep terminal internal container scrolled to latest line WITHOUT scrolling the window
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+    }
   }, [lines, isProcessing]);
 
-  // Global Ctrl+C handler to clear the terminal
+  // Escape to exit Fullscreen & Global Ctrl+C handler to clear the terminal
   useEffect(() => {
     const handleGlobalKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+        soundEngine.playGlassClick();
+        return;
+      }
+
       if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C')) {
         const selection = window.getSelection()?.toString();
         // Clear terminal if no text is being selected for copying, or if focused inside terminal
@@ -81,11 +117,11 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, []);
+  }, [isFullscreen]);
 
-  // Keep input focused when clicking on the workspace
+  // Keep input focused when clicking on the workspace without window scrolling
   const handleContainerClick = () => {
-    inputRef.current?.focus();
+    inputRef.current?.focus({ preventScroll: true });
   };
 
   const getPromptString = () => {
@@ -133,8 +169,11 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
         type: 'output',
         elements: (
           <div className="space-y-3 py-1 font-mono text-xs">
-            <div className="text-emerald-300 font-bold border-b border-emerald-500/30 pb-1">
-              POWERSHELL PORTFOLYO KOMUT KILAVUZU (v7.4)
+            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2 gap-2">
+              <div className="text-emerald-300 font-bold truncate">
+                POWERSHELL PORTFOLYO KOMUT KILAVUZU (v7.4)
+              </div>
+              <PulsingNormalOpenButton onClick={() => onSwitchToNormal('profile')} label="Normal Pencerede Aç" />
             </div>
             <div className="text-white/80">
               Bu terminal ortamında Emirhan Yılmaz&apos;ın tüm projelerini, yayınlarını, teknik becerilerini ve özgeçmişini doğrudan komut satırından inceleyebilirsiniz.
@@ -302,19 +341,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
               <div className="font-mono text-xs space-y-2 py-1">
                 <div className="flex items-center justify-between border-b border-white/10 pb-1.5 gap-2">
                   <div className="text-white/60">Dizin: {currentPath}</div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      soundEngine.playGlassClick();
-                      onSwitchToNormal();
-                    }}
-                    className="relative inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 text-black font-extrabold text-[10px] tracking-wide shadow-[0_0_18px_rgba(52,211,153,0.7)] animate-pulse hover:scale-105 active:scale-95 transition-all cursor-pointer hover:brightness-110 shrink-0 border border-emerald-200 select-none group"
-                    title="Görsel Cam Arayüze geç ve projeleri galeri kartları halinde incele"
-                  >
-                    <span className="w-2 h-2 rounded-full bg-emerald-950 animate-ping absolute -top-1 -right-1" />
-                    <Sparkles size={11} className="text-black animate-spin" style={{ animationDuration: '3.5s' }} />
-                    <span>Normal Modda Göster</span>
-                  </button>
+                  <PulsingNormalOpenButton onClick={() => onSwitchToNormal('projects')} label="Normal Pencerede Aç" />
                 </div>
                 <div className="grid grid-cols-12 text-white/50 border-b border-white/10 pb-1 text-[11px] font-bold">
                   <span className="col-span-2">Mode</span>
@@ -359,7 +386,10 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
             type: 'table',
             elements: (
               <div className="font-mono text-xs space-y-2 py-1">
-                <div className="text-white/60">Dizin: {currentPath}</div>
+                <div className="flex items-center justify-between border-b border-white/10 pb-1.5 gap-2">
+                  <div className="text-white/60">Dizin: {currentPath}</div>
+                  <PulsingNormalOpenButton onClick={() => onSwitchToNormal('articles')} label="Normal Pencerede Aç" />
+                </div>
                 <div className="grid grid-cols-12 text-white/50 border-b border-white/10 pb-1 text-[11px] font-bold">
                   <span className="col-span-2">Mode</span>
                   <span className="col-span-3">LastWriteTime</span>
@@ -402,7 +432,10 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
           type: 'table',
           elements: (
             <div className="font-mono text-xs space-y-2 py-1">
-              <div className="text-white/60">Dizin: {currentPath}</div>
+              <div className="flex items-center justify-between border-b border-white/10 pb-1.5 gap-2">
+                <div className="text-white/60">Dizin: {currentPath}</div>
+                <PulsingNormalOpenButton onClick={() => onSwitchToNormal('projects')} label="Normal Pencerede Aç" />
+              </div>
               <div className="grid grid-cols-12 text-white/50 border-b border-white/10 pb-1 text-[11px] font-bold">
                 <span className="col-span-2">Mode</span>
                 <span className="col-span-3">LastWriteTime</span>
@@ -516,8 +549,11 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
             type: 'output',
             elements: (
               <div className="font-mono text-xs space-y-2 p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-lg">
-                <div className="text-amber-400 font-bold border-b border-emerald-500/30 pb-1">
-                  === {profileData.name.toUpperCase()} | ÖZGEÇMİŞ & BİYOGRAFİ ===
+                <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2 gap-2">
+                  <div className="text-amber-400 font-bold truncate">
+                    === {profileData.name.toUpperCase()} | ÖZGEÇMİŞ & BİYOGRAFİ ===
+                  </div>
+                  <PulsingNormalOpenButton onClick={() => onSwitchToNormal('profile')} label="Normal Pencerede Aç" />
                 </div>
                 <div className="text-emerald-300 font-bold">{profileData.title}</div>
                 <div className="text-white/90 leading-relaxed">{profileData.about}</div>
@@ -543,8 +579,11 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
             type: 'output',
             elements: (
               <div className="font-mono text-xs p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-lg space-y-2">
-                <div className="text-amber-400 font-bold border-b border-emerald-500/30 pb-1">
-                  === TEKNİK YETENEKLER & TEKNOLOJİ YIĞINI (JSON) ===
+                <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2 gap-2">
+                  <div className="text-amber-400 font-bold truncate">
+                    === TEKNİK YETENEKLER & TEKNOLOJİ YIĞINI (JSON) ===
+                  </div>
+                  <PulsingNormalOpenButton onClick={() => onSwitchToNormal('profile')} label="Normal Pencerede Aç" />
                 </div>
                 <pre className="text-emerald-300 text-[11px] leading-relaxed overflow-x-auto whitespace-pre">
 {JSON.stringify({
@@ -581,8 +620,11 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
             type: 'output',
             elements: (
               <div className="font-mono text-xs p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-lg space-y-2">
-                <div className="text-amber-400 font-bold border-b border-emerald-500/30 pb-1">
-                  === SAHA & KARİYER DENEYİM LOGU ===
+                <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2 gap-2">
+                  <div className="text-amber-400 font-bold truncate">
+                    === SAHA & KARİYER DENEYİM LOGU ===
+                  </div>
+                  <PulsingNormalOpenButton onClick={() => onSwitchToNormal('profile')} label="Normal Pencerede Aç" />
                 </div>
                 <div className="space-y-2">
                   <div className="border-l-2 border-emerald-400 pl-3">
@@ -617,8 +659,11 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
             type: 'output',
             elements: (
               <div className="font-mono text-xs p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-lg space-y-2">
-                <div className="text-amber-400 font-bold border-b border-emerald-500/30 pb-1">
-                  # Contact.ps1 - İletişim Kanalları
+                <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2 gap-2">
+                  <div className="text-amber-400 font-bold truncate">
+                    # Contact.ps1 - İletişim Kanalları
+                  </div>
+                  <PulsingNormalOpenButton onClick={() => onSwitchToNormal('contact')} label="Normal Pencerede Aç" />
                 </div>
                 <div className="space-y-1 text-white/90 text-xs">
                   <div>$Email    = <span className="text-emerald-300">&quot;emirhan0008@gmail.com&quot;</span></div>
@@ -653,24 +698,17 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                     <span>PROJE: {foundProject.title}</span>
                     <span className="text-amber-300 text-xs font-normal">[{foundProject.category}]</span>
                   </div>
-                  {/* Yanıp sönen Normal Modda Göster butonu */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      soundEngine.playGlassClick();
+                  <PulsingNormalOpenButton 
+                    onClick={() => {
                       if (onOpenProjectModal) {
                         onOpenProjectModal(foundProject);
                       } else {
-                        onSwitchToNormal();
+                        onSwitchToNormal('projects');
                       }
                     }}
-                    className="relative inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 text-black font-extrabold text-[10px] tracking-wide shadow-[0_0_18px_rgba(52,211,153,0.7)] animate-pulse hover:scale-105 active:scale-95 transition-all cursor-pointer hover:brightness-110 shrink-0 border border-emerald-200 select-none group"
-                    title="Bu projeyi normal zengin kart ve canlı demo modunda aç"
-                  >
-                    <span className="w-2 h-2 rounded-full bg-emerald-950 animate-ping absolute -top-1 -right-1" />
-                    <Sparkles size={11} className="text-black animate-spin" style={{ animationDuration: '3.5s' }} />
-                    <span>Normal Modda Göster</span>
-                  </button>
+                    label="Normal Pencerede Aç"
+                    tooltip="Bu projeyi normal zengin kart ve canlı demo modunda aç"
+                  />
                 </div>
                 <div className="text-white/90 leading-relaxed">{foundProject.description}</div>
                 {foundProject.longDescription && (
@@ -719,8 +757,21 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
             type: 'output',
             elements: (
               <div className="font-mono text-xs p-3 bg-emerald-950/25 border border-emerald-500/40 rounded-lg space-y-2">
-                <div className="text-cyan-400 font-bold text-sm border-b border-cyan-500/30 pb-1">
-                  YAYIN: {foundArticle.title}
+                <div className="flex items-center justify-between border-b border-cyan-500/30 pb-2 gap-2">
+                  <div className="text-cyan-400 font-bold text-sm truncate">
+                    YAYIN: {foundArticle.title}
+                  </div>
+                  <PulsingNormalOpenButton 
+                    onClick={() => {
+                      if (onOpenArticleModal) {
+                        onOpenArticleModal(foundArticle);
+                      } else {
+                        onSwitchToNormal('articles');
+                      }
+                    }}
+                    label="Normal Pencerede Aç"
+                    tooltip="Bu makaleyi zengin okuma modunda aç"
+                  />
                 </div>
                 <div className="flex gap-4 text-[11px] text-white/60">
                   <span>Tarih: {foundArticle.date}</span>
@@ -771,20 +822,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                 <div className="text-emerald-400 font-bold truncate">
                   EMIRHAN YILMAZ — YENİLİKÇİ PROJE KATALOĞU ({projects.length} Proje)
                 </div>
-                {/* Yanıp sönen Normal Modda Göster butonu */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    soundEngine.playGlassClick();
-                    onSwitchToNormal();
-                  }}
-                  className="relative inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 text-black font-extrabold text-[10px] tracking-wide shadow-[0_0_18px_rgba(52,211,153,0.7)] animate-pulse hover:scale-105 active:scale-95 transition-all cursor-pointer hover:brightness-110 shrink-0 border border-emerald-200 select-none group"
-                  title="Cam Arayüze geç ve projeleri modern kart galerisinde incele"
-                >
-                  <span className="w-2 h-2 rounded-full bg-emerald-950 animate-ping absolute -top-1 -right-1" />
-                  <Sparkles size={11} className="text-black animate-spin" style={{ animationDuration: '3.5s' }} />
-                  <span>Normal Modda Göster</span>
-                </button>
+                <PulsingNormalOpenButton onClick={() => onSwitchToNormal('projects')} label="Normal Pencerede Aç" />
               </div>
               <div className="space-y-1.5">
                 {projects.map((p, i) => (
@@ -844,20 +882,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                 <div className="text-cyan-400 font-bold truncate">
                   YAYINLAR & BİLİMSEL İÇERİKLER ({articles.length} Makale)
                 </div>
-                {/* Yanıp sönen Normal Modda Göster butonu */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    soundEngine.playGlassClick();
-                    onSwitchToNormal();
-                  }}
-                  className="relative inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 text-black font-extrabold text-[10px] tracking-wide shadow-[0_0_18px_rgba(34,211,238,0.7)] animate-pulse hover:scale-105 active:scale-95 transition-all cursor-pointer hover:brightness-110 shrink-0 border border-cyan-200 select-none group"
-                  title="Cam Arayüze geç ve makaleleri modern okuma panelinde incele"
-                >
-                  <span className="w-2 h-2 rounded-full bg-cyan-950 animate-ping absolute -top-1 -right-1" />
-                  <Sparkles size={11} className="text-black animate-spin" style={{ animationDuration: '3.5s' }} />
-                  <span>Normal Modda Göster</span>
-                </button>
+                <PulsingNormalOpenButton onClick={() => onSwitchToNormal('articles')} label="Normal Pencerede Aç" />
               </div>
               <div className="space-y-1.5">
                 {articles.map((a, i) => (
@@ -1276,33 +1301,66 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
   return (
     <div 
       onClick={handleContainerClick}
-      className="w-full h-full flex flex-col rounded-3xl bg-[#03130d]/95 border border-emerald-500/50 shadow-[0_0_40px_rgba(16,185,129,0.18)] overflow-hidden font-mono select-text relative cursor-text text-white"
+      className={
+        isFullscreen
+          ? "fixed inset-0 z-[200] w-screen h-screen flex flex-col bg-[#020d08] font-mono select-text cursor-text text-white shadow-2xl"
+          : "w-full h-full flex flex-col rounded-3xl bg-[#03130d]/95 border border-emerald-500/50 shadow-[0_0_40px_rgba(16,185,129,0.18)] overflow-hidden font-mono select-text relative cursor-text text-white"
+      }
     >
       {/* Top Authentic PowerShell Window Bar */}
       <div className="w-full bg-[#051c14] border-b border-emerald-500/30 px-4 py-2 flex items-center justify-between text-xs select-none shrink-0">
         <div className="flex items-center gap-2">
           {/* Traffic lights / Terminal window controls */}
           <div className="flex items-center gap-1.5">
-            <span className="w-3 h-3 rounded-full bg-red-500/80 inline-block shadow-[0_0_6px_rgba(239,68,68,0.6)] cursor-pointer" onClick={onSwitchToNormal} title="Normal Arayüze Dön" />
+            <span 
+              className="w-3 h-3 rounded-full bg-red-500/80 hover:bg-red-400 inline-block shadow-[0_0_6px_rgba(239,68,68,0.6)] cursor-pointer" 
+              onClick={(e) => {
+                e.stopPropagation();
+                onSwitchToNormal('projects');
+              }} 
+              title="Normal Arayüze Dön" 
+            />
             <span className="w-3 h-3 rounded-full bg-yellow-500/80 inline-block shadow-[0_0_6px_rgba(234,179,8,0.6)]" />
-            <span className="w-3 h-3 rounded-full bg-emerald-500/80 inline-block shadow-[0_0_6px_rgba(16,185,129,0.6)]" />
+            <span 
+              className="w-3 h-3 rounded-full bg-emerald-500/80 hover:bg-emerald-400 inline-block shadow-[0_0_6px_rgba(16,185,129,0.6)] cursor-pointer" 
+              onClick={(e) => {
+                e.stopPropagation();
+                soundEngine.playGlassClick();
+                setIsFullscreen(prev => !prev);
+              }}
+              title={isFullscreen ? "Normal Boyuta Dön (Esc)" : "Tam Ekran Yap (Siteyi Kapla)"}
+            />
           </div>
-          <span className="text-emerald-300 font-bold ml-2 tracking-tight flex items-center gap-1.5">
-            <Terminal size={14} className="text-emerald-400" />
-            PowerShell 7.4 — Emirhan Yilmaz Portfolio Terminal [x64]
+          <span className="text-emerald-300 font-bold ml-2 tracking-tight flex items-center gap-1.5 truncate">
+            <Terminal size={14} className="text-emerald-400 shrink-0" />
+            PowerShell 7.4 — Emirhan Yilmaz Portfolio Terminal [x64] {isFullscreen && <span className="text-amber-300 text-[10px] ml-1">[TAM EKRAN]</span>}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-emerald-400/80 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30 font-bold">
+          {/* Fullscreen Toggle Button */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              soundEngine.playGlassClick();
+              setIsFullscreen(prev => !prev);
+            }}
+            className="text-[11px] text-emerald-300 hover:text-white bg-emerald-950/70 hover:bg-emerald-900/80 border border-emerald-500/40 px-2.5 py-0.5 rounded transition-all cursor-pointer flex items-center gap-1.5 font-bold"
+            title={isFullscreen ? "Normal Boyuta Dön (Esc)" : "Tam Ekran Yap (Tüm siteyi kapla)"}
+          >
+            {isFullscreen ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
+            <span>{isFullscreen ? 'Küçült' : 'Tam Ekran'}</span>
+          </button>
+
+          <span className="text-[10px] text-emerald-400/80 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30 font-bold hidden sm:inline">
             PS 7.4.5
           </span>
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onSwitchToNormal();
+              onSwitchToNormal('projects');
             }}
-            className="text-[10px] text-white/70 hover:text-white bg-white/10 hover:bg-white/15 px-2.5 py-0.5 rounded transition-all cursor-pointer"
+            className="text-[11px] text-white/80 hover:text-white bg-white/10 hover:bg-white/15 px-2.5 py-0.5 rounded transition-all cursor-pointer border border-white/10"
             title="Normal Cam Görünüme Geç"
           >
             Normal Arayüz
@@ -1329,7 +1387,10 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
       </div>
 
       {/* Terminal Screen Body / Lines Container */}
-      <div className="flex-1 p-4 overflow-y-auto space-y-2 text-xs leading-relaxed scrollbar-thin">
+      <div 
+        ref={scrollContainerRef}
+        className="flex-1 p-4 overflow-y-auto space-y-2 text-xs leading-relaxed scrollbar-thin"
+      >
         {lines.map((line) => {
           if (line.type === 'prompt') {
             return (
@@ -1393,8 +1454,6 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
             <span className="w-2 h-4 bg-emerald-400/90 animate-pulse ml-0.5 pointer-events-none" />
           </div>
         </div>
-
-        <div ref={bottomRef} />
       </div>
 
       {/* Bottom Status Ribbon */}
@@ -1408,7 +1467,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
           <span className="hidden sm:inline">Geçmiş: {history.length} komut</span>
         </div>
         <div className="text-emerald-400/80">
-          Tab: Tamamlama | Ctrl+C: Ekranı Temizle | ↑↓: Geçmiş
+          Tab: Tamamlama | Ctrl+C: Temizle | {isFullscreen ? 'Esc: Küçült' : 'Tam Ekran Yapılabilir'}
         </div>
       </div>
     </div>

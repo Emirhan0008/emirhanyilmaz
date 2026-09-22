@@ -48,8 +48,8 @@ import {
  import { profileData, projects, articles } from './data';
  import { Project, Article } from './types';
  import { SeamlessVideo } from './components/SeamlessVideo';
- 
- import { AiAssistantDrawer } from './components/AiAssistantDrawer';
+
+import { InteractiveCatCompanion } from './components/InteractiveCatCompanion';
 import { ProjectEstimator } from './components/ProjectEstimator';
 import { TechRadar } from './components/TechRadar';
 import { DeveloperTerminalModal } from './components/DeveloperTerminalModal';
@@ -518,7 +518,7 @@ export interface ContactMessage {
   ] as const;
 
   return (
-    <div className={`relative min-h-screen w-full bg-black text-white ${theme === 'terminal' ? 'theme-terminal font-mono' : 'theme-normal font-sans'} overflow-x-hidden antialiased select-none`}>
+    <div className={`relative min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden w-full bg-black text-white ${theme === 'terminal' ? 'theme-terminal font-mono' : 'theme-normal font-sans'} overflow-x-hidden antialiased select-none`}>
       
       {/* BACKGROUND VIDEO & CRT SCANLINE EFFECTS */}
       <div className="fixed inset-0 w-full h-full z-0 overflow-hidden select-none pointer-events-none">
@@ -1185,9 +1185,9 @@ export interface ContactMessage {
           <div className="flex-1 flex flex-col min-h-0">
             {theme === 'terminal' ? (
               <PowerShellTerminalWorkspace
-                onSwitchToNormal={() => {
+                onSwitchToNormal={(targetTab) => {
                   setTheme('normal');
-                  setActiveTab('projects');
+                  setActiveTab(targetTab || 'projects');
                 }}
                 onOpenProjectModal={(p) => {
                   setTheme('normal');
@@ -2468,13 +2468,15 @@ export interface ContactMessage {
         )}
       </AnimatePresence>
 
-      {/* Floating Gemini AI Twin Assistant Drawer */}
-      <AiAssistantDrawer
-        onNavigateToTab={(tab) => setActiveTab(tab)}
-        onOpenEstimator={() => setShowEstimatorModal(true)}
-        onFillContactMessage={(msg) => {
-          setFormData(prev => ({ ...prev, message: msg }));
-          setActiveTab('contact');
+      {/* Interactive Autonomous Cyber Cat Companion (Walks along bottom, turns to visitor, purrs, meows & interacts) */}
+      <InteractiveCatCompanion
+        theme={theme}
+        onNavigateToTab={(tab) => {
+          setTheme('normal');
+          setActiveTab(tab as any);
+        }}
+        onOpenTerminal={() => {
+          setTheme('terminal');
         }}
       />
 
