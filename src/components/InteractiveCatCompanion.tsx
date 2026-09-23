@@ -131,7 +131,7 @@ export function InteractiveCatCompanion({
             initial={{ opacity: 0, y: 15, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.9 }}
-            className={`pointer-events-auto absolute bottom-16 -left-32 sm:-left-36 w-72 sm:w-80 p-3.5 rounded-2xl shadow-2xl border backdrop-blur-xl z-20 text-left ${
+            className={`pointer-events-auto absolute bottom-22 -left-32 sm:-left-36 w-72 sm:w-80 p-3.5 rounded-2xl shadow-2xl border backdrop-blur-xl z-20 text-left ${
               isTerminal 
                 ? 'bg-[#03150d]/95 border-emerald-500/60 shadow-[0_0_25px_rgba(16,185,129,0.3)] text-emerald-300 font-mono'
                 : 'liquid-glass-strong border-white/20 text-white font-sans'
@@ -231,16 +231,16 @@ export function InteractiveCatCompanion({
             animate={{ opacity: 0, y: -45, scale: 1.4 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1.2, ease: "easeOut" }}
-            className="absolute -top-6 left-6 text-rose-400 pointer-events-none z-30"
+            className="absolute -top-9 left-7 text-rose-400 pointer-events-none z-30"
           >
-            <Heart size={18} className="fill-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
+            <Heart size={20} className="fill-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* Sleeping 'Zzz' animation */}
       {behavior === 'sleeping' && !dialogOpen && (
-        <div className="absolute -top-7 right-1 font-mono font-bold text-xs text-emerald-400/80 pointer-events-none select-none">
+        <div className="absolute -top-9 right-1 font-mono font-bold text-xs text-emerald-400/80 pointer-events-none select-none">
           <motion.span
             animate={{ y: [-2, -12], opacity: [0, 1, 0], scale: [0.8, 1.2] }}
             transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
@@ -265,18 +265,18 @@ export function InteractiveCatCompanion({
         title="Emirhan'ın Dijital Kedisi (Bana tıkla!) 🐾"
       >
         {/* Glow halo under cat */}
-        <div className={`absolute -bottom-1 -left-2 -right-2 h-3 rounded-full blur-md transition-all duration-300 ${
+        <div className={`absolute -bottom-1 -left-3 -right-3 h-4 rounded-full blur-md transition-all duration-300 ${
           isTerminal ? 'bg-emerald-500/40' : 'bg-teal-400/30'
         }`} />
 
-        {/* Dynamic SVG Animated Cat */}
+        {/* Dynamic SVG Animated Cat - Scaled up for prominent, friendly appearance */}
         <svg 
-          width="54" 
-          height="48" 
+          width="82" 
+          height="72" 
           viewBox="0 0 64 56" 
           fill="none" 
           xmlns="http://www.w3.org/2000/svg"
-          className="relative drop-shadow-[0_8px_16px_rgba(0,0,0,0.6)]"
+          className="relative drop-shadow-[0_10px_20px_rgba(0,0,0,0.65)]"
         >
           {/* Animated Tail */}
           <motion.path

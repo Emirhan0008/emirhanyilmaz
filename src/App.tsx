@@ -520,16 +520,38 @@ export interface ContactMessage {
   return (
     <div className={`relative min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden w-full bg-black text-white ${theme === 'terminal' ? 'theme-terminal font-mono' : 'theme-normal font-sans'} overflow-x-hidden antialiased select-none`}>
       
-      {/* BACKGROUND VIDEO & CRT SCANLINE EFFECTS */}
-      <div className="fixed inset-0 w-full h-full z-0 overflow-hidden select-none pointer-events-none">
-        <SeamlessVideo src="/background.mp4" />
-        {/* Subtle vignette to preserve soft depth and text clarity, without stripping video colors */}
-        <div className="absolute inset-0 bg-radial from-transparent via-black/10 to-black/60 z-1" />
-        <div className="absolute inset-0 bg-black/10 backdrop-blur-[1px] z-2" />
+      {/* IMMERSIVE THEME BACKGROUNDS & CRT SCANLINE EFFECTS */}
+      <div className="fixed inset-0 w-full h-full z-0 overflow-hidden select-none pointer-events-none bg-[#030408]">
+        {/* Normal Mode Background (Clean, high-res visual aura) */}
+        <img
+          src="/bg-normal.jpg"
+          alt="Normal Mode Background"
+          className={`absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none transition-opacity duration-700 ease-in-out ${
+            theme === 'normal' ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+          }`}
+          style={{ transitionProperty: 'opacity, transform' }}
+          loading="eager"
+        />
+
+        {/* Terminal Mode Background (Cyberpunk / Terminal Visual) */}
+        <img
+          src="/bg-terminal.png"
+          alt="Terminal Mode Background"
+          className={`absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none transition-opacity duration-700 ease-in-out ${
+            theme === 'terminal' ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
+          }`}
+          style={{ transitionProperty: 'opacity, transform' }}
+          loading="eager"
+        />
+
+        {/* Subtle vignette to preserve soft depth and text clarity, without stripping image colors */}
+        <div className="absolute inset-0 bg-radial from-transparent via-black/15 to-black/70 z-1" />
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-[0.5px] z-2" />
+
         {/* Terminal CRT Scanlines Overlay when Terminal Mode is active */}
         {theme === 'terminal' && (
           <>
-            <div className="absolute inset-0 bg-emerald-950/30 mix-blend-screen z-3" />
+            <div className="absolute inset-0 bg-emerald-950/20 mix-blend-screen z-3" />
             <div className="absolute inset-0 terminal-scanlines opacity-75 z-4" />
           </>
         )}
@@ -567,6 +589,15 @@ export interface ContactMessage {
             >
               {/* Outer neon border glow */}
               <div className="absolute -inset-px rounded-3xl bg-gradient-to-r from-white/5 via-white/15 to-white/5 opacity-50 pointer-events-none" />
+
+              {/* Logo in Admin Modal */}
+              <div className="w-14 h-14 mx-auto flex items-center justify-center">
+                <img 
+                  src={profileData.logo} 
+                  alt="Emirhan Yılmaz Logo" 
+                  className="w-full h-full object-contain filter drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]"
+                />
+              </div>
 
               {/* Close Button */}
               <button
@@ -680,18 +711,20 @@ export interface ContactMessage {
 
           <header className="flex items-center justify-between z-10 mb-6 lg:mb-8 shrink-0">
             <div 
-              className="flex items-center gap-3 cursor-pointer group"
+              className="flex items-center gap-3 cursor-pointer group select-none"
               onClick={() => {
                 setSelectedProject(null);
                 setSelectedArticle(null);
                 setActiveTab('profile');
               }}
+              title="Emirhan Yılmaz Ana Sayfa"
             >
-              <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20 transition-transform duration-300 group-hover:scale-110 shrink-0">
+              {/* Separate Brand Logo with transparent background */}
+              <div className="w-10 h-10 transition-transform duration-300 group-hover:scale-110 shrink-0 flex items-center justify-center">
                 <img 
-                  src={profileData.avatar} 
-                  alt="Emirhan Yılmaz" 
-                  className="w-full h-full object-cover"
+                  src={profileData.logo} 
+                  alt="Emirhan Yılmaz Logo" 
+                  className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.35)] group-hover:drop-shadow-[0_0_14px_rgba(56,189,248,0.7)]"
                   referrerPolicy="no-referrer"
                 />
               </div>
@@ -748,6 +781,11 @@ export interface ContactMessage {
                 className="absolute top-20 left-6 right-6 z-30 liquid-glass-strong rounded-2xl p-4 flex flex-col gap-2 md:hidden"
                 id="mobile-nav-menu"
               >
+                {/* Brand header with Logo in mobile drawer */}
+                <div className="flex items-center gap-2.5 pb-2.5 mb-1 border-b border-white/10 px-2 select-none">
+                  <img src={profileData.logo} alt="Logo" className="w-6 h-6 object-contain drop-shadow-md" />
+                  <span className="font-extrabold text-white text-xs tracking-wider uppercase">Emirhan Yılmaz</span>
+                </div>
                 {navItems.map(item => (
                   <button
                     key={item.id}
@@ -1047,12 +1085,15 @@ export interface ContactMessage {
               "Zihnin derinliklerini, algoritmanın <span className="font-serif text-white font-medium">gücüyle anlamak</span>."
             </blockquote>
             <div className="flex items-center justify-between gap-3 w-full pt-1">
-              <span 
-                onClick={handleFooterClick}
-                className="text-[10px] tracking-widest text-white/90 uppercase font-bold select-none cursor-default"
-              >
-                EMİRHAN YILMAZ
-              </span>
+              <div className="flex items-center gap-2">
+                <img src={profileData.logo} alt="Logo" className="w-4 h-4 object-contain opacity-80" />
+                <span 
+                  onClick={handleFooterClick}
+                  className="text-[10px] tracking-widest text-white/90 uppercase font-bold select-none cursor-default hover:text-white transition-colors"
+                >
+                  EMİRHAN YILMAZ
+                </span>
+              </div>
               <a 
                 href="https://github.com/Emirhan0008" 
                 target="_blank" 

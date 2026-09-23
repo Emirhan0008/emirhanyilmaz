@@ -10,6 +10,7 @@ export const profileData = {
   name: "Emirhan YILMAZ",
   title: "Psikolojik Danışman & Yazılımcı",
   avatar: "/profile-photo.jpg",
+  logo: "/logo.png",
   about: "Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık mezunuyum. İnsan psikolojisini ve 3 yıllık özel eğitim öğretmenliği saha tecrübemi, yaklaşık 1-2 yıldır aktif olarak geliştirdiğim yapay zeka, Python otomasyonları ve mobil yazılım becerilerimle harmanlayarak yenilikçi ve insan odaklı dijital çözümler üretiyorum.",
   education: {
     school: "Aksaray Üniversitesi",

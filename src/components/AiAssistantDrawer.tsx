@@ -135,8 +135,8 @@ export function AiAssistantDrawer({ onNavigateToTab, onOpenEstimator, onFillCont
               {/* Drawer Header */}
               <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-black/40 shrink-0">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-black font-extrabold shadow-lg">
-                    <Sparkles size={20} />
+                  <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center p-1.5 border border-white/10 shadow-lg">
+                    <img src="/logo.png" alt="Logo" className="w-full h-full object-contain drop-shadow-md" />
                   </div>
                   <div>
                     <h3 className="text-sm font-extrabold text-white flex items-center gap-2">

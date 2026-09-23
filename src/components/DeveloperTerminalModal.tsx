@@ -140,8 +140,8 @@ export function DeveloperTerminalModal({ isOpen, onClose, onNavigateTab, onSelec
         >
           {/* Header */}
           <div className="p-4 bg-black/80 border-b border-white/10 flex items-center justify-between shrink-0">
-            <div className="flex items-center gap-2">
-              <Terminal size={18} className="text-emerald-400" />
+            <div className="flex items-center gap-2.5">
+              <img src="/logo.png" alt="Logo" className="w-5 h-5 object-contain drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
               <span className="text-xs font-bold text-emerald-400">emirhan@portfolio-os:~$</span>
               <span className="text-[10px] text-white/50">(`Ctrl + ~` to exit)</span>
             </div>

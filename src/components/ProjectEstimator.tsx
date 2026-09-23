@@ -109,8 +109,8 @@ ${result.summary}`;
       {/* Header */}
       <div className="flex items-center justify-between border-b border-white/10 pb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-black font-bold shadow-lg">
-            <Wand2 size={20} />
+          <div className="w-10 h-10 rounded-2xl bg-white/10 flex items-center justify-center p-1.5 border border-white/10 shadow-lg">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain drop-shadow-md" />
           </div>
           <div>
             <h2 className="text-xl font-extrabold text-white flex items-center gap-2">

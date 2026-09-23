@@ -61,7 +61,8 @@ export function TechRadar({ onSelectProject }: TechRadarProps) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
         <div>
           <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
-            İnteraktif Teknoloji Radarı & Beceri Mimarisi
+            <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain drop-shadow-md shrink-0" />
+            <span>İnteraktif Teknoloji Radarı & Beceri Mimarisi</span>
             <Sparkles size={16} className="text-emerald-400" />
           </h2>
           <p className="text-xs text-white/60 mt-1">

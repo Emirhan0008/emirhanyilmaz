@@ -1331,9 +1331,9 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
               title={isFullscreen ? "Normal Boyuta Dön (Esc)" : "Tam Ekran Yap (Siteyi Kapla)"}
             />
           </div>
-          <span className="text-emerald-300 font-bold ml-2 tracking-tight flex items-center gap-1.5 truncate">
-            <Terminal size={14} className="text-emerald-400 shrink-0" />
-            PowerShell 7.4 — Emirhan Yilmaz Portfolio Terminal [x64] {isFullscreen && <span className="text-amber-300 text-[10px] ml-1">[TAM EKRAN]</span>}
+          <span className="text-emerald-300 font-bold ml-2 tracking-tight flex items-center gap-2 truncate">
+            <img src="/logo.png" alt="Logo" className="w-4 h-4 object-contain shrink-0 drop-shadow-[0_0_6px_rgba(52,211,153,0.5)]" />
+            <span>PowerShell 7.4 — Emirhan Yilmaz Portfolio Terminal [x64]</span> {isFullscreen && <span className="text-amber-300 text-[10px] ml-1">[TAM EKRAN]</span>}
           </span>
         </div>
 
