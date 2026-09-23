@@ -321,7 +321,7 @@ export function InteractiveCatCompanion({
       {/* CLOUD BUBBLE STACK & FLOATING INPUT (Strictly max 2 bubbles, no window background) */}
       <AnimatePresence>
         {dialogOpen && (
-          <div className={`pointer-events-none absolute bottom-[78px] w-88 sm:w-[410px] flex flex-col items-center gap-3 z-20 ${containerAlignClass}`}>
+          <div className={`pointer-events-none absolute bottom-[78px] w-92 sm:w-[440px] flex flex-col items-center gap-3 z-20 ${containerAlignClass}`}>
             
             {/* Exactly 2 Cloud Bubbles Stack with graceful fade-in & fade-out */}
             <div className="w-full flex flex-col gap-3 items-center">
@@ -338,7 +338,7 @@ export function InteractiveCatCompanion({
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -16, scale: 0.84, transition: { duration: 0.35, ease: 'easeOut' } }}
                       transition={{ duration: 0.3, ease: 'easeOut' }}
-                      className={`relative pointer-events-auto w-full px-9 sm:px-11 py-6 sm:py-7 min-h-[110px] flex flex-col justify-center select-text ${
+                      className={`relative pointer-events-auto w-full px-12 sm:px-14 py-7 sm:py-8 min-h-[115px] flex flex-col justify-center items-center text-center select-text ${
                         isCat ? 'self-start sm:self-center' : 'self-end sm:self-center'
                       }`}
                     >
@@ -346,7 +346,7 @@ export function InteractiveCatCompanion({
                       <svg 
                         viewBox="0 0 340 200" 
                         preserveAspectRatio="none" 
-                        className="absolute -inset-3 sm:-inset-4 w-[calc(100%+24px)] sm:w-[calc(100%+32px)] h-[calc(100%+24px)] sm:h-[calc(100%+32px)] -z-10 overflow-visible drop-shadow-[0_14px_32px_rgba(0,0,0,0.65)]"
+                        className="absolute -inset-x-6 -inset-y-4 sm:-inset-x-8 sm:-inset-y-5 w-[calc(100%+48px)] sm:w-[calc(100%+64px)] h-[calc(100%+32px)] sm:h-[calc(100%+40px)] -z-10 overflow-visible drop-shadow-[0_14px_32px_rgba(0,0,0,0.65)]"
                       >
                         <path
                           d="M 50,80
@@ -399,10 +399,10 @@ export function InteractiveCatCompanion({
                         </div>
                       )}
 
-                      {/* Content inside cloud - perfectly sized safe text area */}
-                      <div className="relative z-10 leading-relaxed text-left">
+                      {/* Content inside cloud - centered in the sweet spot of the cloud */}
+                      <div className="relative z-10 w-full max-w-[280px] sm:max-w-[320px] mx-auto flex flex-col items-center text-center">
                         {/* Sender Micro Label */}
-                        <div className="text-[11px] font-bold mb-1 flex items-center gap-1.5">
+                        <div className="text-[11px] font-bold mb-1 flex items-center justify-center gap-1.5">
                           {isCat ? (
                             <span className="text-emerald-400">
                               🐾 Kedi:
@@ -414,8 +414,8 @@ export function InteractiveCatCompanion({
                           )}
                         </div>
 
-                        {/* Bubble Text */}
-                        <p className={`text-xs sm:text-[13px] font-normal leading-relaxed break-words ${
+                        {/* Bubble Text (Centered and balanced) */}
+                        <p className={`text-xs sm:text-[13px] font-normal leading-relaxed text-center break-words ${
                           isTerminal ? 'text-emerald-200' : 'text-white'
                         }`}>
                           {isCat ? renderFormattedText(item.text) : item.text}
@@ -423,7 +423,7 @@ export function InteractiveCatCompanion({
 
                         {/* Interactive Redirection Buttons inside cat's bubble */}
                         {isCat && actionButtons.length > 0 && (
-                          <div className="mt-2.5 pt-2 border-t border-white/15 flex flex-wrap gap-1.5">
+                          <div className="mt-2.5 pt-2 border-t border-white/15 w-full flex flex-wrap justify-center gap-1.5">
                             {actionButtons.map((btn) => (
                               <button
                                 key={btn.id}
