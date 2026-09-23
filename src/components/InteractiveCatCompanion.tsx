@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Send, Loader2, FolderGit2, Terminal, Mail, BookOpen, Sparkles } from 'lucide-react';
+import { Heart, Send, Loader2, FolderGit2, Terminal, Mail, BookOpen } from 'lucide-react';
 import { soundEngine } from '../utils/audioSynth';
 import { askGroqCatAssistant } from '../utils/groqService';
 
@@ -12,29 +12,25 @@ export interface InteractiveCatCompanionProps {
   onOpenTerminal?: () => void;
 }
 
+export interface CloudBubbleItem {
+  id: string;
+  sender: 'user' | 'cat';
+  text: string;
+}
+
 const CAT_QUOTES = [
-  {
-    text: "Miyav! Hoş geldin. Projeler sekmesine veya İletişim bölümüne göz atabilir, bana dilediğini sorabilirsin. 🐾",
-  },
-  {
-    text: "Emirhan'ın mobil asistan ve yapay zeka çalışmalarını görmek için Projeler sekmesine bakabilirsin.",
-  },
-  {
-    text: "Hacker görünümü için Terminal moduna geçebilir ya da PowerShell komutlarını deneyebilirsin!",
-  },
-  {
-    text: "Doğrudan mesaj iletmek istersen İletişim sayfasından veya e-posta ile ulaşabilirsin. ✉️",
-  },
-  {
-    text: "Mırrr... Dinleniyorum. Kafana takılan bir şey varsa hemen sorabilirsin. 🐾",
-  }
+  "Miyav! Hoş geldin. Projeler sekmesine veya İletişim bölümüne göz atabilir, bana dilediğini sorabilirsin. 🐾",
+  "Emirhan'ın mobil asistan ve yapay zeka çalışmalarını görmek için Projeler sekmesine bakabilirsin.",
+  "Hacker görünümü için Terminal moduna geçebilir ya da PowerShell komutlarını deneyebilirsin!",
+  "Doğrudan mesaj iletmek istersen İletişim sayfasından veya e-posta ile ulaşabilirsin. ✉️",
+  "Mırrr... Dinleniyorum. Kafana takılan bir şey varsa hemen sorabilirsin. 🐾"
 ];
 
 const PRESET_QUERIES = [
-  "Projeler?",
-  "Kimdir?",
+  "Projeleri Özetle",
+  "Emirhan Kimdir?",
   "Mod Değiştir",
-  "İletişim?"
+  "İletişim Bilgileri"
 ];
 
 export function InteractiveCatCompanion({
@@ -50,8 +46,15 @@ export function InteractiveCatCompanion({
   const [petCount, setPetCount] = useState<number>(0);
   const [showHeart, setShowHeart] = useState<boolean>(false);
 
-  // Active cat message shown in bubble
-  const [currentMessage, setCurrentMessage] = useState<string>(CAT_QUOTES[0].text);
+  // Maximum 2 bubbles on screen at any time! (Oldest fades out when 3rd arrives)
+  const [bubbles, setBubbles] = useState<CloudBubbleItem[]>([
+    {
+      id: 'init-cat',
+      sender: 'cat',
+      text: CAT_QUOTES[0]
+    }
+  ]);
+
   const [inputQuery, setInputQuery] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const isTerminal = theme === 'terminal';
@@ -83,7 +86,7 @@ export function InteractiveCatCompanion({
     };
   }, [dialogOpen, isHovered]);
 
-  // Click on Cat: Toggles the speech bubble open or closed
+  // Click on Cat: Toggles the cloud bubbles & floating input on or off
   const handleCatClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     soundEngine.playCatMeow();
@@ -103,12 +106,13 @@ export function InteractiveCatCompanion({
     setTimeout(() => setShowHeart(false), 1200);
   };
 
-  const handleNextQuote = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    soundEngine.playCatMeow();
-    const nextIdx = (quoteIndex + 1) % CAT_QUOTES.length;
-    setQuoteIndex(nextIdx);
-    setCurrentMessage(CAT_QUOTES[nextIdx].text);
+  // Add message ensuring STRICTLY MAXIMUM 2 BUBBLES on screen
+  const addBubbleStrictMaxTwo = (newBubble: CloudBubbleItem) => {
+    setBubbles(prev => {
+      const combined = [...prev, newBubble];
+      // Keep only the last 2 items; older ones get dropped and fade out via AnimatePresence
+      return combined.slice(-2);
+    });
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -118,14 +122,38 @@ export function InteractiveCatCompanion({
     soundEngine.playAiSparkle();
     setInputQuery('');
     setBehavior('curious-front');
+
+    // 1. Add Visitor's message bubble (triggers fade-out of oldest if already 2)
+    const userBubble: CloudBubbleItem = {
+      id: `user-${Date.now()}`,
+      sender: 'user',
+      text: query
+    };
+    addBubbleStrictMaxTwo(userBubble);
     setIsThinking(true);
 
     try {
-      const reply = await askGroqCatAssistant(query, [{ sender: 'user', text: query }]);
-      setCurrentMessage(reply);
+      const historyForAi = bubbles.map(b => ({
+        sender: b.sender,
+        text: b.text
+      }));
+      const reply = await askGroqCatAssistant(query, historyForAi);
+      
+      // 2. Add Cat's reply bubble (triggers fade-out of oldest if already 2)
+      const catBubble: CloudBubbleItem = {
+        id: `cat-${Date.now()}`,
+        sender: 'cat',
+        text: reply
+      };
+      addBubbleStrictMaxTwo(catBubble);
       soundEngine.playCatPurr();
     } catch {
-      setCurrentMessage("Miyav! 🐾 Detaylar için Projeler ve İletişim sekmesine göz atabilirsin!");
+      const fallbackBubble: CloudBubbleItem = {
+        id: `cat-${Date.now()}`,
+        sender: 'cat',
+        text: "Miyav! 🐾 Detaylar için Projeler ve İletişim sekmesine göz atabilirsin!"
+      };
+      addBubbleStrictMaxTwo(fallbackBubble);
     } finally {
       setIsThinking(false);
     }
@@ -148,7 +176,9 @@ export function InteractiveCatCompanion({
               soundEngine.playGlassClick();
               onNavigateToTab?.('projects');
             }}
-            className="text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-4 cursor-pointer transition-colors inline-block"
+            className={`font-bold underline underline-offset-4 cursor-pointer transition-colors inline-block ${
+              isTerminal ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-500'
+            }`}
             title="Projelere Git"
           >
             {part}
@@ -165,7 +195,9 @@ export function InteractiveCatCompanion({
               soundEngine.playTerminalKey();
               onOpenTerminal?.();
             }}
-            className="text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-4 cursor-pointer transition-colors inline-block"
+            className={`font-bold underline underline-offset-4 cursor-pointer transition-colors inline-block ${
+              isTerminal ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-500'
+            }`}
             title="Terminal Moduna Geç"
           >
             {part}
@@ -182,7 +214,9 @@ export function InteractiveCatCompanion({
               soundEngine.playGlassClick();
               onNavigateToTab?.('contact');
             }}
-            className="text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-4 cursor-pointer transition-colors inline-block"
+            className={`font-bold underline underline-offset-4 cursor-pointer transition-colors inline-block ${
+              isTerminal ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-500'
+            }`}
             title="İletişime Git"
           >
             {part}
@@ -199,7 +233,9 @@ export function InteractiveCatCompanion({
               soundEngine.playGlassClick();
               onNavigateToTab?.('articles');
             }}
-            className="text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-4 cursor-pointer transition-colors inline-block"
+            className={`font-bold underline underline-offset-4 cursor-pointer transition-colors inline-block ${
+              isTerminal ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-500'
+            }`}
             title="Makalelere Git"
           >
             {part}
@@ -211,7 +247,7 @@ export function InteractiveCatCompanion({
     });
   };
 
-  // Generate interactive redirection buttons based on text content
+  // Generate interactive redirection buttons for cat messages
   const getActionButtons = (text: string) => {
     const lower = text.toLowerCase();
     const buttons: { id: string; label: string; icon: React.ReactNode; onClick: () => void }[] = [];
@@ -267,19 +303,11 @@ export function InteractiveCatCompanion({
     return buttons;
   };
 
-  const actionButtons = getActionButtons(currentMessage);
-
-  // Responsive bubble alignment based on cat screen position
-  const bubbleAlignClass = positionX < 25 
+  // Responsive alignment to keep bubbles on screen
+  const containerAlignClass = positionX < 30 
     ? 'left-0 translate-x-0' 
-    : positionX > 75 
+    : positionX > 70 
     ? 'right-0 translate-x-0' 
-    : 'left-1/2 -translate-x-1/2';
-
-  const tailAlignClass = positionX < 25
-    ? 'left-10'
-    : positionX > 75
-    ? 'right-10'
     : 'left-1/2 -translate-x-1/2';
 
   return (
@@ -290,169 +318,233 @@ export function InteractiveCatCompanion({
         transform: 'translateX(-50%)'
       }}
     >
-      {/* PURE COMIC CLOUD SPEECH BUBBLE (No rectangular box, no border) */}
+      {/* CLOUD BUBBLE STACK & FLOATING INPUT (Strictly max 2 bubbles, no window background) */}
       <AnimatePresence>
         {dialogOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.88 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.88 }}
-            className={`pointer-events-auto absolute bottom-[86px] w-80 sm:w-92 z-20 text-left select-text ${bubbleAlignClass}`}
-          >
-            {/* The Cloud Container */}
-            <div className="relative px-7 py-6">
-              
-              {/* Organic Comic Cloud SVG Background (Fluffy cloud lobes, borderless/soft stroke) */}
-              <svg 
-                viewBox="0 0 340 200" 
-                preserveAspectRatio="none" 
-                className="absolute -inset-3 w-[calc(100%+24px)] h-[calc(100%+24px)] -z-10 overflow-visible drop-shadow-[0_16px_35px_rgba(0,0,0,0.65)]"
-              >
-                <path
-                  d="M 50,80
-                     C 28,55 42,28 75,32
-                     C 95,12 135,10 160,25
-                     C 185,8 225,8 250,26
-                     C 275,14 308,30 314,58
-                     C 336,78 336,115 315,135
-                     C 328,162 298,188 268,182
-                     C 245,198 205,198 180,185
-                     C 155,198 115,198 90,184
-                     C 62,192 35,172 40,145
-                     C 18,128 18,98 50,80 Z"
-                  fill={isTerminal ? "rgba(2, 24, 14, 0.95)" : "rgba(15, 23, 42, 0.92)"}
-                  stroke={isTerminal ? "rgba(52, 211, 153, 0.4)" : "rgba(255, 255, 255, 0.2)"}
-                  strokeWidth="1.6"
-                />
-              </svg>
+          <div className={`pointer-events-none absolute bottom-[78px] w-84 sm:w-96 flex flex-col items-center gap-3 z-20 ${containerAlignClass}`}>
+            
+            {/* Exactly 2 Cloud Bubbles Stack with graceful fade-in & fade-out */}
+            <div className="w-full flex flex-col gap-2.5 items-center">
+              <AnimatePresence initial={false}>
+                {bubbles.map((item) => {
+                  const isCat = item.sender === 'cat';
+                  const actionButtons = isCat ? getActionButtons(item.text) : [];
 
-              {/* Trailing Comic Cloud Puffs leading down to the cat */}
-              <div className={`absolute -bottom-6 ${tailAlignClass} flex flex-col items-center gap-1 pointer-events-none z-10`}>
-                <div className={`w-3.5 h-3.5 rounded-full shadow-md ${
-                  isTerminal 
-                    ? 'bg-[#02180e] border border-emerald-500/50 shadow-emerald-900/30' 
-                    : 'bg-slate-900 border border-white/20 shadow-black/40'
-                }`} />
-                <div className={`w-2.5 h-2.5 rounded-full shadow-xs ${
-                  isTerminal 
-                    ? 'bg-[#02180e] border border-emerald-500/50' 
-                    : 'bg-slate-900 border border-white/20'
-                }`} />
-                <div className={`w-1.5 h-1.5 rounded-full ${
-                  isTerminal 
-                    ? 'bg-[#02180e] border border-emerald-500/50' 
-                    : 'bg-slate-900 border border-white/20'
-                }`} />
-              </div>
+                  return (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, y: 15, scale: 0.88 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -16, scale: 0.84, transition: { duration: 0.35, ease: 'easeOut' } }}
+                      transition={{ duration: 0.3, ease: 'easeOut' }}
+                      className={`relative pointer-events-auto w-full px-7 py-5 select-text ${
+                        isCat ? 'self-start sm:self-center' : 'self-end sm:self-center'
+                      }`}
+                    >
+                      {/* Comic Cloud SVG Background (Matching pngwing.com.png puffy cloud with black outline & soft shadow) */}
+                      <svg 
+                        viewBox="0 0 340 200" 
+                        preserveAspectRatio="none" 
+                        className="absolute inset-0 w-full h-full -z-10 overflow-visible drop-shadow-[0_12px_26px_rgba(0,0,0,0.38)]"
+                      >
+                        <path
+                          d="M 50,80
+                             C 26,55 40,26 75,30
+                             C 95,10 135,8 160,22
+                             C 185,8 225,8 248,24
+                             C 275,12 308,28 314,56
+                             C 336,76 336,115 315,135
+                             C 328,162 298,188 268,182
+                             C 245,198 205,198 180,185
+                             C 155,198 115,198 90,184
+                             C 62,192 35,170 40,142
+                             C 18,126 18,96 50,80 Z"
+                          fill={
+                            isTerminal 
+                              ? (isCat ? '#031a0e' : '#01120a') 
+                              : (isCat ? '#ffffff' : '#f8fafc')
+                          }
+                          stroke={
+                            isTerminal 
+                              ? (isCat ? '#10b981' : '#059669') 
+                              : '#0f172a'
+                          }
+                          strokeWidth="2.6"
+                        />
+                      </svg>
 
-              {/* Thinking Indicator or Message Content */}
-              {isThinking ? (
-                <div className="flex items-center gap-2 text-xs py-2 text-emerald-400 font-mono">
-                  <Loader2 size={14} className="animate-spin text-emerald-400" />
-                  <span>Mırrr... Bulutta düşünüyorum 🐾☁️</span>
-                </div>
-              ) : (
-                <>
-                  <p className="text-xs leading-relaxed font-normal">
-                    {renderFormattedText(currentMessage)}
-                  </p>
+                      {/* Trailing Comic Thought Bubbles pointing to the speaker (like pngwing.com.png) */}
+                      {isCat ? (
+                        /* Cat's cloud bubbles pointing down-left toward cat */
+                        <div className="absolute -bottom-5 left-10 flex flex-col items-center gap-0.5 pointer-events-none">
+                          <div className={`w-3.5 h-2.5 rounded-full border-[2px] -rotate-25 shadow-xs ${
+                            isTerminal ? 'bg-[#031a0e] border-emerald-500' : 'bg-white border-slate-900'
+                          }`} />
+                          <div className={`w-2.5 h-1.8 rounded-full border-[1.8px] -rotate-25 ${
+                            isTerminal ? 'bg-[#031a0e] border-emerald-500' : 'bg-white border-slate-900'
+                          }`} />
+                          <div className={`w-1.5 h-1 rounded-full border-[1.4px] -rotate-25 ${
+                            isTerminal ? 'bg-[#031a0e] border-emerald-500' : 'bg-white border-slate-900'
+                          }`} />
+                        </div>
+                      ) : (
+                        /* Visitor's cloud bubbles pointing down-right */
+                        <div className="absolute -bottom-5 right-12 flex flex-col items-center gap-0.5 pointer-events-none">
+                          <div className={`w-3.5 h-2.5 rounded-full border-[2px] rotate-25 shadow-xs ${
+                            isTerminal ? 'bg-[#01120a] border-emerald-600' : 'bg-slate-50 border-slate-900'
+                          }`} />
+                          <div className={`w-2.5 h-1.8 rounded-full border-[1.8px] rotate-25 ${
+                            isTerminal ? 'bg-[#01120a] border-emerald-600' : 'bg-slate-50 border-slate-900'
+                          }`} />
+                          <div className={`w-1.5 h-1 rounded-full border-[1.4px] rotate-25 ${
+                            isTerminal ? 'bg-[#01120a] border-emerald-600' : 'bg-slate-50 border-slate-900'
+                          }`} />
+                        </div>
+                      )}
 
-                  {/* Interactive Redirection Buttons */}
-                  {actionButtons.length > 0 && (
-                    <div className="mt-2.5 pt-2 border-t border-white/10 flex flex-wrap gap-1.5">
-                      {actionButtons.map((btn) => (
-                        <button
-                          key={btn.id}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            btn.onClick();
-                          }}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500 hover:bg-emerald-400 text-black shadow-md shadow-emerald-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                        >
-                          {btn.icon}
-                          <span>{btn.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </>
+                      {/* Content inside cloud */}
+                      <div className="relative z-10 text-xs leading-relaxed px-1">
+                        {/* Sender Micro Label */}
+                        <div className="text-[10px] font-bold mb-1 flex items-center gap-1">
+                          {isCat ? (
+                            <span className={isTerminal ? 'text-emerald-400' : 'text-emerald-700'}>
+                              🐾 Kedi:
+                            </span>
+                          ) : (
+                            <span className={isTerminal ? 'text-emerald-500' : 'text-slate-500'}>
+                              💬 Sen:
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Bubble Text */}
+                        <p className={`font-normal ${
+                          isTerminal ? 'text-emerald-200' : 'text-slate-900'
+                        }`}>
+                          {isCat ? renderFormattedText(item.text) : item.text}
+                        </p>
+
+                        {/* Interactive Redirection Buttons inside cat's bubble */}
+                        {isCat && actionButtons.length > 0 && (
+                          <div className="mt-2.5 pt-1.5 border-t border-black/10 flex flex-wrap gap-1.5">
+                            {actionButtons.map((btn) => (
+                              <button
+                                key={btn.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  btn.onClick();
+                                }}
+                                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer ${
+                                  isTerminal
+                                    ? 'bg-emerald-500 text-black hover:bg-emerald-400 shadow-emerald-500/25'
+                                    : 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-600/30'
+                                }`}
+                              >
+                                {btn.icon}
+                                <span>{btn.label}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
+
+              {/* Thinking Indicator as small floating thought cloud */}
+              {isThinking && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.85 }}
+                  className="relative pointer-events-auto px-5 py-2.5"
+                >
+                  <svg 
+                    viewBox="0 0 200 80" 
+                    preserveAspectRatio="none" 
+                    className="absolute inset-0 w-full h-full -z-10 overflow-visible drop-shadow-md"
+                  >
+                    <path
+                      d="M 30,40 C 15,25 25,10 45,15 C 60,5 90,5 105,15 C 120,5 150,5 165,15 C 185,15 195,30 185,50 C 195,65 175,75 155,70 C 135,78 110,78 95,70 C 75,78 50,75 40,60 C 20,55 20,45 30,40 Z"
+                      fill={isTerminal ? '#031a0e' : '#ffffff'}
+                      stroke={isTerminal ? '#10b981' : '#0f172a'}
+                      strokeWidth="2.2"
+                    />
+                  </svg>
+                  <div className={`flex items-center gap-2 text-xs font-mono font-medium ${
+                    isTerminal ? 'text-emerald-400' : 'text-slate-900'
+                  }`}>
+                    <Loader2 size={13} className="animate-spin text-emerald-500" />
+                    <span>Mırrr... Düşünüyorum 🐾💭</span>
+                  </div>
+                </motion.div>
               )}
+            </div>
 
-              {/* Minimalist Question Input */}
-              <form 
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSendMessage();
-                }}
-                className="mt-2.5 pt-2 border-t border-white/10 flex items-center gap-1.5"
-              >
+            {/* SEPARATE FLOATING INPUT (No container background, floats freely in the air) */}
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage();
+              }}
+              className="w-full max-w-[340px] flex items-center gap-1.5 pointer-events-auto"
+            >
+              <div className={`flex-1 flex items-center gap-2 px-3.5 py-1.5 rounded-full shadow-xl backdrop-blur-xl border transition-all ${
+                isTerminal
+                  ? 'bg-black/80 border-emerald-500/50 text-emerald-300 focus-within:border-emerald-400'
+                  : 'bg-black/75 border-white/25 text-white focus-within:border-emerald-400'
+              }`}>
                 <input
                   type="text"
                   value={inputQuery}
                   onChange={(e) => setInputQuery(e.target.value)}
-                  placeholder="Kediciğe sor... 🐾"
+                  placeholder="Kediciğe bir soru sor... 🐾"
                   disabled={isThinking}
-                  className={`flex-1 min-w-0 px-2.5 py-1 text-xs rounded-full bg-black/40 border border-white/15 outline-hidden placeholder:text-white/40 transition-colors ${
-                    isTerminal ? 'text-emerald-300 font-mono focus:border-emerald-400' : 'text-white font-sans focus:border-white/40'
-                  }`}
+                  className="flex-1 min-w-0 bg-transparent text-xs outline-hidden placeholder:text-white/40"
                 />
                 <button
                   type="submit"
                   disabled={isThinking || !inputQuery.trim()}
                   className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all ${
                     inputQuery.trim() && !isThinking
-                      ? 'bg-emerald-500 text-black hover:bg-emerald-400 cursor-pointer shadow-sm shadow-emerald-500/30'
+                      ? 'bg-emerald-500 text-black hover:bg-emerald-400 cursor-pointer shadow-sm shadow-emerald-500/40'
                       : 'bg-white/10 text-white/30 cursor-not-allowed'
                   }`}
-                  title="Sor"
+                  title="Gönder"
                 >
-                  <Send size={10} />
+                  <Send size={11} />
                 </button>
-              </form>
-
-              {/* Quick Prompt Chips & Interactions Footer */}
-              <div className="mt-1.5 pt-1 flex items-center justify-between gap-1 text-[9px] text-white/60">
-                <div className="flex flex-wrap gap-1">
-                  {PRESET_QUERIES.map((q, idx) => (
-                    <button
-                      key={idx}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (q === "Mod Değiştir") {
-                          soundEngine.playTerminalKey();
-                          onOpenTerminal?.();
-                        } else {
-                          handleSendMessage(q);
-                        }
-                      }}
-                      className="px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/15 text-white/80 hover:text-emerald-300 border border-white/10 transition-all cursor-pointer"
-                    >
-                      {q}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={handlePetAction}
-                    className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full hover:bg-white/10 text-rose-300 hover:text-rose-200 transition-colors cursor-pointer"
-                    title="Sevgi Göster"
-                  >
-                    <Heart size={9} className="fill-rose-400 text-rose-400" />
-                    <span>{petCount}</span>
-                  </button>
-                  <button
-                    onClick={handleNextQuote}
-                    className="px-1.5 py-0.5 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
-                    title="Farklı Söz Söyle"
-                  >
-                    <Sparkles size={9} />
-                  </button>
-                </div>
               </div>
+            </form>
 
+            {/* PRESET QUESTIONS (Floating freely under input with NO background) */}
+            <div className="flex flex-wrap items-center justify-center gap-1.5 pointer-events-auto max-w-[350px]">
+              {PRESET_QUERIES.map((q, idx) => (
+                <button
+                  key={idx}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (q === "Mod Değiştir") {
+                      soundEngine.playTerminalKey();
+                      onOpenTerminal?.();
+                    } else {
+                      handleSendMessage(q);
+                    }
+                  }}
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-medium backdrop-blur-md border shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer ${
+                    isTerminal
+                      ? 'bg-black/70 border-emerald-500/40 text-emerald-300 hover:border-emerald-400 hover:text-white'
+                      : 'bg-black/70 border-white/20 text-white/90 hover:border-emerald-400 hover:text-emerald-300'
+                  }`}
+                >
+                  {q}
+                </button>
+              ))}
             </div>
-          </motion.div>
+
+          </div>
         )}
       </AnimatePresence>
 
