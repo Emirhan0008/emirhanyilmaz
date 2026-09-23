@@ -28,6 +28,10 @@ export const profileData = {
     details: "1-2 yıldır aktif olarak Büyük Dil Modelleri (LLM), Gemini API istem mühendisliği, Doğal Dil İşleme (NLP) ve makine öğrenmesi uygulamaları üzerinde çalışıyor ve kendimi geliştiriyorum."
   },
   github: "https://github.com/Emirhan0008",
+  email: "emirhan0008@gmail.com",
+  whatsapp: "Emirhan_yilmaz08",
+  telegram: "t.me/emirhanyilmazrpd",
+  instagram: "Henüz aktif profil yok (Yakında)",
   experience: {
     title: "Özel Eğitim Öğretmenliği",
     period: "3 Yıl Saha Deneyimi",
