@@ -169,34 +169,21 @@ export function InteractiveCatCompanion({
         transform: 'translateX(-50%)'
       }}
     >
-      {/* Floating Dialog / Speech Bubble & Groq AI Chat */}
+      {/* Floating Speech Bubbles & Groq AI Chat (No window background) */}
       <AnimatePresence>
         {dialogOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 15, scale: 0.9 }}
+            initial={{ opacity: 0, y: 12, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.9 }}
-            className={`pointer-events-auto absolute bottom-22 -left-36 sm:-left-44 w-84 sm:w-96 p-4 rounded-2xl shadow-2xl border backdrop-blur-2xl z-20 text-left ${
-              isTerminal 
-                ? 'bg-[#03150d]/95 border-emerald-500/60 shadow-[0_0_30px_rgba(16,185,129,0.35)] text-emerald-300 font-mono'
-                : 'liquid-glass-strong border-white/20 text-white font-sans'
-            }`}
+            exit={{ opacity: 0, y: 8, scale: 0.94 }}
+            className="pointer-events-auto absolute bottom-22 -left-36 sm:-left-44 w-80 sm:w-92 z-20 text-left select-text flex flex-col gap-2"
           >
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-2.5 mb-2.5">
-              <div className="flex items-center gap-1.5">
-                <span className="text-base">🐾</span>
-                <span className="text-xs font-bold tracking-tight">
-                  {isTerminal ? 'CYBER-CAT // GROQ AI' : 'Siber Kedi Asistanı'}
-                </span>
-                <span className={`inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                  isTerminal 
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' 
-                    : 'bg-emerald-500/30 text-emerald-300 border border-emerald-400/30'
-                }`}>
-                  <Zap size={9} className="text-emerald-400 animate-pulse" />
-                  Groq ⚡
-                </span>
+            {/* Top Minimal Toolbar (Only Close & Reset floating badges) */}
+            <div className="flex items-center justify-between px-1">
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 border border-white/10 text-[9px] font-bold text-emerald-300 backdrop-blur-md">
+                <span>🐾</span>
+                <span>{isTerminal ? 'CYBER-CAT // GROQ' : 'Kedi Asistanı'}</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
               </div>
               <div className="flex items-center gap-1">
                 {chatHistory.length > 0 && (
@@ -205,10 +192,10 @@ export function InteractiveCatCompanion({
                       soundEngine.playGlassClick();
                       setChatHistory([]);
                     }}
-                    className="text-white/40 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10 cursor-pointer"
+                    className="w-5 h-5 rounded-full bg-black/60 border border-white/10 hover:border-white/30 text-white/70 hover:text-white flex items-center justify-center text-[10px] backdrop-blur-md cursor-pointer transition-colors"
                     title="Sohbeti Sıfırla"
                   >
-                    <RotateCcw size={12} />
+                    <RotateCcw size={10} />
                   </button>
                 )}
                 <button
@@ -217,27 +204,32 @@ export function InteractiveCatCompanion({
                     soundEngine.playGlassClick();
                     setDialogOpen(false);
                   }}
-                  className="text-white/40 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10 cursor-pointer"
+                  className="w-5 h-5 rounded-full bg-black/60 border border-white/10 hover:border-white/30 text-white/70 hover:text-white flex items-center justify-center text-[10px] backdrop-blur-md cursor-pointer transition-colors"
                   title="Kapat"
                 >
-                  <X size={13} />
+                  <X size={11} />
                 </button>
               </div>
             </div>
 
-            {/* Conversation or Quote Area */}
+            {/* Conversation Area (Only floating speech bubbles) */}
             <div 
               ref={chatScrollRef}
-              className="max-h-56 overflow-y-auto pr-1 space-y-2.5 text-xs scrollbar-thin scrollbar-thumb-white/20"
+              className="max-h-60 overflow-y-auto pr-0.5 space-y-2 text-xs scrollbar-thin scrollbar-thumb-white/20"
             >
               {chatHistory.length === 0 ? (
-                <>
-                  <p className="text-xs text-white/90 leading-relaxed">
+                /* Primary Greeting Speech Bubble */
+                <div className={`relative p-3.5 rounded-2xl rounded-bl-xs shadow-xl backdrop-blur-xl border ${
+                  isTerminal 
+                    ? 'bg-[#02180e]/95 border-emerald-500/50 text-emerald-300 font-mono shadow-[0_8px_30px_rgba(0,0,0,0.6)]' 
+                    : 'liquid-glass-strong border-white/20 text-white shadow-[0_8px_30px_rgba(0,0,0,0.45)]'
+                }`}>
+                  <p className="text-xs leading-relaxed">
                     {currentQuote.text}
                   </p>
 
-                  {/* Preset Question Chips */}
-                  <div className="pt-2">
+                  {/* Preset Question Chips as mini floating pills */}
+                  <div className="pt-2 mt-2 border-t border-white/10">
                     <span className="text-[10px] text-white/50 block mb-1.5 font-medium">
                       Hızlıca sorabilirsiniz:
                     </span>
@@ -253,47 +245,75 @@ export function InteractiveCatCompanion({
                       ))}
                     </div>
                   </div>
-                </>
+
+                  {/* Speech Bubble Tail */}
+                  <div className={`absolute -bottom-2 left-36 sm:left-44 w-3.5 h-3.5 rotate-45 border-r border-b ${
+                    isTerminal ? 'bg-[#02180e] border-emerald-500/50' : 'bg-slate-900 border-white/20'
+                  }`} />
+                </div>
               ) : (
-                chatHistory.map((item, idx) => (
-                  <div 
-                    key={idx} 
-                    className={`flex flex-col ${item.sender === 'user' ? 'items-end' : 'items-start'}`}
-                  >
-                    <div className={`rounded-xl px-3 py-2 max-w-[90%] text-xs leading-relaxed ${
-                      item.sender === 'user'
-                        ? 'bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 ml-auto'
-                        : isTerminal
-                        ? 'bg-black/60 border border-emerald-500/30 text-emerald-300'
-                        : 'bg-white/15 border border-white/15 text-white/95'
-                    }`}>
-                      {item.sender === 'cat' && (
-                        <span className="text-[10px] font-bold text-emerald-400 block mb-0.5">
-                          🐾 Kedi Asistan:
-                        </span>
-                      )}
-                      <p className="whitespace-pre-wrap">{item.text}</p>
+                /* Chat Speech Bubbles */
+                chatHistory.map((item, idx) => {
+                  const isUser = item.sender === 'user';
+                  const isLastCatMsg = !isUser && idx === chatHistory.length - 1;
+
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
+                    >
+                      <div className={`relative px-3.5 py-2.5 max-w-[88%] text-xs leading-relaxed shadow-lg backdrop-blur-xl ${
+                        isUser
+                          ? 'rounded-2xl rounded-br-xs bg-emerald-500/30 border border-emerald-400/50 text-emerald-100 shadow-[0_4px_20px_rgba(16,185,129,0.2)]'
+                          : isTerminal
+                          ? 'rounded-2xl rounded-bl-xs bg-[#02180e]/95 border border-emerald-500/50 text-emerald-300 font-mono shadow-[0_6px_25px_rgba(0,0,0,0.6)]'
+                          : 'rounded-2xl rounded-bl-xs liquid-glass-strong border border-white/20 text-white shadow-[0_6px_25px_rgba(0,0,0,0.45)]'
+                      }`}>
+                        {!isUser && (
+                          <span className="text-[10px] font-bold text-emerald-400 block mb-0.5">
+                            🐾 Kedi:
+                          </span>
+                        )}
+                        <p className="whitespace-pre-wrap">{item.text}</p>
+
+                        {/* Speech bubble tail for last cat message */}
+                        {isLastCatMsg && (
+                          <div className={`absolute -bottom-1.5 left-6 w-3 h-3 rotate-45 border-r border-b ${
+                            isTerminal ? 'bg-[#02180e] border-emerald-500/50' : 'bg-slate-900 border-white/20'
+                          }`} />
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
 
-              {/* Thinking Indicator */}
+              {/* Floating Thinking Bubble */}
               {isThinking && (
-                <div className="flex items-center gap-2 text-xs text-emerald-400/90 py-1 font-mono">
-                  <Loader2 size={13} className="animate-spin text-emerald-400" />
-                  <span>Mırrr... Groq ile düşünüyorum 🐾⚡</span>
+                <div className="flex items-start">
+                  <div className={`px-3 py-1.5 rounded-2xl rounded-bl-xs shadow-md backdrop-blur-md border flex items-center gap-2 text-xs font-mono ${
+                    isTerminal
+                      ? 'bg-[#02180e]/95 border-emerald-500/40 text-emerald-400'
+                      : 'liquid-glass-strong border-white/20 text-emerald-300'
+                  }`}>
+                    <Loader2 size={12} className="animate-spin text-emerald-400" />
+                    <span>Mırrr... 🐾⚡</span>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Interactive Query Input Bar */}
+            {/* Floating Input Pill (No large container card) */}
             <form 
               onSubmit={(e) => {
                 e.preventDefault();
                 handleSendMessage();
               }}
-              className="mt-3 flex items-center gap-1.5 pt-2.5 border-t border-white/10"
+              className={`flex items-center gap-1.5 p-1 rounded-full shadow-xl backdrop-blur-xl border ${
+                isTerminal
+                  ? 'bg-[#02180e]/95 border-emerald-500/50'
+                  : 'bg-slate-900/85 border-white/20'
+              }`}
             >
               <input
                 type="text"
@@ -301,71 +321,49 @@ export function InteractiveCatCompanion({
                 onChange={(e) => setInputQuery(e.target.value)}
                 placeholder="Kediciğe bir soru sor... 🐾"
                 disabled={isThinking}
-                className={`flex-1 min-w-0 px-3 py-1.5 rounded-xl text-xs outline-hidden transition-all placeholder:text-white/40 ${
-                  isTerminal
-                    ? 'bg-black/70 border border-emerald-500/50 text-emerald-300 focus:border-emerald-400'
-                    : 'bg-white/10 border border-white/15 text-white focus:bg-white/15 focus:border-white/30'
+                className={`flex-1 min-w-0 px-3 py-1 text-xs outline-hidden bg-transparent transition-all placeholder:text-white/40 ${
+                  isTerminal ? 'text-emerald-300 font-mono' : 'text-white font-sans'
                 }`}
               />
               <button
                 type="submit"
                 disabled={isThinking || !inputQuery.trim()}
-                className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer ${
                   inputQuery.trim() && !isThinking
                     ? 'bg-emerald-500 text-black hover:bg-emerald-400 shadow-md shadow-emerald-500/30'
                     : 'bg-white/10 text-white/40 cursor-not-allowed'
                 }`}
                 title="Gönder"
               >
-                <Send size={12} />
+                <Send size={11} />
               </button>
             </form>
 
-            {/* Quick Actions Footer */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-2.5 mt-2 border-t border-white/10 text-[10px]">
-              {chatHistory.length === 0 && currentQuote.actionTab && (
+            {/* Floating Action Pills */}
+            <div className="flex items-center justify-between gap-1 text-[10px] px-1">
+              <div className="flex items-center gap-1">
+                {onNavigateToTab && (
+                  <button
+                    onClick={() => {
+                      soundEngine.playGlassClick();
+                      onNavigateToTab('projects');
+                      setDialogOpen(false);
+                    }}
+                    className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/50 hover:bg-black/70 border border-white/10 text-white/80 hover:text-white backdrop-blur-md transition-all cursor-pointer"
+                  >
+                    <span>Projeler</span>
+                    <ArrowRight size={8} />
+                  </button>
+                )}
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    soundEngine.playGlassClick();
-                    if (currentQuote.actionTab === 'terminal' && onOpenTerminal) {
-                      onOpenTerminal();
-                    } else if (onNavigateToTab) {
-                      onNavigateToTab(currentQuote.actionTab);
-                    }
-                    setDialogOpen(false);
-                  }}
-                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold bg-emerald-500 hover:bg-emerald-400 text-black transition-all cursor-pointer"
+                  onClick={handlePetAction}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/50 hover:bg-black/70 border border-white/10 text-white/80 hover:text-rose-300 backdrop-blur-md transition-all cursor-pointer"
+                  title="Sevgi Göster"
                 >
-                  <Sparkles size={10} />
-                  <span>
-                    {currentQuote.actionTab === 'projects' ? 'Projeleri Aç' : currentQuote.actionTab === 'terminal' ? 'Terminale Geç' : 'İletişime Geç'}
-                  </span>
+                  <Heart size={9} className="text-rose-400 fill-rose-400" />
+                  <span>Sev ({petCount})</span>
                 </button>
-              )}
-
-              {onNavigateToTab && (
-                <button
-                  onClick={() => {
-                    soundEngine.playGlassClick();
-                    onNavigateToTab('projects');
-                    setDialogOpen(false);
-                  }}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white/90 transition-all cursor-pointer"
-                >
-                  <span>Projeler</span>
-                  <ArrowRight size={9} />
-                </button>
-              )}
-
-              <button
-                onClick={handlePetAction}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium transition-all cursor-pointer"
-                title="Sevgi Göster"
-              >
-                <Heart size={10} className="text-rose-400 fill-rose-400" />
-                <span>Sev ({petCount})</span>
-              </button>
+              </div>
 
               {chatHistory.length === 0 && (
                 <button
@@ -374,18 +372,13 @@ export function InteractiveCatCompanion({
                     soundEngine.playCatMeow();
                     setQuoteIndex(prev => (prev + 1) % CAT_QUOTES.length);
                   }}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-white/80 transition-all cursor-pointer ml-auto"
+                  className="px-2 py-0.5 rounded-full bg-black/50 hover:bg-black/70 border border-white/10 text-white/70 hover:text-white backdrop-blur-md transition-all cursor-pointer"
                   title="Farklı bir şey söyle"
                 >
                   <span>Farklı Söz 🐾</span>
                 </button>
               )}
             </div>
-
-            {/* Bottom Arrow Pointer */}
-            <div className={`absolute -bottom-2 left-36 sm:left-44 w-3.5 h-3.5 rotate-45 border-r border-b ${
-              isTerminal ? 'bg-[#03150d] border-emerald-500/60' : 'bg-slate-900 border-white/20'
-            }`} />
           </motion.div>
         )}
       </AnimatePresence>
