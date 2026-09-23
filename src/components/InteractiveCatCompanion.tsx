@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, MessageCircle, Heart, Compass, Mail, Terminal as TerminalIcon, X, Zap } from 'lucide-react';
+import { Sparkles, Heart, X, Zap, Send, RotateCcw, Loader2, ArrowRight } from 'lucide-react';
 import { soundEngine } from '../utils/audioSynth';
+import { askGroqCatAssistant } from '../utils/groqService';
 
 export type CatBehavior = 'walking-left' | 'walking-right' | 'curious-front' | 'sleeping' | 'purring';
 
@@ -9,14 +10,16 @@ export interface InteractiveCatCompanionProps {
   theme?: 'normal' | 'terminal';
   onNavigateToTab?: (tab: string) => void;
   onOpenTerminal?: () => void;
-  // Future AI Assistant Architecture hooks
-  onAskAssistant?: (query: string) => Promise<string> | void;
-  isAiAssistantMode?: boolean;
+}
+
+interface ChatHistoryItem {
+  sender: 'user' | 'cat';
+  text: string;
 }
 
 const CAT_QUOTES = [
   {
-    text: "Miyav! Hoş geldin! Ben Emirhan'ın dijital yol arkadaşıyım. 🐾",
+    text: "Miyav! Hoş geldin! Ben Emirhan'ın Groq yapay zekasıyla güçlendirilmiş dijital kedi asistanıyım. Bana dilediğini sorabilirsin! 🐾⚡",
     badge: "Selam!",
     actionTab: null
   },
@@ -31,7 +34,7 @@ const CAT_QUOTES = [
     actionTab: null
   },
   {
-    text: "Terminal modunu denedin mi? Sağ üstteki anahtarla terminale geçebilir ve 'Get-Projects' yazabilirsin!",
+    text: "Terminal modunu denedin mi? Üstteki anahtarla terminale geçebilir ve PowerShell komutları çalıştırabilirsin!",
     badge: "İpucu",
     actionTab: "terminal"
   },
@@ -39,12 +42,14 @@ const CAT_QUOTES = [
     text: "Emirhan ile doğrudan iş birliği yapmak veya selam vermek istersen: emirhan0008@gmail.com ✉️",
     badge: "İletişim",
     actionTab: "contact"
-  },
-  {
-    text: "Çok yakında Emirhan beni akıllı bir yapay zeka asistanına dönüştürecek! Altyapım şimdiden hazırlandı. 🚀",
-    badge: "Yol Haritası",
-    actionTab: null
   }
+];
+
+const PRESET_QUERIES = [
+  "Emirhan kimdir?",
+  "Projelerini özetle",
+  "PDR ve Yapay Zeka?",
+  "Hangi dilleri biliyor?"
 ];
 
 export function InteractiveCatCompanion({
@@ -60,9 +65,11 @@ export function InteractiveCatCompanion({
   const [petCount, setPetCount] = useState<number>(0);
   const [showHeart, setShowHeart] = useState<boolean>(false);
 
-  // Future assistant extensible query state
-  const [userQuery, setUserQuery] = useState('');
+  // Groq AI Chat States
+  const [inputQuery, setInputQuery] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
 
   const isTerminal = theme === 'terminal';
   const behaviorTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -94,6 +101,13 @@ export function InteractiveCatCompanion({
     };
   }, [dialogOpen, isHovered]);
 
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [chatHistory, isThinking]);
+
   const handleCatClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     soundEngine.playCatMeow();
@@ -103,7 +117,6 @@ export function InteractiveCatCompanion({
 
     setBehavior('curious-front');
     setDialogOpen(true);
-    setQuoteIndex(prev => (prev + 1) % CAT_QUOTES.length);
   };
 
   const handlePetAction = (e: React.MouseEvent) => {
@@ -112,6 +125,38 @@ export function InteractiveCatCompanion({
     setPetCount(prev => prev + 1);
     setShowHeart(true);
     setTimeout(() => setShowHeart(false), 1200);
+  };
+
+  const handleSendMessage = async (textToSend?: string) => {
+    const query = (textToSend || inputQuery).trim();
+    if (!query || isThinking) return;
+
+    soundEngine.playAiSparkle();
+    setInputQuery('');
+    setBehavior('curious-front');
+
+    const updatedHistory: ChatHistoryItem[] = [
+      ...chatHistory,
+      { sender: 'user', text: query }
+    ];
+    setChatHistory(updatedHistory);
+    setIsThinking(true);
+
+    try {
+      const reply = await askGroqCatAssistant(query, chatHistory);
+      setChatHistory([...updatedHistory, { sender: 'cat', text: reply }]);
+      soundEngine.playCatPurr();
+    } catch {
+      setChatHistory([
+        ...updatedHistory,
+        {
+          sender: 'cat',
+          text: "Miyav! 🐾 Yanıt oluştururken küçük bir aksaklık oldu. Projeler sekmesinden Emirhan'ın çalışmalarını inceleyebilirsin!"
+        }
+      ]);
+    } finally {
+      setIsThinking(false);
+    }
   };
 
   const currentQuote = CAT_QUOTES[quoteIndex];
@@ -124,53 +169,161 @@ export function InteractiveCatCompanion({
         transform: 'translateX(-50%)'
       }}
     >
-      {/* Floating Dialog / Speech Bubble */}
+      {/* Floating Dialog / Speech Bubble & Groq AI Chat */}
       <AnimatePresence>
         {dialogOpen && (
           <motion.div
             initial={{ opacity: 0, y: 15, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.9 }}
-            className={`pointer-events-auto absolute bottom-22 -left-32 sm:-left-36 w-72 sm:w-80 p-3.5 rounded-2xl shadow-2xl border backdrop-blur-xl z-20 text-left ${
+            className={`pointer-events-auto absolute bottom-22 -left-36 sm:-left-44 w-84 sm:w-96 p-4 rounded-2xl shadow-2xl border backdrop-blur-2xl z-20 text-left ${
               isTerminal 
-                ? 'bg-[#03150d]/95 border-emerald-500/60 shadow-[0_0_25px_rgba(16,185,129,0.3)] text-emerald-300 font-mono'
+                ? 'bg-[#03150d]/95 border-emerald-500/60 shadow-[0_0_30px_rgba(16,185,129,0.35)] text-emerald-300 font-mono'
                 : 'liquid-glass-strong border-white/20 text-white font-sans'
             }`}
           >
-            {/* Speech bubble header */}
-            <div className="flex items-center justify-between border-b border-white/10 pb-2 mb-2">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-white/10 pb-2.5 mb-2.5">
               <div className="flex items-center gap-1.5">
-                <span className="text-sm">🐾</span>
+                <span className="text-base">🐾</span>
                 <span className="text-xs font-bold tracking-tight">
-                  {isTerminal ? 'CYBER-CAT // PROMPTER' : 'Dijital Asistan Kedi'}
+                  {isTerminal ? 'CYBER-CAT // GROQ AI' : 'Siber Kedi Asistanı'}
                 </span>
-                <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                  isTerminal ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-white/15 text-white/90'
+                <span className={`inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                  isTerminal 
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' 
+                    : 'bg-emerald-500/30 text-emerald-300 border border-emerald-400/30'
                 }`}>
-                  {currentQuote.badge}
+                  <Zap size={9} className="text-emerald-400 animate-pulse" />
+                  Groq ⚡
                 </span>
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  soundEngine.playGlassClick();
-                  setDialogOpen(false);
-                }}
-                className="text-white/40 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10 cursor-pointer"
-                title="Kapat"
-              >
-                <X size={13} />
-              </button>
+              <div className="flex items-center gap-1">
+                {chatHistory.length > 0 && (
+                  <button
+                    onClick={() => {
+                      soundEngine.playGlassClick();
+                      setChatHistory([]);
+                    }}
+                    className="text-white/40 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10 cursor-pointer"
+                    title="Sohbeti Sıfırla"
+                  >
+                    <RotateCcw size={12} />
+                  </button>
+                )}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    soundEngine.playGlassClick();
+                    setDialogOpen(false);
+                  }}
+                  className="text-white/40 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/10 cursor-pointer"
+                  title="Kapat"
+                >
+                  <X size={13} />
+                </button>
+              </div>
             </div>
 
-            {/* Bubble Quote Content */}
-            <p className="text-xs text-white/90 leading-relaxed mb-3">
-              {currentQuote.text}
-            </p>
+            {/* Conversation or Quote Area */}
+            <div 
+              ref={chatScrollRef}
+              className="max-h-56 overflow-y-auto pr-1 space-y-2.5 text-xs scrollbar-thin scrollbar-thumb-white/20"
+            >
+              {chatHistory.length === 0 ? (
+                <>
+                  <p className="text-xs text-white/90 leading-relaxed">
+                    {currentQuote.text}
+                  </p>
 
-            {/* Interactive Actions */}
-            <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-white/10 text-[10px]">
-              {currentQuote.actionTab && (
+                  {/* Preset Question Chips */}
+                  <div className="pt-2">
+                    <span className="text-[10px] text-white/50 block mb-1.5 font-medium">
+                      Hızlıca sorabilirsiniz:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {PRESET_QUERIES.map((q, idx) => (
+                        <button
+                          key={idx}
+                          onClick={() => handleSendMessage(q)}
+                          className="px-2 py-1 rounded-lg text-[10px] bg-white/10 hover:bg-white/20 text-white/90 hover:text-emerald-300 border border-white/10 transition-all cursor-pointer text-left"
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              ) : (
+                chatHistory.map((item, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`flex flex-col ${item.sender === 'user' ? 'items-end' : 'items-start'}`}
+                  >
+                    <div className={`rounded-xl px-3 py-2 max-w-[90%] text-xs leading-relaxed ${
+                      item.sender === 'user'
+                        ? 'bg-emerald-500/25 border border-emerald-400/40 text-emerald-200 ml-auto'
+                        : isTerminal
+                        ? 'bg-black/60 border border-emerald-500/30 text-emerald-300'
+                        : 'bg-white/15 border border-white/15 text-white/95'
+                    }`}>
+                      {item.sender === 'cat' && (
+                        <span className="text-[10px] font-bold text-emerald-400 block mb-0.5">
+                          🐾 Kedi Asistan:
+                        </span>
+                      )}
+                      <p className="whitespace-pre-wrap">{item.text}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+
+              {/* Thinking Indicator */}
+              {isThinking && (
+                <div className="flex items-center gap-2 text-xs text-emerald-400/90 py-1 font-mono">
+                  <Loader2 size={13} className="animate-spin text-emerald-400" />
+                  <span>Mırrr... Groq ile düşünüyorum 🐾⚡</span>
+                </div>
+              )}
+            </div>
+
+            {/* Interactive Query Input Bar */}
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage();
+              }}
+              className="mt-3 flex items-center gap-1.5 pt-2.5 border-t border-white/10"
+            >
+              <input
+                type="text"
+                value={inputQuery}
+                onChange={(e) => setInputQuery(e.target.value)}
+                placeholder="Kediciğe bir soru sor... 🐾"
+                disabled={isThinking}
+                className={`flex-1 min-w-0 px-3 py-1.5 rounded-xl text-xs outline-hidden transition-all placeholder:text-white/40 ${
+                  isTerminal
+                    ? 'bg-black/70 border border-emerald-500/50 text-emerald-300 focus:border-emerald-400'
+                    : 'bg-white/10 border border-white/15 text-white focus:bg-white/15 focus:border-white/30'
+                }`}
+              />
+              <button
+                type="submit"
+                disabled={isThinking || !inputQuery.trim()}
+                className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                  inputQuery.trim() && !isThinking
+                    ? 'bg-emerald-500 text-black hover:bg-emerald-400 shadow-md shadow-emerald-500/30'
+                    : 'bg-white/10 text-white/40 cursor-not-allowed'
+                }`}
+                title="Gönder"
+              >
+                <Send size={12} />
+              </button>
+            </form>
+
+            {/* Quick Actions Footer */}
+            <div className="flex flex-wrap items-center gap-1.5 pt-2.5 mt-2 border-t border-white/10 text-[10px]">
+              {chatHistory.length === 0 && currentQuote.actionTab && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -182,41 +335,55 @@ export function InteractiveCatCompanion({
                     }
                     setDialogOpen(false);
                   }}
-                  className={`flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                    isTerminal
-                      ? 'bg-emerald-500 text-black hover:bg-emerald-400 font-bold'
-                      : 'bg-emerald-500 hover:bg-emerald-400 text-white font-extrabold shadow-xs'
-                  }`}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold bg-emerald-500 hover:bg-emerald-400 text-black transition-all cursor-pointer"
                 >
                   <Sparkles size={10} />
-                  <span>{currentQuote.actionTab === 'projects' ? 'Projeleri Aç' : currentQuote.actionTab === 'terminal' ? 'Terminale Geç' : 'İletişime Geç'}</span>
+                  <span>
+                    {currentQuote.actionTab === 'projects' ? 'Projeleri Aç' : currentQuote.actionTab === 'terminal' ? 'Terminale Geç' : 'İletişime Geç'}
+                  </span>
+                </button>
+              )}
+
+              {onNavigateToTab && (
+                <button
+                  onClick={() => {
+                    soundEngine.playGlassClick();
+                    onNavigateToTab('projects');
+                    setDialogOpen(false);
+                  }}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white/90 transition-all cursor-pointer"
+                >
+                  <span>Projeler</span>
+                  <ArrowRight size={9} />
                 </button>
               )}
 
               <button
                 onClick={handlePetAction}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium transition-all cursor-pointer"
+                className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium transition-all cursor-pointer"
                 title="Sevgi Göster"
               >
                 <Heart size={10} className="text-rose-400 fill-rose-400" />
                 <span>Sev ({petCount})</span>
               </button>
 
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  soundEngine.playCatMeow();
-                  setQuoteIndex(prev => (prev + 1) % CAT_QUOTES.length);
-                }}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-white/80 transition-all cursor-pointer ml-auto"
-                title="Başka bir şey söyle"
-              >
-                <span>Farklı Söz 🐾</span>
-              </button>
+              {chatHistory.length === 0 && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    soundEngine.playCatMeow();
+                    setQuoteIndex(prev => (prev + 1) % CAT_QUOTES.length);
+                  }}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5 hover:bg-white/15 text-white/80 transition-all cursor-pointer ml-auto"
+                  title="Farklı bir şey söyle"
+                >
+                  <span>Farklı Söz 🐾</span>
+                </button>
+              )}
             </div>
 
             {/* Bottom Arrow Pointer */}
-            <div className={`absolute -bottom-2 left-32 sm:left-36 w-3.5 h-3.5 rotate-45 border-r border-b ${
+            <div className={`absolute -bottom-2 left-36 sm:left-44 w-3.5 h-3.5 rotate-45 border-r border-b ${
               isTerminal ? 'bg-[#03150d] border-emerald-500/60' : 'bg-slate-900 border-white/20'
             }`} />
           </motion.div>
@@ -262,14 +429,14 @@ export function InteractiveCatCompanion({
         onMouseLeave={() => setIsHovered(false)}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
-        title="Emirhan'ın Dijital Kedisi (Bana tıkla!) 🐾"
+        title="Emirhan'ın Groq Yapay Zeka Destekli Siber Kedisi (Bana tıkla!) 🐾"
       >
         {/* Glow halo under cat */}
         <div className={`absolute -bottom-1 -left-3 -right-3 h-4 rounded-full blur-md transition-all duration-300 ${
           isTerminal ? 'bg-emerald-500/40' : 'bg-teal-400/30'
         }`} />
 
-        {/* Dynamic SVG Animated Cat - Scaled up for prominent, friendly appearance */}
+        {/* Dynamic SVG Animated Cat */}
         <svg 
           width="82" 
           height="72" 
@@ -349,7 +516,7 @@ export function InteractiveCatCompanion({
               animate={isHovered ? { rotate: [-4, 4, -4] } : {}}
               transition={{ repeat: Infinity, duration: 0.8 }}
             />
-            {/* Left Ear Inner Pink / Glow */}
+            {/* Left Ear Inner */}
             <polygon 
               points="19,16 17,9 24,13" 
               fill={isTerminal ? "rgba(52,211,153,0.4)" : "rgba(244,114,182,0.6)"} 
@@ -364,7 +531,7 @@ export function InteractiveCatCompanion({
               animate={isHovered ? { rotate: [4, -4, 4] } : {}}
               transition={{ repeat: Infinity, duration: 0.8 }}
             />
-            {/* Right Ear Inner Pink / Glow */}
+            {/* Right Ear Inner */}
             <polygon 
               points="45,16 47,9 40,13" 
               fill={isTerminal ? "rgba(52,211,153,0.4)" : "rgba(244,114,182,0.6)"} 
@@ -388,15 +555,12 @@ export function InteractiveCatCompanion({
 
             {/* Eyes */}
             {behavior === 'sleeping' ? (
-              // Closed smiling eyes (^ ^)
               <g stroke={isTerminal ? "#34d399" : "#38bdf8"} strokeWidth="1.6" strokeLinecap="round">
                 <path d="M26 21 Q28 18 30 21" />
                 <path d="M34 21 Q36 18 38 21" />
               </g>
             ) : (
-              // Big expressive eyes
               <g>
-                {/* Left eye */}
                 <ellipse 
                   cx={behavior === 'walking-left' ? "26.5" : behavior === 'walking-right' ? "28.5" : "28"} 
                   cy="20.5" 
@@ -404,10 +568,8 @@ export function InteractiveCatCompanion({
                   ry="3.2" 
                   fill={isTerminal ? "#34d399" : "#38bdf8"} 
                 />
-                {/* Left pupil reflection */}
                 <circle cx={behavior === 'walking-left' ? "26" : "27.5"} cy="19.5" r="0.9" fill="#ffffff" />
 
-                {/* Right eye */}
                 <ellipse 
                   cx={behavior === 'walking-left' ? "34.5" : behavior === 'walking-right' ? "36.5" : "36"} 
                   cy="20.5" 
@@ -415,7 +577,6 @@ export function InteractiveCatCompanion({
                   ry="3.2" 
                   fill={isTerminal ? "#34d399" : "#38bdf8"} 
                 />
-                {/* Right pupil reflection */}
                 <circle cx={behavior === 'walking-left' ? "34" : "35.5"} cy="19.5" r="0.9" fill="#ffffff" />
               </g>
             )}
@@ -450,7 +611,7 @@ export function InteractiveCatCompanion({
 
         {/* Micro Interaction Tooltip badge */}
         <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/80 text-[9px] font-bold text-emerald-300 border border-emerald-500/40 whitespace-nowrap shadow-xs">
-          Bana tıkla! 🐾
+          Groq AI Kedi 🐾⚡
         </div>
       </motion.div>
     </div>
