@@ -321,10 +321,10 @@ export function InteractiveCatCompanion({
       {/* CLOUD BUBBLE STACK & FLOATING INPUT (Strictly max 2 bubbles, no window background) */}
       <AnimatePresence>
         {dialogOpen && (
-          <div className={`pointer-events-none absolute bottom-[78px] w-84 sm:w-96 flex flex-col items-center gap-3 z-20 ${containerAlignClass}`}>
+          <div className={`pointer-events-none absolute bottom-[78px] w-88 sm:w-[410px] flex flex-col items-center gap-3 z-20 ${containerAlignClass}`}>
             
             {/* Exactly 2 Cloud Bubbles Stack with graceful fade-in & fade-out */}
-            <div className="w-full flex flex-col gap-2.5 items-center">
+            <div className="w-full flex flex-col gap-3 items-center">
               <AnimatePresence initial={false}>
                 {bubbles.map((item) => {
                   const isCat = item.sender === 'cat';
@@ -338,15 +338,15 @@ export function InteractiveCatCompanion({
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: -16, scale: 0.84, transition: { duration: 0.35, ease: 'easeOut' } }}
                       transition={{ duration: 0.3, ease: 'easeOut' }}
-                      className={`relative pointer-events-auto w-full px-7 py-5 select-text ${
+                      className={`relative pointer-events-auto w-full px-9 sm:px-11 py-6 sm:py-7 min-h-[110px] flex flex-col justify-center select-text ${
                         isCat ? 'self-start sm:self-center' : 'self-end sm:self-center'
                       }`}
                     >
-                      {/* Comic Cloud SVG Background (Matching pngwing.com.png puffy cloud with black outline & soft shadow) */}
+                      {/* Comic Cloud SVG Background (Matching pngwing.com.png with PURE WHITE outline & soft shadow) */}
                       <svg 
                         viewBox="0 0 340 200" 
                         preserveAspectRatio="none" 
-                        className="absolute inset-0 w-full h-full -z-10 overflow-visible drop-shadow-[0_12px_26px_rgba(0,0,0,0.38)]"
+                        className="absolute -inset-3 sm:-inset-4 w-[calc(100%+24px)] sm:w-[calc(100%+32px)] h-[calc(100%+24px)] sm:h-[calc(100%+32px)] -z-10 overflow-visible drop-shadow-[0_14px_32px_rgba(0,0,0,0.65)]"
                       >
                         <path
                           d="M 50,80
@@ -362,72 +362,68 @@ export function InteractiveCatCompanion({
                              C 18,126 18,96 50,80 Z"
                           fill={
                             isTerminal 
-                              ? (isCat ? '#031a0e' : '#01120a') 
-                              : (isCat ? '#ffffff' : '#f8fafc')
+                              ? (isCat ? '#02180e' : '#01120a') 
+                              : (isCat ? 'rgba(10, 15, 29, 0.95)' : 'rgba(15, 23, 42, 0.95)')
                           }
-                          stroke={
-                            isTerminal 
-                              ? (isCat ? '#10b981' : '#059669') 
-                              : '#0f172a'
-                          }
-                          strokeWidth="2.6"
+                          stroke="#ffffff"
+                          strokeWidth="2.8"
                         />
                       </svg>
 
-                      {/* Trailing Comic Thought Bubbles pointing to the speaker (like pngwing.com.png) */}
+                      {/* Trailing Comic Thought Bubbles with PURE WHITE outline (like pngwing.com.png) */}
                       {isCat ? (
                         /* Cat's cloud bubbles pointing down-left toward cat */
-                        <div className="absolute -bottom-5 left-10 flex flex-col items-center gap-0.5 pointer-events-none">
-                          <div className={`w-3.5 h-2.5 rounded-full border-[2px] -rotate-25 shadow-xs ${
-                            isTerminal ? 'bg-[#031a0e] border-emerald-500' : 'bg-white border-slate-900'
+                        <div className="absolute -bottom-6 left-12 flex flex-col items-center gap-0.5 pointer-events-none">
+                          <div className={`w-3.5 h-2.5 rounded-full border-[2.2px] border-white -rotate-25 shadow-xs ${
+                            isTerminal ? 'bg-[#02180e]' : 'bg-[#0a0f1d]'
                           }`} />
-                          <div className={`w-2.5 h-1.8 rounded-full border-[1.8px] -rotate-25 ${
-                            isTerminal ? 'bg-[#031a0e] border-emerald-500' : 'bg-white border-slate-900'
+                          <div className={`w-2.5 h-1.8 rounded-full border-[2px] border-white -rotate-25 ${
+                            isTerminal ? 'bg-[#02180e]' : 'bg-[#0a0f1d]'
                           }`} />
-                          <div className={`w-1.5 h-1 rounded-full border-[1.4px] -rotate-25 ${
-                            isTerminal ? 'bg-[#031a0e] border-emerald-500' : 'bg-white border-slate-900'
+                          <div className={`w-1.5 h-1 rounded-full border-[1.6px] border-white -rotate-25 ${
+                            isTerminal ? 'bg-[#02180e]' : 'bg-[#0a0f1d]'
                           }`} />
                         </div>
                       ) : (
                         /* Visitor's cloud bubbles pointing down-right */
-                        <div className="absolute -bottom-5 right-12 flex flex-col items-center gap-0.5 pointer-events-none">
-                          <div className={`w-3.5 h-2.5 rounded-full border-[2px] rotate-25 shadow-xs ${
-                            isTerminal ? 'bg-[#01120a] border-emerald-600' : 'bg-slate-50 border-slate-900'
+                        <div className="absolute -bottom-6 right-14 flex flex-col items-center gap-0.5 pointer-events-none">
+                          <div className={`w-3.5 h-2.5 rounded-full border-[2.2px] border-white rotate-25 shadow-xs ${
+                            isTerminal ? 'bg-[#01120a]' : 'bg-[#0f172a]'
                           }`} />
-                          <div className={`w-2.5 h-1.8 rounded-full border-[1.8px] rotate-25 ${
-                            isTerminal ? 'bg-[#01120a] border-emerald-600' : 'bg-slate-50 border-slate-900'
+                          <div className={`w-2.5 h-1.8 rounded-full border-[2px] border-white rotate-25 ${
+                            isTerminal ? 'bg-[#01120a]' : 'bg-[#0f172a]'
                           }`} />
-                          <div className={`w-1.5 h-1 rounded-full border-[1.4px] rotate-25 ${
-                            isTerminal ? 'bg-[#01120a] border-emerald-600' : 'bg-slate-50 border-slate-900'
+                          <div className={`w-1.5 h-1 rounded-full border-[1.6px] border-white rotate-25 ${
+                            isTerminal ? 'bg-[#01120a]' : 'bg-[#0f172a]'
                           }`} />
                         </div>
                       )}
 
-                      {/* Content inside cloud */}
-                      <div className="relative z-10 text-xs leading-relaxed px-1">
+                      {/* Content inside cloud - perfectly sized safe text area */}
+                      <div className="relative z-10 leading-relaxed text-left">
                         {/* Sender Micro Label */}
-                        <div className="text-[10px] font-bold mb-1 flex items-center gap-1">
+                        <div className="text-[11px] font-bold mb-1 flex items-center gap-1.5">
                           {isCat ? (
-                            <span className={isTerminal ? 'text-emerald-400' : 'text-emerald-700'}>
+                            <span className="text-emerald-400">
                               🐾 Kedi:
                             </span>
                           ) : (
-                            <span className={isTerminal ? 'text-emerald-500' : 'text-slate-500'}>
+                            <span className="text-cyan-400">
                               💬 Sen:
                             </span>
                           )}
                         </div>
 
                         {/* Bubble Text */}
-                        <p className={`font-normal ${
-                          isTerminal ? 'text-emerald-200' : 'text-slate-900'
+                        <p className={`text-xs sm:text-[13px] font-normal leading-relaxed break-words ${
+                          isTerminal ? 'text-emerald-200' : 'text-white'
                         }`}>
                           {isCat ? renderFormattedText(item.text) : item.text}
                         </p>
 
                         {/* Interactive Redirection Buttons inside cat's bubble */}
                         {isCat && actionButtons.length > 0 && (
-                          <div className="mt-2.5 pt-1.5 border-t border-black/10 flex flex-wrap gap-1.5">
+                          <div className="mt-2.5 pt-2 border-t border-white/15 flex flex-wrap gap-1.5">
                             {actionButtons.map((btn) => (
                               <button
                                 key={btn.id}
@@ -435,11 +431,7 @@ export function InteractiveCatCompanion({
                                   e.stopPropagation();
                                   btn.onClick();
                                 }}
-                                className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer ${
-                                  isTerminal
-                                    ? 'bg-emerald-500 text-black hover:bg-emerald-400 shadow-emerald-500/25'
-                                    : 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-emerald-600/30'
-                                }`}
+                                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500 hover:bg-emerald-400 text-black shadow-md shadow-emerald-500/30 hover:scale-105 active:scale-95 transition-all cursor-pointer border border-white/20"
                               >
                                 {btn.icon}
                                 <span>{btn.label}</span>
@@ -459,7 +451,7 @@ export function InteractiveCatCompanion({
                   initial={{ opacity: 0, scale: 0.85 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.85 }}
-                  className="relative pointer-events-auto px-5 py-2.5"
+                  className="relative pointer-events-auto px-6 py-3"
                 >
                   <svg 
                     viewBox="0 0 200 80" 
@@ -468,15 +460,15 @@ export function InteractiveCatCompanion({
                   >
                     <path
                       d="M 30,40 C 15,25 25,10 45,15 C 60,5 90,5 105,15 C 120,5 150,5 165,15 C 185,15 195,30 185,50 C 195,65 175,75 155,70 C 135,78 110,78 95,70 C 75,78 50,75 40,60 C 20,55 20,45 30,40 Z"
-                      fill={isTerminal ? '#031a0e' : '#ffffff'}
-                      stroke={isTerminal ? '#10b981' : '#0f172a'}
-                      strokeWidth="2.2"
+                      fill={isTerminal ? '#02180e' : 'rgba(10, 15, 29, 0.95)'}
+                      stroke="#ffffff"
+                      strokeWidth="2.4"
                     />
                   </svg>
                   <div className={`flex items-center gap-2 text-xs font-mono font-medium ${
-                    isTerminal ? 'text-emerald-400' : 'text-slate-900'
+                    isTerminal ? 'text-emerald-400' : 'text-white'
                   }`}>
-                    <Loader2 size={13} className="animate-spin text-emerald-500" />
+                    <Loader2 size={13} className="animate-spin text-emerald-400" />
                     <span>Mırrr... Düşünüyorum 🐾💭</span>
                   </div>
                 </motion.div>
