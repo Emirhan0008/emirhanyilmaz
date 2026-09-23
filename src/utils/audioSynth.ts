@@ -378,45 +378,6 @@ class SoundEngine {
   }
 
   /**
-   * Synthesized playful Cat Hiss / Puff sound effect
-   */
-  public playCatHiss() {
-    if (this.isMuted) return;
-    try {
-      this.initCtx();
-      if (!this.ctx) return;
-      const t = this.ctx.currentTime;
-
-      // Filtered white noise puff
-      const bufferSize = this.ctx.sampleRate * 0.25;
-      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-      const output = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) {
-        output[i] = Math.random() * 2 - 1;
-      }
-
-      const whiteNoise = this.ctx.createBufferSource();
-      whiteNoise.buffer = buffer;
-
-      const filter = this.ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.setValueAtTime(3200, t);
-      filter.Q.setValueAtTime(1.5, t);
-
-      const gain = this.ctx.createGain();
-      gain.gain.setValueAtTime(0.03, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.24);
-
-      whiteNoise.connect(filter);
-      filter.connect(gain);
-      gain.connect(this.ctx.destination);
-
-      whiteNoise.start(t);
-      whiteNoise.stop(t + 0.25);
-    } catch {}
-  }
-
-  /**
    * Synthesized Cute Cat Purr Sound Effect
    */
   public playCatPurr() {
@@ -449,58 +410,6 @@ class SoundEngine {
       osc.start(t);
       lfo.stop(t + 0.9);
       osc.stop(t + 0.9);
-    } catch {}
-  }
-
-  /**
-   * Synthesized Toy Ball Bouncing / Swat sound effect
-   */
-  public playBallBounce() {
-    if (this.isMuted) return;
-    try {
-      this.initCtx();
-      if (!this.ctx) return;
-      const t = this.ctx.currentTime;
-
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(320, t);
-      osc.frequency.exponentialRampToValueAtTime(140, t + 0.12);
-
-      gain.gain.setValueAtTime(0.08, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
-
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.13);
-    } catch {}
-  }
-
-  /**
-   * Synthesized playful cat jump / pounce sound
-   */
-  public playCatPounce() {
-    if (this.isMuted) return;
-    try {
-      this.initCtx();
-      if (!this.ctx) return;
-      const t = this.ctx.currentTime;
-
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(220, t);
-      osc.frequency.exponentialRampToValueAtTime(480, t + 0.15);
-
-      gain.gain.setValueAtTime(0.05, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
-
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(t);
-      osc.stop(t + 0.19);
     } catch {}
   }
 
