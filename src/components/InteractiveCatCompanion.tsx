@@ -19,27 +19,27 @@ interface ChatHistoryItem {
 
 const CAT_QUOTES = [
   {
-    text: "Miyav! Hoş geldin! Ben Emirhan'ın Groq yapay zekasıyla güçlendirilmiş dijital kedi asistanıyım. Bana dilediğini sorabilirsin! 🐾⚡",
-    badge: "Selam!",
+    text: "Miyav! Ben Emirhan'ın kedi asistanıyım. Sorun olursa buradan yazabilirsin. 🐾",
+    badge: "Selam",
     actionTab: null
   },
   {
-    text: "Emirhan'ın yapay zeka & Python projelerini inceledin mi? 'Projeler' sekmesinde çok yenilikçi çalışmalar var!",
-    badge: "Tavsiye",
+    text: "Projeler sekmesinde mobil asistan, eğitim ve Python araçları yer alıyor.",
+    badge: "Projeler",
     actionTab: "projects"
   },
   {
-    text: "Mırrr... Sırtımı kaşıdığın için teşekkürler! 😻 Burada kod yazmayı ve kahve kokusunu çok severim.",
+    text: "Mırrr... Dinleniyorum. İstediğin zaman soru sorabilirsin. 🐾",
     badge: "Mırrr",
     actionTab: null
   },
   {
-    text: "Terminal modunu denedin mi? Üstteki anahtarla terminale geçebilir ve PowerShell komutları çalıştırabilirsin!",
-    badge: "İpucu",
+    text: "Üstteki anahtarla Terminal moduna geçip komut satırını deneyebilirsin.",
+    badge: "Terminal",
     actionTab: "terminal"
   },
   {
-    text: "Emirhan ile doğrudan iş birliği yapmak veya selam vermek istersen: emirhan0008@gmail.com ✉️",
+    text: "İletişim için: emirhan0008@gmail.com ✉️",
     badge: "İletişim",
     actionTab: "contact"
   }
