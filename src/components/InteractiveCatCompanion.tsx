@@ -290,27 +290,66 @@ export function InteractiveCatCompanion({
         transform: 'translateX(-50%)'
       }}
     >
-      {/* PURE SPEECH BUBBLE (No window frame, no background wrapper) */}
+      {/* PURE COMIC CLOUD SPEECH BUBBLE (No rectangular box, no border) */}
       <AnimatePresence>
         {dialogOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.92 }}
+            initial={{ opacity: 0, y: 12, scale: 0.88 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.92 }}
-            className={`pointer-events-auto absolute bottom-[76px] w-72 sm:w-80 z-20 text-left select-text ${bubbleAlignClass}`}
+            exit={{ opacity: 0, y: 8, scale: 0.88 }}
+            className={`pointer-events-auto absolute bottom-[86px] w-80 sm:w-92 z-20 text-left select-text ${bubbleAlignClass}`}
           >
-            {/* The Speech Bubble Body */}
-            <div className={`relative p-3.5 rounded-2xl shadow-2xl backdrop-blur-xl border ${
-              isTerminal 
-                ? 'bg-[#02180e]/95 border-emerald-500/60 text-emerald-200 font-mono shadow-[0_10px_35px_rgba(0,0,0,0.7)]'
-                : 'liquid-glass-strong border-white/25 text-white shadow-[0_12px_35px_rgba(0,0,0,0.5)]'
-            }`}>
+            {/* The Cloud Container */}
+            <div className="relative px-7 py-6">
               
+              {/* Organic Comic Cloud SVG Background (Fluffy cloud lobes, borderless/soft stroke) */}
+              <svg 
+                viewBox="0 0 340 200" 
+                preserveAspectRatio="none" 
+                className="absolute -inset-3 w-[calc(100%+24px)] h-[calc(100%+24px)] -z-10 overflow-visible drop-shadow-[0_16px_35px_rgba(0,0,0,0.65)]"
+              >
+                <path
+                  d="M 50,80
+                     C 28,55 42,28 75,32
+                     C 95,12 135,10 160,25
+                     C 185,8 225,8 250,26
+                     C 275,14 308,30 314,58
+                     C 336,78 336,115 315,135
+                     C 328,162 298,188 268,182
+                     C 245,198 205,198 180,185
+                     C 155,198 115,198 90,184
+                     C 62,192 35,172 40,145
+                     C 18,128 18,98 50,80 Z"
+                  fill={isTerminal ? "rgba(2, 24, 14, 0.95)" : "rgba(15, 23, 42, 0.92)"}
+                  stroke={isTerminal ? "rgba(52, 211, 153, 0.4)" : "rgba(255, 255, 255, 0.2)"}
+                  strokeWidth="1.6"
+                />
+              </svg>
+
+              {/* Trailing Comic Cloud Puffs leading down to the cat */}
+              <div className={`absolute -bottom-6 ${tailAlignClass} flex flex-col items-center gap-1 pointer-events-none z-10`}>
+                <div className={`w-3.5 h-3.5 rounded-full shadow-md ${
+                  isTerminal 
+                    ? 'bg-[#02180e] border border-emerald-500/50 shadow-emerald-900/30' 
+                    : 'bg-slate-900 border border-white/20 shadow-black/40'
+                }`} />
+                <div className={`w-2.5 h-2.5 rounded-full shadow-xs ${
+                  isTerminal 
+                    ? 'bg-[#02180e] border border-emerald-500/50' 
+                    : 'bg-slate-900 border border-white/20'
+                }`} />
+                <div className={`w-1.5 h-1.5 rounded-full ${
+                  isTerminal 
+                    ? 'bg-[#02180e] border border-emerald-500/50' 
+                    : 'bg-slate-900 border border-white/20'
+                }`} />
+              </div>
+
               {/* Thinking Indicator or Message Content */}
               {isThinking ? (
-                <div className="flex items-center gap-2 text-xs py-1 text-emerald-400 font-mono">
-                  <Loader2 size={13} className="animate-spin text-emerald-400" />
-                  <span>Mırrr... Düşünüyorum 🐾⚡</span>
+                <div className="flex items-center gap-2 text-xs py-2 text-emerald-400 font-mono">
+                  <Loader2 size={14} className="animate-spin text-emerald-400" />
+                  <span>Mırrr... Bulutta düşünüyorum 🐾☁️</span>
                 </div>
               ) : (
                 <>
@@ -412,10 +451,6 @@ export function InteractiveCatCompanion({
                 </div>
               </div>
 
-              {/* Speech Bubble Tail pointing straight to the cat */}
-              <div className={`absolute -bottom-2 ${tailAlignClass} w-3.5 h-3.5 rotate-45 border-r border-b ${
-                isTerminal ? 'bg-[#02180e] border-emerald-500/60' : 'bg-slate-900 border-white/25'
-              }`} />
             </div>
           </motion.div>
         )}
