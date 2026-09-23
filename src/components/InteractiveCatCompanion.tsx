@@ -483,10 +483,10 @@ export function InteractiveCatCompanion({
               }}
               className="w-full max-w-[340px] flex items-center gap-1.5 pointer-events-auto"
             >
-              <div className={`flex-1 flex items-center gap-2 px-3.5 py-1.5 rounded-full shadow-xl backdrop-blur-xl border transition-all ${
+              <div className={`flex-1 flex items-center gap-2 px-3.5 py-1.5 rounded-full shadow-2xl backdrop-blur-xl border-[2px] border-white transition-all ${
                 isTerminal
-                  ? 'bg-black/80 border-emerald-500/50 text-emerald-300 focus-within:border-emerald-400'
-                  : 'bg-black/75 border-white/25 text-white focus-within:border-emerald-400'
+                  ? 'bg-black/85 text-emerald-300 focus-within:border-emerald-400'
+                  : 'bg-black/80 text-white focus-within:border-emerald-400'
               }`}>
                 <input
                   type="text"
@@ -494,15 +494,15 @@ export function InteractiveCatCompanion({
                   onChange={(e) => setInputQuery(e.target.value)}
                   placeholder="Kediciğe bir soru sor... 🐾"
                   disabled={isThinking}
-                  className="flex-1 min-w-0 bg-transparent text-xs outline-hidden placeholder:text-white/40"
+                  className="flex-1 min-w-0 bg-transparent text-xs outline-hidden placeholder:text-white/50"
                 />
                 <button
                   type="submit"
                   disabled={isThinking || !inputQuery.trim()}
                   className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all ${
                     inputQuery.trim() && !isThinking
-                      ? 'bg-emerald-500 text-black hover:bg-emerald-400 cursor-pointer shadow-sm shadow-emerald-500/40'
-                      : 'bg-white/10 text-white/30 cursor-not-allowed'
+                      ? 'bg-emerald-500 text-black hover:bg-emerald-400 cursor-pointer shadow-sm shadow-emerald-500/40 border border-white/60'
+                      : 'bg-white/10 text-white/30 cursor-not-allowed border border-white/20'
                   }`}
                   title="Gönder"
                 >
@@ -511,7 +511,7 @@ export function InteractiveCatCompanion({
               </div>
             </form>
 
-            {/* PRESET QUESTIONS (Floating freely under input with NO background) */}
+            {/* PRESET QUESTIONS (Floating freely under input with solid white outline) */}
             <div className="flex flex-wrap items-center justify-center gap-1.5 pointer-events-auto max-w-[350px]">
               {PRESET_QUERIES.map((q, idx) => (
                 <button
@@ -525,10 +525,10 @@ export function InteractiveCatCompanion({
                       handleSendMessage(q);
                     }
                   }}
-                  className={`px-2.5 py-1 rounded-full text-[10px] font-medium backdrop-blur-md border shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer ${
+                  className={`px-3 py-1 rounded-full text-[10px] font-semibold backdrop-blur-md border-[2px] border-white shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer ${
                     isTerminal
-                      ? 'bg-black/70 border-emerald-500/40 text-emerald-300 hover:border-emerald-400 hover:text-white'
-                      : 'bg-black/70 border-white/20 text-white/90 hover:border-emerald-400 hover:text-emerald-300'
+                      ? 'bg-black/85 text-emerald-300 hover:text-white hover:border-emerald-400'
+                      : 'bg-black/80 text-white hover:text-emerald-300 hover:border-emerald-400'
                   }`}
                 >
                   {q}
