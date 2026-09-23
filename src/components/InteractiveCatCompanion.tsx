@@ -557,7 +557,7 @@ export function InteractiveCatCompanion({
 
       {/* Sleeping 'Zzz' animation */}
       {behavior === 'sleeping' && !dialogOpen && (
-        <div className="absolute -top-9 right-1 font-mono font-bold text-xs text-emerald-400/80 pointer-events-none select-none">
+        <div className="absolute -top-9 right-1 font-mono font-bold text-xs text-amber-400/90 pointer-events-none select-none">
           <motion.span
             animate={{ y: [-2, -12], opacity: [0, 1, 0], scale: [0.8, 1.2] }}
             transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
@@ -577,23 +577,21 @@ export function InteractiveCatCompanion({
           setBehavior('curious-front');
         }}
         onMouseLeave={() => setIsHovered(false)}
-        whileHover={{ scale: 1.08 }}
+        whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         title="Emirhan'ın Siber Kedisi (Açmak / Kapatmak için tıkla) 🐾"
       >
-        {/* Glow halo under cat */}
-        <div className={`absolute -bottom-1 -left-3 -right-3 h-4 rounded-full blur-md transition-all duration-300 ${
-          isTerminal ? 'bg-emerald-500/40' : 'bg-teal-400/30'
-        }`} />
+        {/* Glow halo under cat (Distinct warm amber/gold puddle that pops against green and dark blue) */}
+        <div className="absolute -bottom-1 -left-4 -right-4 h-5 rounded-full blur-md bg-amber-500/45 shadow-[0_0_20px_rgba(245,158,11,0.55)] transition-all duration-300" />
 
-        {/* Dynamic SVG Animated Cat */}
+        {/* Dynamic SVG Animated Cat with distinctive Golden Amber outline palette */}
         <svg 
-          width="82" 
-          height="72" 
+          width="84" 
+          height="74" 
           viewBox="0 0 64 56" 
           fill="none" 
           xmlns="http://www.w3.org/2000/svg"
-          className="relative drop-shadow-[0_10px_20px_rgba(0,0,0,0.65)]"
+          className="relative drop-shadow-[0_12px_22px_rgba(245,158,11,0.35)]"
         >
           {/* Animated Tail */}
           <motion.path
@@ -603,8 +601,8 @@ export function InteractiveCatCompanion({
               ? "M18 38 C 12 34, 4 30, 6 20 C 8 14, 14 16, 12 24"
               : "M42 38 C 50 36, 56 32, 54 22 C 52 16, 47 18, 49 26"
             }
-            stroke={isTerminal ? "#10b981" : "#38bdf8"}
-            strokeWidth="3.5"
+            stroke="#fbbf24"
+            strokeWidth="3.8"
             strokeLinecap="round"
             fill="none"
             animate={{
@@ -623,16 +621,16 @@ export function InteractiveCatCompanion({
             cy="36" 
             rx="16" 
             ry="11" 
-            fill={isTerminal ? "#041b12" : "#0f172a"} 
-            stroke={isTerminal ? "#34d399" : "#38bdf8"} 
-            strokeWidth="1.8"
+            fill={isTerminal ? "#041b12" : "#0a0f1d"} 
+            stroke="#fbbf24" 
+            strokeWidth="2.4"
           />
 
           {/* Cyber Accent Circuit lines on back */}
           <path
             d="M26 33 L32 30 L38 33"
-            stroke={isTerminal ? "rgba(52,211,153,0.5)" : "rgba(56,189,248,0.5)"}
-            strokeWidth="1"
+            stroke="rgba(251, 191, 36, 0.7)"
+            strokeWidth="1.2"
             strokeLinecap="round"
           />
 
@@ -642,16 +640,16 @@ export function InteractiveCatCompanion({
               animate={{ y: [0, -2, 0] }}
               transition={{ repeat: Infinity, duration: 0.4 }}
             >
-              <ellipse cx="23" cy="45" rx="3.5" ry="2" fill={isTerminal ? "#34d399" : "#e2e8f0"} />
-              <ellipse cx="30" cy="46" rx="3.5" ry="2" fill={isTerminal ? "#10b981" : "#cbd5e1"} />
-              <ellipse cx="37" cy="45" rx="3.5" ry="2" fill={isTerminal ? "#34d399" : "#e2e8f0"} />
-              <ellipse cx="43" cy="46" rx="3.5" ry="2" fill={isTerminal ? "#10b981" : "#cbd5e1"} />
+              <ellipse cx="23" cy="45" rx="3.5" ry="2" fill="#fef08a" stroke="#d97706" strokeWidth="0.8" />
+              <ellipse cx="30" cy="46" rx="3.5" ry="2" fill="#fde047" stroke="#d97706" strokeWidth="0.8" />
+              <ellipse cx="37" cy="45" rx="3.5" ry="2" fill="#fef08a" stroke="#d97706" strokeWidth="0.8" />
+              <ellipse cx="43" cy="46" rx="3.5" ry="2" fill="#fde047" stroke="#d97706" strokeWidth="0.8" />
             </motion.g>
           ) : (
             <g>
-              <ellipse cx="24" cy="45" rx="3.5" ry="2" fill={isTerminal ? "#34d399" : "#cbd5e1"} />
-              <ellipse cx="32" cy="45.5" rx="3.5" ry="2" fill={isTerminal ? "#10b981" : "#e2e8f0"} />
-              <ellipse cx="40" cy="45" rx="3.5" ry="2" fill={isTerminal ? "#34d399" : "#cbd5e1"} />
+              <ellipse cx="24" cy="45" rx="3.5" ry="2" fill="#fde047" stroke="#d97706" strokeWidth="0.8" />
+              <ellipse cx="32" cy="45.5" rx="3.5" ry="2" fill="#fef08a" stroke="#d97706" strokeWidth="0.8" />
+              <ellipse cx="40" cy="45" rx="3.5" ry="2" fill="#fde047" stroke="#d97706" strokeWidth="0.8" />
             </g>
           )}
 
@@ -660,31 +658,31 @@ export function InteractiveCatCompanion({
             {/* Left Ear */}
             <motion.path
               d={behavior === 'walking-left' ? "M20 19 L15 6 L26 13 Z" : "M20 18 L16 7 L27 13 Z"}
-              fill={isTerminal ? "#041b12" : "#0f172a"}
-              stroke={isTerminal ? "#34d399" : "#38bdf8"}
-              strokeWidth="1.6"
+              fill={isTerminal ? "#041b12" : "#0a0f1d"}
+              stroke="#fbbf24"
+              strokeWidth="2.2"
               animate={isHovered ? { rotate: [-4, 4, -4] } : {}}
               transition={{ repeat: Infinity, duration: 0.8 }}
             />
             {/* Left Ear Inner */}
             <polygon 
               points="19,16 17,9 24,13" 
-              fill={isTerminal ? "rgba(52,211,153,0.4)" : "rgba(244,114,182,0.6)"} 
+              fill="rgba(244, 114, 182, 0.75)" 
             />
 
             {/* Right Ear */}
             <motion.path
               d={behavior === 'walking-right' ? "M44 19 L49 6 L38 13 Z" : "M44 18 L48 7 L37 13 Z"}
-              fill={isTerminal ? "#041b12" : "#0f172a"}
-              stroke={isTerminal ? "#34d399" : "#38bdf8"}
-              strokeWidth="1.6"
+              fill={isTerminal ? "#041b12" : "#0a0f1d"}
+              stroke="#fbbf24"
+              strokeWidth="2.2"
               animate={isHovered ? { rotate: [4, -4, 4] } : {}}
               transition={{ repeat: Infinity, duration: 0.8 }}
             />
             {/* Right Ear Inner */}
             <polygon 
               points="45,16 47,9 40,13" 
-              fill={isTerminal ? "rgba(52,211,153,0.4)" : "rgba(244,114,182,0.6)"} 
+              fill="rgba(244, 114, 182, 0.75)" 
             />
 
             {/* Head Round */}
@@ -692,20 +690,20 @@ export function InteractiveCatCompanion({
               cx="32" 
               cy="21" 
               r="12.5" 
-              fill={isTerminal ? "#02120c" : "#0a0f1d"} 
-              stroke={isTerminal ? "#34d399" : "#38bdf8"} 
-              strokeWidth="1.8"
+              fill={isTerminal ? "#02120c" : "#060913"} 
+              stroke="#fbbf24" 
+              strokeWidth="2.4"
             />
 
             {/* Whiskers */}
-            <line x1="16" y1="23" x2="24" y2="23" stroke={isTerminal ? "#6ee7b7" : "#94a3b8"} strokeWidth="1" strokeLinecap="round" />
-            <line x1="15" y1="26" x2="24" y2="25" stroke={isTerminal ? "#6ee7b7" : "#94a3b8"} strokeWidth="1" strokeLinecap="round" />
-            <line x1="48" y1="23" x2="40" y2="23" stroke={isTerminal ? "#6ee7b7" : "#94a3b8"} strokeWidth="1" strokeLinecap="round" />
-            <line x1="49" y1="26" x2="40" y2="25" stroke={isTerminal ? "#6ee7b7" : "#94a3b8"} strokeWidth="1" strokeLinecap="round" />
+            <line x1="16" y1="23" x2="24" y2="23" stroke="#fef08a" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="15" y1="26" x2="24" y2="25" stroke="#fef08a" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="48" y1="23" x2="40" y2="23" stroke="#fef08a" strokeWidth="1.2" strokeLinecap="round" />
+            <line x1="49" y1="26" x2="40" y2="25" stroke="#fef08a" strokeWidth="1.2" strokeLinecap="round" />
 
-            {/* Eyes */}
+            {/* Eyes - Glowing Amber Gold */}
             {behavior === 'sleeping' ? (
-              <g stroke={isTerminal ? "#34d399" : "#38bdf8"} strokeWidth="1.6" strokeLinecap="round">
+              <g stroke="#fbbf24" strokeWidth="2" strokeLinecap="round">
                 <path d="M26 21 Q28 18 30 21" />
                 <path d="M34 21 Q36 18 38 21" />
               </g>
@@ -714,53 +712,59 @@ export function InteractiveCatCompanion({
                 <ellipse 
                   cx={behavior === 'walking-left' ? "26.5" : behavior === 'walking-right' ? "28.5" : "28"} 
                   cy="20.5" 
-                  rx="2.6" 
-                  ry="3.2" 
-                  fill={isTerminal ? "#34d399" : "#38bdf8"} 
+                  rx="2.8" 
+                  ry="3.4" 
+                  fill="#f59e0b" 
+                  stroke="#fde047"
+                  strokeWidth="0.8"
                 />
-                <circle cx={behavior === 'walking-left' ? "26" : "27.5"} cy="19.5" r="0.9" fill="#ffffff" />
+                <circle cx={behavior === 'walking-left' ? "26" : "27.5"} cy="19.5" r="1.1" fill="#ffffff" />
 
                 <ellipse 
                   cx={behavior === 'walking-left' ? "34.5" : behavior === 'walking-right' ? "36.5" : "36"} 
                   cy="20.5" 
-                  rx="2.6" 
-                  ry="3.2" 
-                  fill={isTerminal ? "#34d399" : "#38bdf8"} 
+                  rx="2.8" 
+                  ry="3.4" 
+                  fill="#f59e0b" 
+                  stroke="#fde047"
+                  strokeWidth="0.8"
                 />
-                <circle cx={behavior === 'walking-left' ? "34" : "35.5"} cy="19.5" r="0.9" fill="#ffffff" />
+                <circle cx={behavior === 'walking-left' ? "34" : "35.5"} cy="19.5" r="1.1" fill="#ffffff" />
               </g>
             )}
 
-            {/* Cute Nose & Mouth */}
-            <polygon points="32,24.5 30.8,23 33.2,23" fill={isTerminal ? "#6ee7b7" : "#f472b6"} />
+            {/* Cute Coral Nose & Mouth */}
+            <polygon points="32,24.5 30.8,23 33.2,23" fill="#f43f5e" />
             <path 
               d="M32 25 L32 26.5 M32 26.5 C31 27.5 29.5 27 29.5 27 M32 26.5 C33 27.5 34.5 27 34.5 27" 
-              stroke={isTerminal ? "#34d399" : "#94a3b8"} 
-              strokeWidth="1.1" 
+              stroke="#fbbf24" 
+              strokeWidth="1.2" 
               strokeLinecap="round" 
               fill="none" 
             />
 
-            {/* Glowing Cyber Collar & EY Tag */}
+            {/* Glowing Cyber Collar & Golden Tag */}
             <path 
               d="M26 31 Q32 34 38 31" 
-              stroke={isTerminal ? "#10b981" : "#06b6d4"} 
-              strokeWidth="2" 
+              stroke="#ec4899" 
+              strokeWidth="2.4" 
               strokeLinecap="round"
               fill="none"
             />
             <circle 
               cx="32" 
               cy="34" 
-              r="2.2" 
-              fill={isTerminal ? "#34d399" : "#38bdf8"} 
+              r="2.4" 
+              fill="#fbbf24" 
+              stroke="#ffffff"
+              strokeWidth="0.8"
               className="animate-pulse"
             />
           </g>
         </svg>
 
         {/* Micro Interaction Tooltip badge */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/80 text-[9px] font-bold text-emerald-300 border border-emerald-500/40 whitespace-nowrap shadow-xs">
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/90 text-[9px] font-bold text-amber-300 border border-amber-400/60 whitespace-nowrap shadow-md">
           {dialogOpen ? 'Kapatmak için tıkla 🐾' : 'Konuşmak için tıkla 🐾'}
         </div>
       </motion.div>
