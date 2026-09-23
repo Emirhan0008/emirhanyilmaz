@@ -1187,11 +1187,11 @@ export default function App() {
                 rel="noopener noreferrer" 
                 onClick={() => soundEngine.playGlassClick()}
                 className="h-8 px-2.5 hover:px-3.5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 hover:border-emerald-500/50 text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer"
-                title="WhatsApp: Mesaj Gönder"
+                title="WhatsApp: Emirhan_yilmaz08"
               >
                 <WhatsAppIcon size={14} className="shrink-0 text-white/80 group-hover:text-emerald-400 transition-colors" />
                 <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
-                  <span className="text-[11px]">WhatsApp Mesajı</span>
+                  <span className="text-[11px]">Emirhan_yilmaz08</span>
                   <ExternalLink size={10} className="shrink-0 opacity-60 group-hover:opacity-100" />
                 </div>
               </a>
@@ -1208,6 +1208,22 @@ export default function App() {
                 <TelegramIcon size={14} className="shrink-0 text-white/80 group-hover:text-sky-400 transition-colors" />
                 <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
                   <span className="text-[11px]">t.me/emirhanyilmazrpd</span>
+                  <ExternalLink size={10} className="shrink-0 opacity-60 group-hover:opacity-100" />
+                </div>
+              </a>
+
+              {/* Gmail - Expandable on Hover */}
+              <a 
+                href="mailto:emirhan0008@gmail.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                onClick={() => soundEngine.playGlassClick()}
+                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 hover:border-red-400/50 text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer"
+                title="Gmail: emirhan0008@gmail.com"
+              >
+                <Mail size={14} className="shrink-0 text-white/80 group-hover:text-red-400 transition-colors" />
+                <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
+                  <span className="text-[11px]">emirhan0008@gmail.com</span>
                   <ExternalLink size={10} className="shrink-0 opacity-60 group-hover:opacity-100" />
                 </div>
               </a>
