@@ -66,7 +66,35 @@ export interface ContactMessage {
    timestamp: number;
  }
  
- export default function App() {
+ function TelegramIcon({ size = 14, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="currentColor" 
+      className={className}
+    >
+      <path d="M12 0C5.37 0 0 5.37 0 12s5.37 12 12 12 12-5.37 12-12S18.63 0 12 0zm5.56 8.16l-1.92 9.06c-.14.65-.53.81-1.07.51l-2.94-2.17-1.42 1.37c-.16.16-.29.29-.6.29l.21-3.01 5.48-4.95c.24-.21-.05-.33-.37-.12l-6.77 4.26-2.92-.91c-.63-.2-.65-.63.13-.94l11.41-4.4c.53-.19.99.13.82.97z"/>
+    </svg>
+  );
+}
+
+function WhatsAppIcon({ size = 14, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="currentColor" 
+      className={className}
+    >
+      <path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.978-.276-.1-.477-.15-.678.15-.2.301-.778.979-.954 1.179-.175.2-.351.226-.652.075-.301-.15-1.272-.469-2.423-1.496-.895-.798-1.5-1.784-1.676-2.085-.175-.301-.019-.464.132-.614.135-.135.301-.351.451-.527.151-.175.201-.301.301-.501.101-.2.05-.376-.025-.527-.075-.15-.678-1.632-.929-2.235-.245-.587-.493-.507-.678-.516l-.578-.01c-.2 0-.527.075-.803.376s-1.054 1.029-1.054 2.511c0 1.482 1.079 2.913 1.23 3.114.15.2 2.123 3.242 5.144 4.547.719.311 1.28.497 1.718.636.722.23 1.378.197 1.897.12.578-.086 1.78-.728 2.031-1.431.251-.703.251-1.305.176-.1431-.076-.126-.276-.201-.577-.351zm-5.438 8.018c-2.11 0-4.08-.57-5.787-1.564l-.415-.242-4.304 1.129 1.149-4.195-.266-.423c-1.089-1.733-1.667-3.754-1.667-5.834 0-6.079 4.946-11.025 11.029-11.025 2.946 0 5.716 1.148 7.798 3.23 2.083 2.083 3.23 4.853 3.23 7.798-.002 6.08-4.948 11.026-11.031 11.026zm7.798-18.825c-2.083-2.083-4.853-3.23-7.798-3.23-6.082 0-11.029 4.946-11.029 11.028 0 1.944.508 3.842 1.472 5.518l-1.565 5.717 5.85-1.535c1.619.882 3.442 1.348 5.272 1.348 6.082 0 11.03-4.947 11.03-11.028 0-2.946-1.148-5.716-3.232-7.818z"/>
+    </svg>
+  );
+}
+
+export default function App() {
    const [activeTab, setActiveTab] = useState<'profile' | 'projects' | 'articles' | 'contact'>('profile');
    const [activeLightboxImage, setActiveLightboxImage] = useState<string | null>(null);
    const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -1115,32 +1143,75 @@ export interface ContactMessage {
 
           {/* Top Bar (Socials, Innovative Actions & Audio Controls) */}
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-            <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-full overflow-x-auto">
+            <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-full overflow-x-auto transition-all duration-300">
               {/* Dual-Theme Skeuomorphic Switch (Normal vs Terminal Mode) */}
               <ThemeToggle theme={theme} onToggle={toggleTheme} className="shrink-0" />
               <div className="w-[1px] h-5 bg-white/15 mx-0.5 shrink-0" />
 
+              {/* GitHub - Expandable on Hover */}
               <a 
                 href="https://github.com/Emirhan0008" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full hover:bg-white/15 text-white font-mono text-xs font-bold transition-all shrink-0 bg-white/5 border border-white/10 hover:border-emerald-400/40 group"
+                onClick={() => soundEngine.playGlassClick()}
+                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 hover:border-emerald-400/50 text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer"
                 title="GitHub: Emirhan0008"
               >
-                <Github size={13} className="text-white group-hover:text-emerald-400 transition-colors" />
-                <span className="hidden sm:inline">github.com/Emirhan0008</span>
-                <span className="sm:hidden">GitHub</span>
-                <ExternalLink size={10} className="opacity-60 group-hover:opacity-100" />
+                <Github size={14} className="shrink-0 text-white group-hover:text-emerald-400 transition-colors" />
+                <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
+                  <span className="text-[11px]">github.com/Emirhan0008</span>
+                  <ExternalLink size={10} className="shrink-0 opacity-60 group-hover:opacity-100" />
+                </div>
               </a>
+
+              {/* Instagram - Expandable on Hover (Hesap yok, yakında) */}
               <a 
                 href="https://instagram.com" 
                 target="_blank" 
                 rel="noopener noreferrer" 
-                className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors shrink-0"
-                title="Instagram"
+                onClick={() => soundEngine.playGlassClick()}
+                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 hover:border-pink-500/50 text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer"
+                title="Instagram (Henüz aktif profil yok)"
               >
-                <Instagram size={14} />
+                <Instagram size={14} className="shrink-0 text-white/80 group-hover:text-pink-400 transition-colors" />
+                <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
+                  <span className="text-[11px]">Instagram (Yakında)</span>
+                  <ExternalLink size={10} className="shrink-0 opacity-60 group-hover:opacity-100" />
+                </div>
               </a>
+
+              {/* WhatsApp - Expandable on Hover */}
+              <a 
+                href="https://wa.me/?text=Merhaba%20Emirhan%20Bey,%20sitenizden%20ulaşıyorum." 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                onClick={() => soundEngine.playGlassClick()}
+                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 hover:border-emerald-500/50 text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer"
+                title="WhatsApp: Mesaj Gönder"
+              >
+                <WhatsAppIcon size={14} className="shrink-0 text-white/80 group-hover:text-emerald-400 transition-colors" />
+                <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
+                  <span className="text-[11px]">WhatsApp Mesajı</span>
+                  <ExternalLink size={10} className="shrink-0 opacity-60 group-hover:opacity-100" />
+                </div>
+              </a>
+
+              {/* Telegram - Expandable on Hover */}
+              <a 
+                href="https://t.me/emirhanyilmazrpd" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                onClick={() => soundEngine.playGlassClick()}
+                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 hover:border-sky-400/50 text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer"
+                title="Telegram: t.me/emirhanyilmazrpd"
+              >
+                <TelegramIcon size={14} className="shrink-0 text-white/80 group-hover:text-sky-400 transition-colors" />
+                <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
+                  <span className="text-[11px]">t.me/emirhanyilmazrpd</span>
+                  <ExternalLink size={10} className="shrink-0 opacity-60 group-hover:opacity-100" />
+                </div>
+              </a>
+
               <div className="w-[1px] h-4 bg-white/10 mx-0.5 shrink-0" />
               
               {/* Sound FX Toggle */}
