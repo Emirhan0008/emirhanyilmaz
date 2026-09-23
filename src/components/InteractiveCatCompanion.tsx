@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Heart, X, Zap, Send, RotateCcw, Loader2, ArrowRight } from 'lucide-react';
+import { Heart, Send, Loader2, FolderGit2, Terminal, Mail, BookOpen, Sparkles } from 'lucide-react';
 import { soundEngine } from '../utils/audioSynth';
 import { askGroqCatAssistant } from '../utils/groqService';
 
@@ -12,44 +12,29 @@ export interface InteractiveCatCompanionProps {
   onOpenTerminal?: () => void;
 }
 
-interface ChatHistoryItem {
-  sender: 'user' | 'cat';
-  text: string;
-}
-
 const CAT_QUOTES = [
   {
-    text: "Miyav! Ben Emirhan'ın kedi asistanıyım. Sorun olursa buradan yazabilirsin. 🐾",
-    badge: "Selam",
-    actionTab: null
+    text: "Miyav! Hoş geldin. Projeler sekmesine veya İletişim bölümüne göz atabilir, bana dilediğini sorabilirsin. 🐾",
   },
   {
-    text: "Projeler sekmesinde mobil asistan, eğitim ve Python araçları yer alıyor.",
-    badge: "Projeler",
-    actionTab: "projects"
+    text: "Emirhan'ın mobil asistan ve yapay zeka çalışmalarını görmek için Projeler sekmesine bakabilirsin.",
   },
   {
-    text: "Mırrr... Dinleniyorum. İstediğin zaman soru sorabilirsin. 🐾",
-    badge: "Mırrr",
-    actionTab: null
+    text: "Hacker görünümü için Terminal moduna geçebilir ya da PowerShell komutlarını deneyebilirsin!",
   },
   {
-    text: "Üstteki anahtarla Terminal moduna geçip komut satırını deneyebilirsin.",
-    badge: "Terminal",
-    actionTab: "terminal"
+    text: "Doğrudan mesaj iletmek istersen İletişim sayfasından veya e-posta ile ulaşabilirsin. ✉️",
   },
   {
-    text: "İletişim için: emirhan0008@gmail.com ✉️",
-    badge: "İletişim",
-    actionTab: "contact"
+    text: "Mırrr... Dinleniyorum. Kafana takılan bir şey varsa hemen sorabilirsin. 🐾",
   }
 ];
 
 const PRESET_QUERIES = [
-  "Emirhan kimdir?",
-  "Projelerini özetle",
-  "PDR ve Yapay Zeka?",
-  "Hangi dilleri biliyor?"
+  "Projeler?",
+  "Kimdir?",
+  "Mod Değiştir",
+  "İletişim?"
 ];
 
 export function InteractiveCatCompanion({
@@ -65,12 +50,10 @@ export function InteractiveCatCompanion({
   const [petCount, setPetCount] = useState<number>(0);
   const [showHeart, setShowHeart] = useState<boolean>(false);
 
-  // Groq AI Chat States
+  // Active cat message shown in bubble
+  const [currentMessage, setCurrentMessage] = useState<string>(CAT_QUOTES[0].text);
   const [inputQuery, setInputQuery] = useState('');
   const [isThinking, setIsThinking] = useState(false);
-  const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
-  const chatScrollRef = useRef<HTMLDivElement>(null);
-
   const isTerminal = theme === 'terminal';
   const behaviorTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -89,7 +72,6 @@ export function InteractiveCatCompanion({
         setPositionX(prev => Math.min(80, prev + (10 + Math.random() * 15)));
       }
 
-      // Schedule next behavior change (between 4 and 8 seconds)
       const nextInterval = 4000 + Math.random() * 4500;
       behaviorTimerRef.current = setTimeout(cycleBehaviors, nextInterval);
     };
@@ -101,13 +83,7 @@ export function InteractiveCatCompanion({
     };
   }, [dialogOpen, isHovered]);
 
-  // Auto-scroll chat to bottom
-  useEffect(() => {
-    if (chatScrollRef.current) {
-      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
-    }
-  }, [chatHistory, isThinking]);
-
+  // Click on Cat: Toggles the speech bubble open or closed
   const handleCatClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     soundEngine.playCatMeow();
@@ -116,7 +92,7 @@ export function InteractiveCatCompanion({
     setTimeout(() => setShowHeart(false), 1400);
 
     setBehavior('curious-front');
-    setDialogOpen(true);
+    setDialogOpen(prev => !prev);
   };
 
   const handlePetAction = (e: React.MouseEvent) => {
@@ -127,6 +103,14 @@ export function InteractiveCatCompanion({
     setTimeout(() => setShowHeart(false), 1200);
   };
 
+  const handleNextQuote = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    soundEngine.playCatMeow();
+    const nextIdx = (quoteIndex + 1) % CAT_QUOTES.length;
+    setQuoteIndex(nextIdx);
+    setCurrentMessage(CAT_QUOTES[nextIdx].text);
+  };
+
   const handleSendMessage = async (textToSend?: string) => {
     const query = (textToSend || inputQuery).trim();
     if (!query || isThinking) return;
@@ -134,32 +118,169 @@ export function InteractiveCatCompanion({
     soundEngine.playAiSparkle();
     setInputQuery('');
     setBehavior('curious-front');
-
-    const updatedHistory: ChatHistoryItem[] = [
-      ...chatHistory,
-      { sender: 'user', text: query }
-    ];
-    setChatHistory(updatedHistory);
     setIsThinking(true);
 
     try {
-      const reply = await askGroqCatAssistant(query, chatHistory);
-      setChatHistory([...updatedHistory, { sender: 'cat', text: reply }]);
+      const reply = await askGroqCatAssistant(query, [{ sender: 'user', text: query }]);
+      setCurrentMessage(reply);
       soundEngine.playCatPurr();
     } catch {
-      setChatHistory([
-        ...updatedHistory,
-        {
-          sender: 'cat',
-          text: "Miyav! 🐾 Yanıt oluştururken küçük bir aksaklık oldu. Projeler sekmesinden Emirhan'ın çalışmalarını inceleyebilirsin!"
-        }
-      ]);
+      setCurrentMessage("Miyav! 🐾 Detaylar için Projeler ve İletişim sekmesine göz atabilirsin!");
     } finally {
       setIsThinking(false);
     }
   };
 
-  const currentQuote = CAT_QUOTES[quoteIndex];
+  // Render text with clickable GREEN and UNDERLINED keywords
+  const renderFormattedText = (text: string) => {
+    const regex = /(projeler(?:i|de|den|e)?|terminal(?:e|de|den)?|powershell|iletişim(?:e|de|den)?|makaleler(?:e|de|den)?)/gi;
+    const parts = text.split(regex);
+
+    return parts.map((part, index) => {
+      const lower = part.toLowerCase();
+
+      if (lower.startsWith('proje')) {
+        return (
+          <button
+            key={index}
+            onClick={(e) => {
+              e.stopPropagation();
+              soundEngine.playGlassClick();
+              onNavigateToTab?.('projects');
+            }}
+            className="text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-4 cursor-pointer transition-colors inline-block"
+            title="Projelere Git"
+          >
+            {part}
+          </button>
+        );
+      }
+
+      if (lower.startsWith('terminal') || lower === 'powershell') {
+        return (
+          <button
+            key={index}
+            onClick={(e) => {
+              e.stopPropagation();
+              soundEngine.playTerminalKey();
+              onOpenTerminal?.();
+            }}
+            className="text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-4 cursor-pointer transition-colors inline-block"
+            title="Terminal Moduna Geç"
+          >
+            {part}
+          </button>
+        );
+      }
+
+      if (lower.startsWith('iletişim')) {
+        return (
+          <button
+            key={index}
+            onClick={(e) => {
+              e.stopPropagation();
+              soundEngine.playGlassClick();
+              onNavigateToTab?.('contact');
+            }}
+            className="text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-4 cursor-pointer transition-colors inline-block"
+            title="İletişime Git"
+          >
+            {part}
+          </button>
+        );
+      }
+
+      if (lower.startsWith('makale')) {
+        return (
+          <button
+            key={index}
+            onClick={(e) => {
+              e.stopPropagation();
+              soundEngine.playGlassClick();
+              onNavigateToTab?.('articles');
+            }}
+            className="text-emerald-400 hover:text-emerald-300 font-bold underline underline-offset-4 cursor-pointer transition-colors inline-block"
+            title="Makalelere Git"
+          >
+            {part}
+          </button>
+        );
+      }
+
+      return <span key={index}>{part}</span>;
+    });
+  };
+
+  // Generate interactive redirection buttons based on text content
+  const getActionButtons = (text: string) => {
+    const lower = text.toLowerCase();
+    const buttons: { id: string; label: string; icon: React.ReactNode; onClick: () => void }[] = [];
+
+    if (lower.includes('proje')) {
+      buttons.push({
+        id: 'projects',
+        label: 'Projelere Git',
+        icon: <FolderGit2 size={12} />,
+        onClick: () => {
+          soundEngine.playGlassClick();
+          onNavigateToTab?.('projects');
+        }
+      });
+    }
+
+    if (lower.includes('terminal') || lower.includes('powershell') || lower.includes('mod')) {
+      buttons.push({
+        id: 'terminal',
+        label: isTerminal ? 'Normal Moda Geç' : 'Mod Değiştir (Terminal)',
+        icon: <Terminal size={12} />,
+        onClick: () => {
+          soundEngine.playTerminalKey();
+          onOpenTerminal?.();
+        }
+      });
+    }
+
+    if (lower.includes('iletişim') || lower.includes('mail') || lower.includes('eposta') || lower.includes('e-posta')) {
+      buttons.push({
+        id: 'contact',
+        label: 'İletişime Geç',
+        icon: <Mail size={12} />,
+        onClick: () => {
+          soundEngine.playGlassClick();
+          onNavigateToTab?.('contact');
+        }
+      });
+    }
+
+    if (lower.includes('makale') || lower.includes('yazı')) {
+      buttons.push({
+        id: 'articles',
+        label: 'Makalelere Git',
+        icon: <BookOpen size={12} />,
+        onClick: () => {
+          soundEngine.playGlassClick();
+          onNavigateToTab?.('articles');
+        }
+      });
+    }
+
+    return buttons;
+  };
+
+  const actionButtons = getActionButtons(currentMessage);
+
+  // Responsive bubble alignment based on cat screen position
+  const bubbleAlignClass = positionX < 25 
+    ? 'left-0 translate-x-0' 
+    : positionX > 75 
+    ? 'right-0 translate-x-0' 
+    : 'left-1/2 -translate-x-1/2';
+
+  const tailAlignClass = positionX < 25
+    ? 'left-10'
+    : positionX > 75
+    ? 'right-10'
+    : 'left-1/2 -translate-x-1/2';
 
   return (
     <div 
@@ -169,215 +290,132 @@ export function InteractiveCatCompanion({
         transform: 'translateX(-50%)'
       }}
     >
-      {/* Floating Speech Bubbles & Groq AI Chat (No window background) */}
+      {/* PURE SPEECH BUBBLE (No window frame, no background wrapper) */}
       <AnimatePresence>
         {dialogOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.94 }}
+            initial={{ opacity: 0, y: 10, scale: 0.92 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.94 }}
-            className="pointer-events-auto absolute bottom-22 -left-36 sm:-left-44 w-80 sm:w-92 z-20 text-left select-text flex flex-col gap-2"
+            exit={{ opacity: 0, y: 8, scale: 0.92 }}
+            className={`pointer-events-auto absolute bottom-[76px] w-72 sm:w-80 z-20 text-left select-text ${bubbleAlignClass}`}
           >
-            {/* Top Minimal Toolbar (Only Close & Reset floating badges) */}
-            <div className="flex items-center justify-between px-1">
-              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 border border-white/10 text-[9px] font-bold text-emerald-300 backdrop-blur-md">
-                <span>🐾</span>
-                <span>{isTerminal ? 'CYBER-CAT // GROQ' : 'Kedi Asistanı'}</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              </div>
-              <div className="flex items-center gap-1">
-                {chatHistory.length > 0 && (
-                  <button
-                    onClick={() => {
-                      soundEngine.playGlassClick();
-                      setChatHistory([]);
-                    }}
-                    className="w-5 h-5 rounded-full bg-black/60 border border-white/10 hover:border-white/30 text-white/70 hover:text-white flex items-center justify-center text-[10px] backdrop-blur-md cursor-pointer transition-colors"
-                    title="Sohbeti Sıfırla"
-                  >
-                    <RotateCcw size={10} />
-                  </button>
-                )}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    soundEngine.playGlassClick();
-                    setDialogOpen(false);
-                  }}
-                  className="w-5 h-5 rounded-full bg-black/60 border border-white/10 hover:border-white/30 text-white/70 hover:text-white flex items-center justify-center text-[10px] backdrop-blur-md cursor-pointer transition-colors"
-                  title="Kapat"
-                >
-                  <X size={11} />
-                </button>
-              </div>
-            </div>
-
-            {/* Conversation Area (Only floating speech bubbles) */}
-            <div 
-              ref={chatScrollRef}
-              className="max-h-60 overflow-y-auto pr-0.5 space-y-2 text-xs scrollbar-thin scrollbar-thumb-white/20"
-            >
-              {chatHistory.length === 0 ? (
-                /* Primary Greeting Speech Bubble */
-                <div className={`relative p-3.5 rounded-2xl rounded-bl-xs shadow-xl backdrop-blur-xl border ${
-                  isTerminal 
-                    ? 'bg-[#02180e]/95 border-emerald-500/50 text-emerald-300 font-mono shadow-[0_8px_30px_rgba(0,0,0,0.6)]' 
-                    : 'liquid-glass-strong border-white/20 text-white shadow-[0_8px_30px_rgba(0,0,0,0.45)]'
-                }`}>
-                  <p className="text-xs leading-relaxed">
-                    {currentQuote.text}
+            {/* The Speech Bubble Body */}
+            <div className={`relative p-3.5 rounded-2xl shadow-2xl backdrop-blur-xl border ${
+              isTerminal 
+                ? 'bg-[#02180e]/95 border-emerald-500/60 text-emerald-200 font-mono shadow-[0_10px_35px_rgba(0,0,0,0.7)]'
+                : 'liquid-glass-strong border-white/25 text-white shadow-[0_12px_35px_rgba(0,0,0,0.5)]'
+            }`}>
+              
+              {/* Thinking Indicator or Message Content */}
+              {isThinking ? (
+                <div className="flex items-center gap-2 text-xs py-1 text-emerald-400 font-mono">
+                  <Loader2 size={13} className="animate-spin text-emerald-400" />
+                  <span>Mırrr... Düşünüyorum 🐾⚡</span>
+                </div>
+              ) : (
+                <>
+                  <p className="text-xs leading-relaxed font-normal">
+                    {renderFormattedText(currentMessage)}
                   </p>
 
-                  {/* Preset Question Chips as mini floating pills */}
-                  <div className="pt-2 mt-2 border-t border-white/10">
-                    <span className="text-[10px] text-white/50 block mb-1.5 font-medium">
-                      Hızlıca sorabilirsiniz:
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {PRESET_QUERIES.map((q, idx) => (
+                  {/* Interactive Redirection Buttons */}
+                  {actionButtons.length > 0 && (
+                    <div className="mt-2.5 pt-2 border-t border-white/10 flex flex-wrap gap-1.5">
+                      {actionButtons.map((btn) => (
                         <button
-                          key={idx}
-                          onClick={() => handleSendMessage(q)}
-                          className="px-2 py-1 rounded-lg text-[10px] bg-white/10 hover:bg-white/20 text-white/90 hover:text-emerald-300 border border-white/10 transition-all cursor-pointer text-left"
+                          key={btn.id}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            btn.onClick();
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-500 hover:bg-emerald-400 text-black shadow-md shadow-emerald-500/25 hover:scale-105 active:scale-95 transition-all cursor-pointer"
                         >
-                          {q}
+                          {btn.icon}
+                          <span>{btn.label}</span>
                         </button>
                       ))}
                     </div>
-                  </div>
-
-                  {/* Speech Bubble Tail */}
-                  <div className={`absolute -bottom-2 left-36 sm:left-44 w-3.5 h-3.5 rotate-45 border-r border-b ${
-                    isTerminal ? 'bg-[#02180e] border-emerald-500/50' : 'bg-slate-900 border-white/20'
-                  }`} />
-                </div>
-              ) : (
-                /* Chat Speech Bubbles */
-                chatHistory.map((item, idx) => {
-                  const isUser = item.sender === 'user';
-                  const isLastCatMsg = !isUser && idx === chatHistory.length - 1;
-
-                  return (
-                    <div 
-                      key={idx} 
-                      className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
-                    >
-                      <div className={`relative px-3.5 py-2.5 max-w-[88%] text-xs leading-relaxed shadow-lg backdrop-blur-xl ${
-                        isUser
-                          ? 'rounded-2xl rounded-br-xs bg-emerald-500/30 border border-emerald-400/50 text-emerald-100 shadow-[0_4px_20px_rgba(16,185,129,0.2)]'
-                          : isTerminal
-                          ? 'rounded-2xl rounded-bl-xs bg-[#02180e]/95 border border-emerald-500/50 text-emerald-300 font-mono shadow-[0_6px_25px_rgba(0,0,0,0.6)]'
-                          : 'rounded-2xl rounded-bl-xs liquid-glass-strong border border-white/20 text-white shadow-[0_6px_25px_rgba(0,0,0,0.45)]'
-                      }`}>
-                        {!isUser && (
-                          <span className="text-[10px] font-bold text-emerald-400 block mb-0.5">
-                            🐾 Kedi:
-                          </span>
-                        )}
-                        <p className="whitespace-pre-wrap">{item.text}</p>
-
-                        {/* Speech bubble tail for last cat message */}
-                        {isLastCatMsg && (
-                          <div className={`absolute -bottom-1.5 left-6 w-3 h-3 rotate-45 border-r border-b ${
-                            isTerminal ? 'bg-[#02180e] border-emerald-500/50' : 'bg-slate-900 border-white/20'
-                          }`} />
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
+                  )}
+                </>
               )}
 
-              {/* Floating Thinking Bubble */}
-              {isThinking && (
-                <div className="flex items-start">
-                  <div className={`px-3 py-1.5 rounded-2xl rounded-bl-xs shadow-md backdrop-blur-md border flex items-center gap-2 text-xs font-mono ${
-                    isTerminal
-                      ? 'bg-[#02180e]/95 border-emerald-500/40 text-emerald-400'
-                      : 'liquid-glass-strong border-white/20 text-emerald-300'
-                  }`}>
-                    <Loader2 size={12} className="animate-spin text-emerald-400" />
-                    <span>Mırrr... 🐾⚡</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Floating Input Pill (No large container card) */}
-            <form 
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendMessage();
-              }}
-              className={`flex items-center gap-1.5 p-1 rounded-full shadow-xl backdrop-blur-xl border ${
-                isTerminal
-                  ? 'bg-[#02180e]/95 border-emerald-500/50'
-                  : 'bg-slate-900/85 border-white/20'
-              }`}
-            >
-              <input
-                type="text"
-                value={inputQuery}
-                onChange={(e) => setInputQuery(e.target.value)}
-                placeholder="Kediciğe bir soru sor... 🐾"
-                disabled={isThinking}
-                className={`flex-1 min-w-0 px-3 py-1 text-xs outline-hidden bg-transparent transition-all placeholder:text-white/40 ${
-                  isTerminal ? 'text-emerald-300 font-mono' : 'text-white font-sans'
-                }`}
-              />
-              <button
-                type="submit"
-                disabled={isThinking || !inputQuery.trim()}
-                className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all cursor-pointer ${
-                  inputQuery.trim() && !isThinking
-                    ? 'bg-emerald-500 text-black hover:bg-emerald-400 shadow-md shadow-emerald-500/30'
-                    : 'bg-white/10 text-white/40 cursor-not-allowed'
-                }`}
-                title="Gönder"
+              {/* Minimalist Question Input */}
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSendMessage();
+                }}
+                className="mt-2.5 pt-2 border-t border-white/10 flex items-center gap-1.5"
               >
-                <Send size={11} />
-              </button>
-            </form>
-
-            {/* Floating Action Pills */}
-            <div className="flex items-center justify-between gap-1 text-[10px] px-1">
-              <div className="flex items-center gap-1">
-                {onNavigateToTab && (
-                  <button
-                    onClick={() => {
-                      soundEngine.playGlassClick();
-                      onNavigateToTab('projects');
-                      setDialogOpen(false);
-                    }}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/50 hover:bg-black/70 border border-white/10 text-white/80 hover:text-white backdrop-blur-md transition-all cursor-pointer"
-                  >
-                    <span>Projeler</span>
-                    <ArrowRight size={8} />
-                  </button>
-                )}
+                <input
+                  type="text"
+                  value={inputQuery}
+                  onChange={(e) => setInputQuery(e.target.value)}
+                  placeholder="Kediciğe sor... 🐾"
+                  disabled={isThinking}
+                  className={`flex-1 min-w-0 px-2.5 py-1 text-xs rounded-full bg-black/40 border border-white/15 outline-hidden placeholder:text-white/40 transition-colors ${
+                    isTerminal ? 'text-emerald-300 font-mono focus:border-emerald-400' : 'text-white font-sans focus:border-white/40'
+                  }`}
+                />
                 <button
-                  onClick={handlePetAction}
-                  className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/50 hover:bg-black/70 border border-white/10 text-white/80 hover:text-rose-300 backdrop-blur-md transition-all cursor-pointer"
-                  title="Sevgi Göster"
+                  type="submit"
+                  disabled={isThinking || !inputQuery.trim()}
+                  className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all ${
+                    inputQuery.trim() && !isThinking
+                      ? 'bg-emerald-500 text-black hover:bg-emerald-400 cursor-pointer shadow-sm shadow-emerald-500/30'
+                      : 'bg-white/10 text-white/30 cursor-not-allowed'
+                  }`}
+                  title="Sor"
                 >
-                  <Heart size={9} className="text-rose-400 fill-rose-400" />
-                  <span>Sev ({petCount})</span>
+                  <Send size={10} />
                 </button>
+              </form>
+
+              {/* Quick Prompt Chips & Interactions Footer */}
+              <div className="mt-1.5 pt-1 flex items-center justify-between gap-1 text-[9px] text-white/60">
+                <div className="flex flex-wrap gap-1">
+                  {PRESET_QUERIES.map((q, idx) => (
+                    <button
+                      key={idx}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (q === "Mod Değiştir") {
+                          soundEngine.playTerminalKey();
+                          onOpenTerminal?.();
+                        } else {
+                          handleSendMessage(q);
+                        }
+                      }}
+                      className="px-2 py-0.5 rounded-full bg-white/5 hover:bg-white/15 text-white/80 hover:text-emerald-300 border border-white/10 transition-all cursor-pointer"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={handlePetAction}
+                    className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full hover:bg-white/10 text-rose-300 hover:text-rose-200 transition-colors cursor-pointer"
+                    title="Sevgi Göster"
+                  >
+                    <Heart size={9} className="fill-rose-400 text-rose-400" />
+                    <span>{petCount}</span>
+                  </button>
+                  <button
+                    onClick={handleNextQuote}
+                    className="px-1.5 py-0.5 rounded-full hover:bg-white/10 text-white/60 hover:text-white transition-colors cursor-pointer"
+                    title="Farklı Söz Söyle"
+                  >
+                    <Sparkles size={9} />
+                  </button>
+                </div>
               </div>
 
-              {chatHistory.length === 0 && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    soundEngine.playCatMeow();
-                    setQuoteIndex(prev => (prev + 1) % CAT_QUOTES.length);
-                  }}
-                  className="px-2 py-0.5 rounded-full bg-black/50 hover:bg-black/70 border border-white/10 text-white/70 hover:text-white backdrop-blur-md transition-all cursor-pointer"
-                  title="Farklı bir şey söyle"
-                >
-                  <span>Farklı Söz 🐾</span>
-                </button>
-              )}
+              {/* Speech Bubble Tail pointing straight to the cat */}
+              <div className={`absolute -bottom-2 ${tailAlignClass} w-3.5 h-3.5 rotate-45 border-r border-b ${
+                isTerminal ? 'bg-[#02180e] border-emerald-500/60' : 'bg-slate-900 border-white/25'
+              }`} />
             </div>
           </motion.div>
         )}
@@ -422,7 +460,7 @@ export function InteractiveCatCompanion({
         onMouseLeave={() => setIsHovered(false)}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
-        title="Emirhan'ın Groq Yapay Zeka Destekli Siber Kedisi (Bana tıkla!) 🐾"
+        title="Emirhan'ın Siber Kedisi (Açmak / Kapatmak için tıkla) 🐾"
       >
         {/* Glow halo under cat */}
         <div className={`absolute -bottom-1 -left-3 -right-3 h-4 rounded-full blur-md transition-all duration-300 ${
@@ -604,7 +642,7 @@ export function InteractiveCatCompanion({
 
         {/* Micro Interaction Tooltip badge */}
         <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/80 text-[9px] font-bold text-emerald-300 border border-emerald-500/40 whitespace-nowrap shadow-xs">
-          Groq AI Kedi 🐾⚡
+          {dialogOpen ? 'Kapatmak için tıkla 🐾' : 'Konuşmak için tıkla 🐾'}
         </div>
       </motion.div>
     </div>
