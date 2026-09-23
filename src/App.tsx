@@ -52,7 +52,6 @@ import {
 import { InteractiveCatCompanion } from './components/InteractiveCatCompanion';
 import { ProjectEstimator } from './components/ProjectEstimator';
 import { TechRadar } from './components/TechRadar';
-import { DeveloperTerminalModal } from './components/DeveloperTerminalModal';
 import { soundEngine, PEACEFUL_TRACKS, MusicTrack } from './utils/audioSynth';
 import { ThemeToggle, AppTheme } from './components/ThemeToggle';
 import { PowerShellTerminalWorkspace } from './components/PowerShellTerminalWorkspace';
@@ -108,7 +107,6 @@ export interface ContactMessage {
    const [profileViewMode, setProfileViewMode] = useState<'summary' | 'timeline'>('summary');
 
    // Innovative Modals & Audio States
-   const [showTerminal, setShowTerminal] = useState(false);
    const [showEstimatorModal, setShowEstimatorModal] = useState(false);
    const [showTechRadarModal, setShowTechRadarModal] = useState(false);
    const [isMuted, setIsMuted] = useState(false);
@@ -152,8 +150,7 @@ export interface ContactMessage {
      const handleKeyDown = (e: KeyboardEvent) => {
        if (e.ctrlKey && (e.key === '`' || e.key === '~')) {
          e.preventDefault();
-         setShowTerminal(prev => !prev);
-         soundEngine.playGlassClick();
+         toggleTheme();
        }
      };
      window.addEventListener('keydown', handleKeyDown);
@@ -1177,18 +1174,6 @@ export interface ContactMessage {
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
                 )}
-              </button>
-
-              {/* Developer Terminal Mode */}
-              <button
-                onClick={() => {
-                  soundEngine.playGlassClick();
-                  setShowTerminal(true);
-                }}
-                className="w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center text-emerald-400 font-mono text-xs font-bold transition-colors cursor-pointer shrink-0"
-                title="Terminal Modu (Ctrl + ~)"
-              >
-                &gt;_
               </button>
             </div>
 
@@ -2436,23 +2421,6 @@ export interface ContactMessage {
           </div>
         )}
       </AnimatePresence>
-
-      {/* Developer Terminal Console Modal */}
-      <DeveloperTerminalModal
-        isOpen={showTerminal}
-        onClose={() => setShowTerminal(false)}
-        onNavigateTab={(tab) => {
-          setActiveTab(tab);
-          setShowTerminal(false);
-        }}
-        onSelectProject={(id) => {
-          const proj = projects.find(p => p.id === id);
-          if (proj) {
-            setSelectedProject(proj);
-            setShowTerminal(false);
-          }
-        }}
-      />
 
       {/* Floating Cybernetic Music Mini-Player Pill */}
       <AnimatePresence>
