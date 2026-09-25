@@ -77,7 +77,7 @@ export function AiAssistantDrawer({ onNavigateToTab, onOpenEstimator, onFillCont
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
         sender: 'ai',
-        text: data.reply || "Ağ hatası oluştu, lütfen tekrar deneyiniz.",
+        text: data?.reply || data?.error || "Ağ hatası oluştu, lütfen tekrar deneyiniz.",
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
@@ -142,7 +142,7 @@ export function AiAssistantDrawer({ onNavigateToTab, onOpenEstimator, onFillCont
                     <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
                       Emirhan AI Danışmanı
                       <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono border border-emerald-500/30">
-                        Gemini 2.5
+                        Gemini 3.6
                       </span>
                     </h3>
                     <p className="text-[10px] text-white/60">Yapay zeka ve proje mimarisi asistanınız</p>

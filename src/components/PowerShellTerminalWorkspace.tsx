@@ -3,6 +3,7 @@ import { Terminal, Send, HelpCircle, CornerDownLeft, Sparkles, Folder, FileText,
 import { profileData, projects, articles } from '../data';
 import { soundEngine } from '../utils/audioSynth';
 import { Project, Article } from '../types';
+import { sanitizeText, sanitizeMultilineText, sanitizeEmail, isValidEmail, sanitizeUrl } from '../utils/sanitize';
 
 interface TerminalLine {
   id: string;
@@ -733,7 +734,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                   {foundProject.demoUrl && (
                     <div className="pt-1 text-[11px]">
                       <span className="text-white/60">Canlı Demo:</span>{' '}
-                      <a href={foundProject.demoUrl} target="_blank" rel="noreferrer" className="text-cyan-400 hover:underline">
+                      <a href={sanitizeUrl(foundProject.demoUrl) || '#'} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">
                         {foundProject.demoUrl}
                       </a>
                     </div>
@@ -1104,7 +1105,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                   <span>GEMINI AI ASİSTANI CEVABI:</span>
                 </div>
                 <div className="text-white/90 leading-relaxed whitespace-pre-wrap">
-                  {data.reply || 'Yanıt alınamadı.'}
+                  {data?.reply || data?.error || 'Yanıt alınamadı.'}
                 </div>
               </div>
             )
@@ -1127,9 +1128,25 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
     // 15. SEND-MAIL / SEND-CONTACT
     // ==========================================
     if (mainCmd === 'send-mail' || mainCmd === 'send-contact' || mainCmd === 'send-message') {
-      const match = rawCmd.match(/-name\s+["']?([^"'-]+)["']?\s+-email\s+["']?([^"'-]+)["']?\s+-message\s+["']?([^"']+)/i);
-      
-      if (!match) {
+      // Robust PowerShell parameter parser supporting quotes and special characters
+      const parseNamedArgs = (cmd: string) => {
+        const args: Record<string, string> = {};
+        const regex = /-(Name|Email|Message)\s+(?:"([^"]*)"|'([^']*)'|([^\s-]+(?:\s+[^\s-]+)*))/gi;
+        let m;
+        while ((m = regex.exec(cmd)) !== null) {
+          const key = m[1].toLowerCase();
+          const val = m[2] !== undefined ? m[2] : m[3] !== undefined ? m[3] : m[4];
+          if (val) args[key] = val.trim();
+        }
+        return args;
+      };
+
+      const parsed = parseNamedArgs(rawCmd);
+      const rawName = parsed.name || '';
+      const rawEmail = parsed.email || '';
+      const rawMessage = parsed.message || '';
+
+      if (!rawName || !rawEmail || !rawMessage) {
         setLines(prev => [
           ...prev,
           {
@@ -1137,8 +1154,8 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
             type: 'error',
             elements: (
               <div className="space-y-1">
-                <div>Kullanım: Send-Mail -Name &quot;&lt;Adınız&gt;&quot; -Email &quot;&lt;E-posta&gt;&quot; -Message &quot;&lt;Mesajınız&gt;&quot;</div>
-                <div className="text-white/60 text-[11px]">Örnek: Send-Mail -Name &quot;Ahmet&quot; -Email &quot;ahmet@tech.com&quot; -Message &quot;Proje teklifi hakkında görüşmek isterim.&quot;</div>
+                <div className="text-amber-300 font-bold">Kullanım: Send-Mail -Name &quot;&lt;Adınız&gt;&quot; -Email &quot;&lt;E-posta&gt;&quot; -Message &quot;&lt;Mesajınız&gt;&quot;</div>
+                <div className="text-white/60 text-[11px]">Örnek: Send-Mail -Name &quot;Ahmet Yılmaz&quot; -Email &quot;ahmet@tech.com&quot; -Message &quot;Proje teklifi hakkında görüşmek isterim.&quot;</div>
               </div>
             )
           }
@@ -1146,20 +1163,53 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
         return;
       }
 
-      const [, name, email, message] = match;
+      // Security: Comprehensive Sanitization & Validation Layer
+      const cleanName = sanitizeText(rawName).slice(0, 100);
+      const cleanEmail = sanitizeEmail(rawEmail).slice(0, 120);
+      const cleanMessage = sanitizeMultilineText(rawMessage).slice(0, 2000);
+
+      if (!cleanName || cleanName.length < 2) {
+        setLines(prev => [
+          ...prev,
+          { id: `err-${Date.now()}`, type: 'error', text: 'Hata: Ad ve soyad en az 2 karakter olmalıdır.' }
+        ]);
+        return;
+      }
+
+      if (!isValidEmail(cleanEmail)) {
+        setLines(prev => [
+          ...prev,
+          { id: `err-${Date.now()}`, type: 'error', text: 'Hata: Lütfen geçerli bir e-posta adresi giriniz (örn: isim@domain.com).' }
+        ]);
+        return;
+      }
+
+      if (!cleanMessage || cleanMessage.length < 5) {
+        setLines(prev => [
+          ...prev,
+          { id: `err-${Date.now()}`, type: 'error', text: 'Hata: Mesajınız en az 5 karakter olmalıdır.' }
+        ]);
+        return;
+      }
+
       const newMsg = {
         id: Date.now().toString(),
-        name: name.trim(),
-        email: email.trim(),
-        message: message.trim(),
-        date: new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        name: cleanName,
+        email: cleanEmail,
+        subject: 'PowerShell Konsol Mesajı',
+        message: cleanMessage,
+        date: new Date().toLocaleString('tr-TR'),
+        timestamp: Date.now(),
         read: false
       };
 
       try {
         const stored = JSON.parse(localStorage.getItem('adm_msg_store') || '[]');
-        localStorage.setItem('adm_msg_store', JSON.stringify([newMsg, ...stored]));
-      } catch {}
+        const validStored = Array.isArray(stored) ? stored : [];
+        localStorage.setItem('adm_msg_store', JSON.stringify([newMsg, ...validStored]));
+      } catch (e) {
+        console.error("Storage save failed:", e);
+      }
 
       soundEngine.playSuccessChime();
       setLines(prev => [
@@ -1170,13 +1220,13 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
           elements: (
             <div className="font-mono text-xs p-2.5 bg-emerald-950/40 border border-emerald-500/50 rounded-lg text-emerald-300 space-y-1">
               <div className="font-bold flex items-center gap-1.5">
-                <span>[BAŞARILI]</span> Mesajınız güvenli biçimde iletildi!
+                <span>[BAŞARILI]</span> Mesajınız güvenli biçimde iletildi ve arşivlendi!
               </div>
               <div className="text-white/80 text-[11px]">
-                Gönderen: {name.trim()} &lt;{email.trim()}&gt;
+                Gönderen: {cleanName} &lt;{cleanEmail}&gt;
               </div>
               <div className="text-white/70 text-[11px] italic">
-                &quot;{message.trim()}&quot;
+                &quot;{cleanMessage}&quot;
               </div>
             </div>
           )
@@ -1192,7 +1242,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
       const textToEcho = rawCmd.replace(/^(write-host|echo|write-output)\s*/i, '');
       setLines(prev => [
         ...prev,
-        { id: `out-${Date.now()}`, type: 'output', text: textToEcho }
+        { id: `out-${Date.now()}`, type: 'output', text: sanitizeText(textToEcho) }
       ]);
       return;
     }
@@ -1211,11 +1261,34 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
         url = target;
       }
 
-      if (url) {
-        window.open(url, '_blank');
+      const safeUrl = sanitizeUrl(url);
+      if (safeUrl) {
         setLines(prev => [
           ...prev,
-          { id: `out-${Date.now()}`, type: 'output', text: `Tarayıcıda açılıyor: ${url}` }
+          {
+            id: `out-${Date.now()}`,
+            type: 'output',
+            elements: (
+              <div className="font-mono text-xs p-2.5 bg-emerald-950/30 border border-emerald-500/30 rounded-lg flex items-center justify-between gap-3">
+                <span className="text-white/80">Hedef Adres: <span className="text-emerald-400 font-bold">{safeUrl}</span></span>
+                <a
+                  href={safeUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3 py-1 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-[11px] rounded-md transition-all flex items-center gap-1 shadow-md hover:scale-105 shrink-0"
+                >
+                  <span>Bağlantıyı Aç</span>
+                  <ExternalLink size={11} />
+                </a>
+              </div>
+            )
+          }
+        ]);
+        return;
+      } else if (url) {
+        setLines(prev => [
+          ...prev,
+          { id: `err-${Date.now()}`, type: 'error', text: 'Güvenlik uyarısı: Geçersiz veya riskli URL protokolü engellendi.' }
         ]);
         return;
       }

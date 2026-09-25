@@ -19,11 +19,30 @@ const GROQ_API_KEY =
  * The assistant NEVER speaks based on outdated or non-existent facts.
  */
 function getLiveSiteSystemPrompt(): string {
-  const projectSummaries = projects
+  let activeProfile = profileData;
+  let activeProjects = projects;
+  let activeArticles = articles;
+
+  if (typeof window !== 'undefined') {
+    try {
+      const savedProf = localStorage.getItem('emirhan_custom_profile');
+      if (savedProf) activeProfile = JSON.parse(savedProf);
+
+      const savedProj = localStorage.getItem('emirhan_custom_projects');
+      if (savedProj) activeProjects = JSON.parse(savedProj);
+
+      const savedArt = localStorage.getItem('emirhan_custom_articles');
+      if (savedArt) activeArticles = JSON.parse(savedArt);
+    } catch {
+      // Safe fallback
+    }
+  }
+
+  const projectSummaries = activeProjects
     .map(p => `${p.title} (${p.category} | ${p.tech.join(', ')})`)
     .join('; ');
   
-  const articleSummaries = articles
+  const articleSummaries = activeArticles
     .map(a => a.title)
     .join('; ');
 
@@ -39,9 +58,9 @@ KATI VE DEĞİŞMEZ KURALLAR:
 6. Bilmediğin veya sitede bulunmayan her konuda doğrudan 'İletişim' sekmesine yönlendir.
 
 GÜNCEL SİTE VERİTABANI:
-- Kişi: ${profileData.name} (${profileData.title})
-- Hakkında & Deneyim: ${profileData.education.school} ${profileData.education.degree}. ${profileData.experience.title} (${profileData.experience.period}).
-- Yazılım & AI: ${profileData.softwareProfile.language} (${profileData.softwareProfile.level}). ${profileData.aiProfile.title} (${profileData.aiProfile.certification}). Yetenekler: ${profileData.softwareProfile.skills.join(', ')}.
+- Kişi: ${activeProfile.name} (${activeProfile.title})
+- Hakkında & Deneyim: ${activeProfile.education?.school || ''} ${activeProfile.education?.degree || ''}. ${activeProfile.experience?.title || ''} (${activeProfile.experience?.period || ''}).
+- Yazılım & AI: ${activeProfile.softwareProfile?.language || ''} (${activeProfile.softwareProfile?.level || ''}). ${activeProfile.aiProfile?.title || ''} (${activeProfile.aiProfile?.certification || ''}). Yetenekler: ${activeProfile.softwareProfile?.skills?.join(', ') || ''}.
 - Canlı Projeler: ${projectSummaries}.
 - Yayınlanan Makaleler: ${articleSummaries}.
 - Resmi İletişim Kanalları:

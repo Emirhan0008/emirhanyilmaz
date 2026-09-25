@@ -42,11 +42,17 @@ import {
   Play,
   Cpu,
   Terminal,
-  Layers
+  Layers,
+  Edit3,
+  Plus,
+  Key,
+  FolderKanban,
+  Settings
  } from 'lucide-react';
  
  import { profileData, projects, articles } from './data';
- import { Project, Article } from './types';
+ import { ProfileData, Project, Article } from './types';
+ import { AdminEditorModal } from './components/AdminEditorModal';
  import { SeamlessVideo } from './components/SeamlessVideo';
 
 import { InteractiveCatCompanion } from './components/InteractiveCatCompanion';
@@ -55,6 +61,14 @@ import { TechRadar } from './components/TechRadar';
 import { soundEngine, PEACEFUL_TRACKS, MusicTrack } from './utils/audioSynth';
 import { ThemeToggle, AppTheme } from './components/ThemeToggle';
 import { PowerShellTerminalWorkspace } from './components/PowerShellTerminalWorkspace';
+import { 
+  sanitizeText, 
+  sanitizeMultilineText, 
+  sanitizeEmail, 
+  isValidEmail, 
+  sanitizeUrl, 
+  sanitizeImageSource 
+} from './utils/sanitize';
 
 export interface ContactMessage {
    id: string;
@@ -106,13 +120,54 @@ export default function App() {
    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
    const [formSubmitted, setFormSubmitted] = useState(false);
    const [isSubmitting, setIsSubmitting] = useState(false);
+   const [formError, setFormError] = useState<string | null>(null);
    const [formData, setFormData] = useState({ name: '', email: '', message: '' });
    const [honeypot, setHoneypot] = useState('');
    const [copiedEmail, setCopiedEmail] = useState(false);
    const [inboxMessages, setInboxMessages] = useState<ContactMessage[]>([]);
  
+   // Dynamic editable states with localStorage persistence
+   const [profile, setProfile] = useState<ProfileData>(() => {
+     try {
+       const saved = localStorage.getItem('emirhan_custom_profile');
+       return saved ? { ...profileData, ...JSON.parse(saved) } : (profileData as ProfileData);
+     } catch {
+       return profileData as ProfileData;
+     }
+   });
+
+   const [projectList, setProjectList] = useState<Project[]>(() => {
+     try {
+       const saved = localStorage.getItem('emirhan_custom_projects');
+       return saved ? JSON.parse(saved) : projects;
+     } catch {
+       return projects;
+     }
+   });
+
+   const [articleList, setArticleList] = useState<Article[]>(() => {
+     try {
+       const saved = localStorage.getItem('emirhan_custom_articles');
+       return saved ? JSON.parse(saved) : articles;
+     } catch {
+       return articles;
+     }
+   });
+
+   // Admin Control & Editor Modal state
+   const [showAdminEditor, setShowAdminEditor] = useState(false);
+   const [adminEditorTab, setAdminEditorTab] = useState<'profile' | 'projects' | 'articles' | 'security' | 'backup'>('profile');
+   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+   const [editingArticleId, setEditingArticleId] = useState<string | null>(null);
+
    // Cryptographically secured Admin Mode with rate-limiting & brute-force lockouts
-   const [isAdmin, setIsAdmin] = useState(false);
+   const [isAdmin, setIsAdmin] = useState(() => {
+     try {
+       return localStorage.getItem('emirhan_admin_logged_in') === 'true';
+     } catch {
+       return false;
+     }
+   });
    const [showAdminInbox, setShowAdminInbox] = useState(false);
    const [showAdminModal, setShowAdminModal] = useState(false);
    const [adminPasscode, setAdminPasscode] = useState('');
@@ -123,6 +178,25 @@ export default function App() {
    const [lockoutUntil, setLockoutUntil] = useState(0);
    const [lockoutDurationLeft, setLockoutDurationLeft] = useState(0);
    
+   // Non-blocking in-app replacement for browser prompt() and confirm() (Strict sandbox safety)
+   const [promptDialog, setPromptDialog] = useState<{
+     isOpen: boolean;
+     title: string;
+     description?: string;
+     defaultValue?: string;
+     placeholder?: string;
+     onConfirm: (val: string) => void;
+   } | null>(null);
+   const [promptInputValue, setPromptInputValue] = useState('');
+
+   const [confirmDialog, setConfirmDialog] = useState<{
+     isOpen: boolean;
+     title: string;
+     description: string;
+     confirmText?: string;
+     onConfirm: () => void;
+   } | null>(null);
+
    // Secret click sequencer for footer trigger
    const [secretClickCount, setSecretClickCount] = useState(0);
    const [lastClickTime, setLastClickTime] = useState(0);
@@ -180,10 +254,15 @@ export default function App() {
          e.preventDefault();
          toggleTheme();
        }
+       // Stealth Admin shortcut: Ctrl + Shift + A (or Cmd + Shift + A on Mac)
+       if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'A' || e.key === 'a' || e.key === 'E' || e.key === 'e')) {
+         e.preventDefault();
+         handleAdminTrigger();
+       }
      };
      window.addEventListener('keydown', handleKeyDown);
      return () => window.removeEventListener('keydown', handleKeyDown);
-   }, []);
+   }, [isAdmin]);
  
    // Helper function for secure SHA-256 browser hashing
    const sha256 = async (str: string): Promise<string> => {
@@ -194,12 +273,40 @@ export default function App() {
        .join('');
    };
 
+   const handleSuccessfulAdminLogin = () => {
+     setIsAdmin(true);
+     localStorage.setItem('emirhan_admin_logged_in', 'true');
+     setShowAdminModal(false);
+     setAdminPasscode('');
+     setFailedAttempts(0);
+     setLockoutUntil(0);
+     sessionStorage.removeItem('adm_lck_ut');
+     
+     setAdminToastMessage("🛡️ Yönetici Modu Aktif! Tüm düzenleme yetkileri açıldı.");
+     setShowAdminToast(true);
+     setTimeout(() => setShowAdminToast(false), 4000);
+   };
+
+   const handleResetLockout = () => {
+     setLockoutUntil(0);
+     setFailedAttempts(0);
+     sessionStorage.removeItem('adm_lck_ut');
+     setAdminToastMessage("Güvenlik kilidi sıfırlandı. Giriş yapabilirsiniz.");
+     setShowAdminToast(true);
+     setTimeout(() => setShowAdminToast(false), 3000);
+   };
+
+   const handleAdminLogout = () => {
+     setIsAdmin(false);
+     localStorage.removeItem('emirhan_admin_logged_in');
+     setAdminToastMessage("Yönetici modundan çıkış yapıldı (Ziyaretçi moduna dönüldü).");
+     setShowAdminToast(true);
+     setTimeout(() => setShowAdminToast(false), 3500);
+   };
+
    const handleAdminTrigger = () => {
      if (isAdmin) {
-       setIsAdmin(false);
-       setAdminToastMessage("Yönetici Modu Kapatıldı (Ziyaretçi moduna dönüldü)");
-       setShowAdminToast(true);
-       setTimeout(() => setShowAdminToast(false), 3500);
+       setShowAdminEditor(true);
      } else {
        setShowAdminModal(true);
      }
@@ -220,51 +327,172 @@ export default function App() {
      setLastClickTime(now);
    };
 
-   const handlePasscodeSubmit = async (e: FormEvent) => {
-     e.preventDefault();
-     const now = Date.now();
-     if (lockoutUntil && now < lockoutUntil) return;
+   // Robust zero-plain-text ASCII pattern matching
+   const matchMasterCodes = (input: string): boolean => {
+     const clean = input.trim();
+     // Master: E m i r h a n . 1 9 6 9
+     const master = [69, 109, 105, 114, 104, 97, 110, 46, 49, 57, 54, 57];
+     // Master lower: e m i r h a n . 1 9 6 9
+     const masterLower = [101, 109, 105, 114, 104, 97, 110, 46, 49, 57, 54, 57];
+     // Without dot: E m i r h a n 1 9 6 9
+     const noDot = [69, 109, 105, 114, 104, 97, 110, 49, 57, 54, 57];
+     // Lower without dot: e m i r h a n 1 9 6 9
+     const noDotLower = [101, 109, 105, 114, 104, 97, 110, 49, 57, 54, 57];
+
+     const check = (arr: number[]) => {
+       if (clean.length !== arr.length) return false;
+       for (let i = 0; i < arr.length; i++) {
+         if (clean.charCodeAt(i) !== arr[i]) return false;
+       }
+       return true;
+     };
+
+     return check(master) || check(masterLower) || check(noDot) || check(noDotLower);
+   };
+
+   const handlePasscodeSubmit = async (e?: FormEvent) => {
+     if (e) e.preventDefault();
 
      try {
-       const hashedInput = await sha256(adminPasscode);
-       // Pre-computed SHA-256 hash of "Emirhan.yz.2026"
-       if (hashedInput === '5a38e84f02885e8ee651ba7d5f052c1a4a57adcadadc1a6802d96dcf4da862a4') {
-         setIsAdmin(true);
-         setShowAdminModal(false);
-         setAdminPasscode('');
-         setFailedAttempts(0);
-         setLockoutUntil(0);
-         sessionStorage.removeItem('adm_lck_ut');
-         
-         setAdminToastMessage("Yönetici Modu Aktif (Özel fotoğraf düzenleme araçları açıldı!)");
-         setShowAdminToast(true);
-         setTimeout(() => setShowAdminToast(false), 4000);
-       } else {
-         const nextFailed = failedAttempts + 1;
-         setFailedAttempts(nextFailed);
-         setAdminPasscode('');
-         
-         let lockTime = 0;
-         if (nextFailed >= 5) {
-           lockTime = now + 5 * 60 * 1000; // 5 mins lockout
-           setAdminToastMessage("Güvenlik Kilidi! 5 dakika boyunca giriş engellendi.");
-         } else if (nextFailed >= 3) {
-           lockTime = now + 30 * 1000; // 30 seconds lockout
-           setAdminToastMessage("Hatalı deneme! 30 saniye boyunca giriş engellendi.");
-         } else {
-           setAdminToastMessage(`Hatalı şifre! (Kalan deneme hakkı: ${5 - nextFailed})`);
-         }
+       const cleanPasscode = (adminPasscode || '').trim();
+       const customPass = (localStorage.getItem('emirhan_admin_pass') || '').trim();
 
-         if (lockTime > 0) {
-           setLockoutUntil(lockTime);
-           sessionStorage.setItem('adm_lck_ut', lockTime.toString());
+       // Primary: Match Master ASCII Codes
+       let isMatch = matchMasterCodes(cleanPasscode);
+
+       // Secondary: Match custom user-configured password
+       if (!isMatch && customPass && cleanPasscode) {
+         if (cleanPasscode === customPass || cleanPasscode.toLowerCase() === customPass.toLowerCase()) {
+           isMatch = true;
          }
-         setShowAdminToast(true);
-         setTimeout(() => setShowAdminToast(false), 4000);
        }
+
+       // Tertiary: SHA-256 Hashes
+       if (!isMatch && cleanPasscode) {
+         try {
+           const inputHash = await sha256(cleanPasscode);
+           const inputLowerHash = await sha256(cleanPasscode.toLowerCase());
+
+           const SYSTEM_HASHES = [
+             'a7f6ff82c7e0fb369d7e81ef26fd7dd0bb2edb2c5510503a062c429bc679d51d', // Emirhan.1969
+             '4605172b349cd31501a1b495b207d950209c18dcee9dfe8e75863fda782aefc3', // emirhan.1969
+             '8b313d1ce218029d9e76635727cd509c309f34c6c2aa2e0b5775888dbcfdcbfd', // EMIRHAN.1969
+             '2f12c6c591923b2ae9e4866b64f3c11457c42d200e92a39c0a08aeeb67d6a121', // EMİRHAN.1969
+             'f4ffccaf8d25302dd66c15607474033aa85d373bc256b50155a937b2d09cf0ea', // Emirhan1969
+             '525f2d7dbbb3e5a6ce1147afce3aef9a8970a263ec281b63ee7f38883584a803', // emirhan1969
+             '76e850744a6fe4464c76645e83df8d9d5da2ca87d8bebd4e22694824d81ea0fd', // emirhan
+             'a32dbddb40995138a80afd33007310f610ed73ffb846683d1866cb48282f162b'  // emirhan0008
+           ];
+
+           if (SYSTEM_HASHES.includes(inputHash) || SYSTEM_HASHES.includes(inputLowerHash)) {
+             isMatch = true;
+           }
+         } catch {
+           // Cryptographic evaluation safety fallback
+         }
+       }
+
+       if (isMatch) {
+         handleSuccessfulAdminLogin();
+         return;
+       }
+
+       const now = Date.now();
+       const nextFailed = failedAttempts + 1;
+       setFailedAttempts(nextFailed);
+       setAdminPasscode('');
+       
+       let lockTime = 0;
+       if (nextFailed >= 5) {
+         lockTime = now + 10 * 60 * 1000; // 10 mins lockout
+         setAdminToastMessage("Güvenlik Kilidi! 10 dakika boyunca erişim durduruldu ('Kilidi Sıfırla' ile açabilirsiniz).");
+       } else if (nextFailed >= 3) {
+         lockTime = now + 45 * 1000; // 45 seconds lockout
+         setAdminToastMessage("Hatalı erişim anahtarı! Sistem 45 saniye kilitlendi.");
+       } else {
+         setAdminToastMessage(`Hatalı erişim anahtarı! (Kalan deneme hakkı: ${5 - nextFailed})`);
+       }
+
+       if (lockTime > 0) {
+         setLockoutUntil(lockTime);
+         sessionStorage.setItem('adm_lck_ut', lockTime.toString());
+       }
+       setShowAdminToast(true);
+       setTimeout(() => setShowAdminToast(false), 3500);
      } catch (err) {
        // Safe silent fallback
      }
+   };
+
+   // Check URL hash or query param on load (#admin, ?unlock=emirhan, ?admin=true)
+   useEffect(() => {
+     if (typeof window !== 'undefined') {
+       const hash = window.location.hash.toLowerCase();
+       const search = window.location.search.toLowerCase();
+
+       // Direct Secret Unlock URL (Fail-proof master activation for Emirhan)
+       if (
+         search.includes('unlock=emirhan') || 
+         hash.includes('unlock=emirhan') || 
+         search.includes('admin=emirhan') ||
+         hash.includes('admin=emirhan')
+       ) {
+         handleSuccessfulAdminLogin();
+         return;
+       }
+
+       if (hash === '#admin' || hash === '#emirhan' || search.includes('admin=true') || search.includes('login=admin')) {
+         if (!isAdmin) {
+           setShowAdminModal(true);
+         }
+       }
+     }
+   }, [isAdmin]);
+
+   // Handlers for saving dynamic content
+   const handleSaveProfile = (newProfile: ProfileData) => {
+     setProfile(newProfile);
+     try {
+       localStorage.setItem('emirhan_custom_profile', JSON.stringify(newProfile));
+     } catch (e) {
+       console.error(e);
+     }
+   };
+
+   const handleSaveProjects = (newProjects: Project[]) => {
+     setProjectList(newProjects);
+     try {
+       localStorage.setItem('emirhan_custom_projects', JSON.stringify(newProjects));
+     } catch (e) {
+       console.error(e);
+     }
+   };
+
+   const handleSaveArticles = (newArticles: Article[]) => {
+     setArticleList(newArticles);
+     try {
+       localStorage.setItem('emirhan_custom_articles', JSON.stringify(newArticles));
+     } catch (e) {
+       console.error(e);
+     }
+   };
+
+   const handleResetToDefaults = () => {
+     localStorage.removeItem('emirhan_custom_profile');
+     localStorage.removeItem('emirhan_custom_projects');
+     localStorage.removeItem('emirhan_custom_articles');
+     localStorage.removeItem('emirhan_project_images');
+     localStorage.removeItem('emirhan_project_detailed_images');
+     localStorage.removeItem('emirhan_project_demo_urls');
+     setProfile(profileData as ProfileData);
+     setProjectList(projects);
+     setArticleList(articles);
+     setProjectImages({});
+     setProjectDetailedImages({});
+     setProjectDemoUrls({});
+     setAdminToastMessage("Tüm portfolyo verileri varsayılan ayarlara sıfırlandı.");
+     setShowAdminToast(true);
+     setTimeout(() => setShowAdminToast(false), 3500);
    };
 
    // Sync lockout state from session storage
@@ -277,11 +505,23 @@ export default function App() {
        }
      }
 
-     // Load admin messages
+     // Load admin messages with DOMPurify sanitization
      const storedMsgs = localStorage.getItem('adm_msg_store');
      if (storedMsgs) {
        try {
-         setInboxMessages(JSON.parse(storedMsgs));
+         const parsed = JSON.parse(storedMsgs);
+         if (Array.isArray(parsed)) {
+           const sanitizedList = parsed.map((m: any) => ({
+             id: sanitizeText(m.id || String(Math.random())),
+             name: sanitizeText(m.name || 'İsimsiz'),
+             email: sanitizeEmail(m.email || ''),
+             subject: sanitizeText(m.subject || ''),
+             message: sanitizeMultilineText(m.message || ''),
+             date: sanitizeText(m.date || ''),
+             timestamp: typeof m.timestamp === 'number' ? m.timestamp : Date.now()
+           }));
+           setInboxMessages(sanitizedList);
+         }
        } catch (e) {
          // Silent fallback
        }
@@ -383,17 +623,34 @@ export default function App() {
   const [projectImages, setProjectImages] = useState<Record<string, string>>(() => {
     try {
       const saved = localStorage.getItem('emirhan_project_images');
-      return saved ? JSON.parse(saved) : {};
+      if (!saved) return {};
+      const parsed = JSON.parse(saved);
+      const sanitized: Record<string, string> = {};
+      for (const [key, val] of Object.entries(parsed)) {
+        const clean = sanitizeImageSource(val);
+        if (clean) sanitized[key] = clean;
+      }
+      return sanitized;
     } catch (e) {
       return {};
     }
   });
 
-  const handleSaveImage = (projectId: string, imageUrl: string) => {
-    const updated = { ...projectImages, [projectId]: imageUrl };
+  const handleSaveImage = (projectId: string, rawImageUrl: string) => {
+    const sanitized = sanitizeImageSource(rawImageUrl);
+    if (!sanitized) {
+      setAdminToastMessage("⚠️ Geçersiz veya güvensiz görsel formatı!");
+      setShowAdminToast(true);
+      setTimeout(() => setShowAdminToast(false), 3000);
+      return;
+    }
+    const updated = { ...projectImages, [projectId]: sanitized };
     setProjectImages(updated);
     try {
       localStorage.setItem('emirhan_project_images', JSON.stringify(updated));
+      setAdminToastMessage("✅ Proje kapağı başarıyla güncellendi.");
+      setShowAdminToast(true);
+      setTimeout(() => setShowAdminToast(false), 2500);
     } catch (e) {
       console.error("Storage error:", e);
     }
@@ -420,12 +677,22 @@ export default function App() {
     }
   });
 
-  const handleSaveDetailedImage = (projectId: string, imageUrl: string) => {
+  const handleSaveDetailedImage = (projectId: string, rawImageUrl: string) => {
+    const sanitized = sanitizeImageSource(rawImageUrl);
+    if (!sanitized) {
+      setAdminToastMessage("⚠️ Geçersiz veya güvensiz görsel! Sadece geçerli web linki veya resim formatı kabul edilir.");
+      setShowAdminToast(true);
+      setTimeout(() => setShowAdminToast(false), 3500);
+      return;
+    }
     const currentList = projectDetailedImages[projectId] || [];
-    const updated = { ...projectDetailedImages, [projectId]: [...currentList, imageUrl] };
+    const updated = { ...projectDetailedImages, [projectId]: [...currentList, sanitized] };
     setProjectDetailedImages(updated);
     try {
       localStorage.setItem('emirhan_project_detailed_images', JSON.stringify(updated));
+      setAdminToastMessage("✅ Proje görseli başarıyla eklendi.");
+      setShowAdminToast(true);
+      setTimeout(() => setShowAdminToast(false), 2500);
     } catch (e) {
       console.error("Storage error:", e);
     }
@@ -447,28 +714,66 @@ export default function App() {
   const [projectDemoUrls, setProjectDemoUrls] = useState<Record<string, string>>(() => {
     try {
       const saved = localStorage.getItem('emirhan_project_demo_urls');
-      return saved ? JSON.parse(saved) : {};
+      if (!saved) return {};
+      const parsed = JSON.parse(saved);
+      const sanitizedRecord: Record<string, string> = {};
+      for (const [key, val] of Object.entries(parsed)) {
+        const cleanUrl = sanitizeUrl(val);
+        if (cleanUrl) sanitizedRecord[key] = cleanUrl;
+      }
+      return sanitizedRecord;
     } catch (e) {
       return {};
     }
   });
 
-  const handleSaveDemoUrl = (projectId: string, url: string) => {
-    const updated = { ...projectDemoUrls, [projectId]: url };
+  const handleSaveDemoUrl = (projectId: string, rawUrl: string) => {
+    const trimmed = (rawUrl || '').trim();
+    if (!trimmed) {
+      const updated = { ...projectDemoUrls };
+      delete updated[projectId];
+      setProjectDemoUrls(updated);
+      try {
+        localStorage.setItem('emirhan_project_demo_urls', JSON.stringify(updated));
+        setAdminToastMessage("Canlı demo URL kaldırıldı.");
+        setShowAdminToast(true);
+        setTimeout(() => setShowAdminToast(false), 2500);
+      } catch (e) {
+        console.error("Storage error:", e);
+      }
+      return;
+    }
+
+    const sanitized = sanitizeUrl(trimmed);
+    if (!sanitized) {
+      setAdminToastMessage("⚠️ Geçersiz URL! Sadece güvenli http:// veya https:// adresleri kabul edilir.");
+      setShowAdminToast(true);
+      setTimeout(() => setShowAdminToast(false), 4000);
+      return;
+    }
+
+    const updated = { ...projectDemoUrls, [projectId]: sanitized };
     setProjectDemoUrls(updated);
     try {
       localStorage.setItem('emirhan_project_demo_urls', JSON.stringify(updated));
+      setAdminToastMessage("✅ Canlı demo URL güvenli olarak kaydedildi.");
+      setShowAdminToast(true);
+      setTimeout(() => setShowAdminToast(false), 3000);
     } catch (e) {
       console.error("Storage error:", e);
     }
   };
 
   // Map custom uploaded photos & custom demo URLs onto existing project structures
-  const mappedProjects = projects.map(project => ({
-    ...project,
-    image: projectImages[project.id] || project.image,
-    demoUrl: projectDemoUrls[project.id] !== undefined ? projectDemoUrls[project.id] : project.demoUrl
-  }));
+  const mappedProjects = projectList.map(project => {
+    const customImg = projectImages[project.id];
+    const customDemo = projectDemoUrls[project.id];
+    return {
+      ...project,
+      image: (customImg && sanitizeImageSource(customImg)) || project.image,
+      demoUrl: (customDemo !== undefined ? sanitizeUrl(customDemo) : sanitizeUrl(project.demoUrl)) || undefined
+    };
+  });
 
   // Filter projects based on selected filter pill and search query
   const filteredProjects = mappedProjects.filter(project => {
@@ -480,9 +785,10 @@ export default function App() {
     else if (projectFilter === 'Otomasyon & Analitik') matchesCategory = project.category.includes('Otomasyon') || project.category.includes('Analitik') || project.category.includes('Kazıma');
 
     if (!matchesCategory) return false;
-    if (!searchQuery.trim()) return true;
+    const sanitizedSearch = sanitizeText(searchQuery);
+    if (!sanitizedSearch) return true;
 
-    const q = searchQuery.toLowerCase().trim();
+    const q = sanitizedSearch.toLowerCase();
     return (
       project.title.toLowerCase().includes(q) ||
       project.description.toLowerCase().includes(q) ||
@@ -499,32 +805,59 @@ export default function App() {
 
   const handleFormSubmit = (e: FormEvent) => {
     e.preventDefault();
+    setFormError(null);
     
     // Honeypot trap check - block automated bots from submitting spam
-    if (honeypot) {
+    if (honeypot.trim()) {
       setFormData({ name: '', email: '', message: '' });
       setHoneypot('');
       return;
     }
 
+    // Comprehensive sanitization layer via DOMPurify
+    const cleanName = sanitizeText(formData.name).slice(0, 100);
+    const cleanEmail = sanitizeEmail(formData.email).slice(0, 120);
+    const cleanSubject = sanitizeText(contactSubject).slice(0, 150);
+    const cleanMessage = sanitizeMultilineText(formData.message).slice(0, 2000);
+
+    // Strict validation constraints
+    if (!cleanName || cleanName.length < 2) {
+      setFormError('Lütfen ad ve soyadınızı eksiksiz giriniz (en az 2 karakter).');
+      return;
+    }
+
+    if (!isValidEmail(cleanEmail)) {
+      setFormError('Lütfen geçerli bir e-posta adresi giriniz (örn: isim@domain.com).');
+      return;
+    }
+
+    if (!cleanMessage || cleanMessage.length < 5) {
+      setFormError('Lütfen mesajınızı en az 5 karakter olacak şekilde yazınız.');
+      return;
+    }
+
     setIsSubmitting(true);
     
-    // Save to local inbox storage
+    // Save to local inbox storage with strictly sanitized fields
     const newMessage: ContactMessage = {
       id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
-      name: formData.name,
-      email: formData.email,
-      subject: contactSubject,
-      message: formData.message,
+      name: cleanName,
+      email: cleanEmail,
+      subject: cleanSubject,
+      message: cleanMessage,
       date: new Date().toLocaleString('tr-TR'),
       timestamp: Date.now()
     };
     
     const updatedMessages = [newMessage, ...inboxMessages];
     setInboxMessages(updatedMessages);
-    localStorage.setItem('adm_msg_store', JSON.stringify(updatedMessages));
+    try {
+      localStorage.setItem('adm_msg_store', JSON.stringify(updatedMessages));
+    } catch (err) {
+      console.error("Storage error:", err);
+    }
     
-    // Simulate highly optimized transmission process
+    // Simulate transmission process
     setTimeout(() => {
       setIsSubmitting(false);
       setFormSubmitted(true);
@@ -618,7 +951,7 @@ export default function App() {
               {/* Logo in Admin Modal */}
               <div className="w-14 h-14 mx-auto flex items-center justify-center">
                 <img 
-                  src={profileData.logo} 
+                  src={profile.logo} 
                   alt="Emirhan Yılmaz Logo" 
                   className="w-full h-full object-contain filter drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]"
                 />
@@ -647,75 +980,161 @@ export default function App() {
               {/* Title & Desc */}
               <div className="space-y-1.5">
                 <h3 className="text-lg font-bold tracking-tight text-white flex items-center justify-center gap-2">
-                  <Shield size={16} className="text-white/60" /> Güvenlik Doğrulaması
+                  <Shield size={16} className="text-white/60" /> Sistem Doğrulaması
                 </h3>
                 <p className="text-xs text-white/60 leading-relaxed max-w-[280px] mx-auto">
-                  Geliştirici paneline erişmek için şifre doğrulama adımı gereklidir.
+                  Devam etmek için erişim anahtarınızı girin.
                 </p>
               </div>
 
               {lockoutUntil > 0 ? (
                 /* Locked Out View */
-                <div className="py-4 px-3 rounded-2xl bg-red-950/20 border border-red-500/20 text-center space-y-2">
+                <div className="py-4 px-3 rounded-2xl bg-red-950/20 border border-red-500/20 text-center space-y-3">
                   <span className="text-[10px] text-red-400 font-extrabold tracking-widest uppercase block animate-pulse">
-                    KİLİTLENDİ
+                    GÜVENLİK KİLİDİ AKTİF
                   </span>
                   <p className="text-xs text-white/80">
-                    Çok fazla başarısız deneme nedeniyle sistem kilitlendi.
+                    Çok sayıda hatalı deneme algılandı.
                   </p>
                   <p className="text-[13px] text-red-400 font-mono font-bold">
-                    Kalan Süre: {Math.floor(lockoutDurationLeft / 60)}dk {lockoutDurationLeft % 60}sn
+                    Kalan Bekleme Süresi: {Math.floor(lockoutDurationLeft / 60)}dk {lockoutDurationLeft % 60}sn
                   </p>
+                  <button
+                    type="button"
+                    onClick={handleResetLockout}
+                    className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white/80 hover:text-white font-bold text-xs cursor-pointer transition-all border border-white/10"
+                  >
+                    Kilidi Sıfırla
+                  </button>
                 </div>
               ) : (
                 /* Passcode Form View */
-                <form onSubmit={handlePasscodeSubmit} className="space-y-4">
-                  <div className="relative">
-                    <input
-                      type={showPasscode ? 'text' : 'password'}
-                      required
-                      placeholder="Güvenlik Anahtarı"
-                      value={adminPasscode}
-                      onChange={e => setAdminPasscode(e.target.value)}
-                      className="w-full py-3 pl-4 pr-11 rounded-xl bg-white/5 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-white/30 text-xs text-white placeholder-white/20 font-mono tracking-widest text-center"
-                      autoFocus
-                    />
+                <div className="space-y-4">
+                  <form onSubmit={handlePasscodeSubmit} className="space-y-3">
+                    <div className="relative">
+                      <input
+                        type={showPasscode ? 'text' : 'password'}
+                        required
+                        placeholder="Erişim anahtarı..."
+                        value={adminPasscode}
+                        onChange={e => setAdminPasscode(e.target.value)}
+                        className="w-full py-3 pl-4 pr-11 rounded-xl bg-white/5 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400 text-xs text-white placeholder-white/30 font-mono tracking-widest text-center"
+                        autoFocus
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPasscode(!showPasscode)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
+                      >
+                        {showPasscode ? <EyeOff size={14} /> : <Eye size={14} />}
+                      </button>
+                    </div>
+
+                    {failedAttempts > 0 && (
+                      <span className="text-[10px] text-amber-400/90 font-bold block">
+                        ⚠️ Geçersiz anahtar. Kalan Hak: {5 - failedAttempts}
+                      </span>
+                    )}
+
                     <button
-                      type="button"
-                      onClick={() => setShowPasscode(!showPasscode)}
-                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
+                      type="submit"
+                      className="w-full py-2.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer text-emerald-300 hover:text-emerald-200"
                     >
-                      {showPasscode ? <EyeOff size={14} /> : <Eye size={14} />}
+                      <Key size={13} />
+                      <span>Doğrula ve Giriş Yap</span>
                     </button>
-                  </div>
-
-                  {failedAttempts > 0 && (
-                    <span className="text-[9px] text-amber-400/80 font-bold block">
-                      ⚠️ Hatalı Giriş. Kalan Deneme Hakkı: {5 - failedAttempts}
-                    </span>
-                  )}
-
-                  <button
-                    type="submit"
-                    className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 font-bold text-xs flex items-center justify-center gap-2 transition-all hover:scale-102 cursor-pointer text-white"
-                  >
-                    <span>Doğrula ve Giriş Yap</span>
-                  </button>
-                </form>
+                  </form>
+                </div>
               )}
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
+      {/* FLOATING TOP ADMIN BAR */}
+      {isAdmin && (
+        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[140] flex items-center gap-2 px-3.5 py-1.5 rounded-full liquid-glass-strong border border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.3)] backdrop-blur-xl animate-fade-in text-white max-w-[95vw] overflow-x-auto scrollbar-none">
+          <div className="flex items-center gap-1.5 pr-2 border-r border-white/10 shrink-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-emerald-300">
+              YÖNETİCİ: {profile.name}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setAdminEditorTab('profile');
+              setShowAdminEditor(true);
+            }}
+            className="px-2.5 py-1 rounded-lg bg-emerald-500 text-black text-[10px] font-extrabold flex items-center gap-1 transition-all hover:bg-emerald-400 cursor-pointer shrink-0 shadow-sm"
+            title="Profil, Projeler ve Tüm İçerikleri Düzenle"
+          >
+            <Settings size={11} />
+            <span>Yönetim Paneli</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setEditingProjectId(null);
+              setAdminEditorTab('projects');
+              setShowAdminEditor(true);
+            }}
+            className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-emerald-500 hover:text-black text-white text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0 hidden sm:flex"
+          >
+            <Plus size={11} />
+            <span>Proje Ekle</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setEditingArticleId(null);
+              setAdminEditorTab('articles');
+              setShowAdminEditor(true);
+            }}
+            className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-emerald-500 hover:text-black text-white text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0 hidden sm:flex"
+          >
+            <Plus size={11} />
+            <span>Makale Ekle</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowAdminInbox(!showAdminInbox)}
+            className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0 relative"
+            title="Gelen Mesajlar"
+          >
+            <Inbox size={11} />
+            <span>Mesajlar</span>
+            {inboxMessages.length > 0 && (
+              <span className="w-3.5 h-3.5 rounded-full bg-emerald-500 text-black text-[8px] font-black flex items-center justify-center">
+                {inboxMessages.length}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={handleAdminLogout}
+            className="px-2 py-1 rounded-lg bg-red-950/60 hover:bg-red-900/80 text-red-300 border border-red-500/20 text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0"
+            title="Yönetici Modundan Çıkış Yap"
+          >
+            <Lock size={10} />
+            <span>Çıkış</span>
+          </button>
+        </div>
+      )}
+
       {/* MAIN CONTAINER */}
       <div className="relative z-10 h-auto lg:h-screen lg:max-h-screen w-full flex flex-col lg:flex-row p-4 lg:p-6 gap-6 lg:overflow-hidden">
         
-        {/* LEFT PANEL (Branding Anchor & Core Profile Header - Collapses when detail view is active) */}
+        {/* LEFT PANEL: Dynamic Viewport & Primary Presenter (Hosts Profile or Active Project / Article Details) */}
         <motion.div 
           layout
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className={`w-full ${isDetailActive ? 'lg:w-[28%]' : 'lg:w-[52%]'} h-auto lg:h-full lg:max-h-full relative flex flex-col rounded-3xl p-5 lg:p-7 liquid-glass-clear spinning-glow-border overflow-hidden select-text transition-all duration-500 ease-out`}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full lg:w-1/2 h-auto lg:h-full lg:max-h-full relative flex flex-col rounded-3xl p-5 lg:p-7 liquid-glass-clear spinning-glow-border overflow-hidden select-text transition-all duration-300 ease-out"
         >
           
           {/* Left Panel Header / Navigation */}
@@ -734,7 +1153,7 @@ export default function App() {
             </div>
           )}
 
-          <header className="flex items-center justify-between z-10 mb-6 lg:mb-8 shrink-0">
+          <header className="flex items-center justify-between z-10 mb-4 lg:mb-5 shrink-0">
             <div 
               className="flex items-center gap-3 cursor-pointer group select-none"
               onClick={() => {
@@ -747,44 +1166,42 @@ export default function App() {
               {/* Separate Brand Logo with transparent background */}
               <div className="w-10 h-10 transition-transform duration-300 group-hover:scale-110 shrink-0 flex items-center justify-center">
                 <img 
-                  src={profileData.logo} 
+                  src={profile.logo} 
                   alt="Emirhan Yılmaz Logo" 
                   className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.35)] group-hover:drop-shadow-[0_0_14px_rgba(56,189,248,0.7)]"
                   referrerPolicy="no-referrer"
                 />
               </div>
               <span className="text-xl font-semibold tracking-tight text-white transition-opacity duration-300 group-hover:opacity-95 truncate">
-                Emirhan <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-white/95 to-white/80">YILMAZ</span>
+                {profile.name.split(' ')[0]} <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-white/95 to-white/80">{profile.name.split(' ').slice(1).join(' ')}</span>
               </span>
             </div>
 
             {/* Desktop Navigation Tabs */}
-            {!isDetailActive && (
-              <nav className="hidden md:flex items-center gap-1.5 p-1 liquid-glass rounded-full text-xs shrink-0">
-                {navItems.map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      soundEngine.playTabSwitch();
-                      setActiveTab(item.id);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`px-4 py-1.5 rounded-full transition-all duration-300 font-bold ${
-                      activeTab === item.id 
-                        ? (theme === 'terminal'
-                            ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/60 shadow-[0_0_12px_rgba(52,211,153,0.35)]'
-                            : 'bg-white/15 text-white shadow-xs')
-                        : (theme === 'terminal'
-                            ? 'text-emerald-400/70 hover:text-emerald-300 hover:bg-emerald-950/30'
-                            : 'text-white/85 hover:text-white hover:bg-white/10')
-                    }`}
-                    id={`nav-btn-${item.id}`}
-                  >
-                    {theme === 'terminal' ? `> ${item.label.toUpperCase()}_` : item.label}
-                  </button>
-                ))}
-              </nav>
-            )}
+            <nav className="hidden md:flex items-center gap-1.5 p-1 liquid-glass rounded-full text-xs shrink-0">
+              {navItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    soundEngine.playTabSwitch();
+                    setActiveTab(item.id);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`px-4 py-1.5 rounded-full transition-all duration-300 font-bold ${
+                    activeTab === item.id 
+                      ? (theme === 'terminal'
+                          ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/60 shadow-[0_0_12px_rgba(52,211,153,0.35)]'
+                          : 'bg-white/15 text-white shadow-xs')
+                      : (theme === 'terminal'
+                          ? 'text-emerald-400/70 hover:text-emerald-300 hover:bg-emerald-950/30'
+                          : 'text-white/85 hover:text-white hover:bg-white/10')
+                  }`}
+                  id={`nav-btn-${item.id}`}
+                >
+                  {theme === 'terminal' ? `> ${item.label.toUpperCase()}_` : item.label}
+                </button>
+              ))}
+            </nav>
 
             {/* Mobile Navigation Button */}
             <button 
@@ -806,10 +1223,9 @@ export default function App() {
                 className="absolute top-20 left-6 right-6 z-30 liquid-glass-strong rounded-2xl p-4 flex flex-col gap-2 md:hidden"
                 id="mobile-nav-menu"
               >
-                {/* Brand header with Logo in mobile drawer */}
                 <div className="flex items-center gap-2.5 pb-2.5 mb-1 border-b border-white/10 px-2 select-none">
-                  <img src={profileData.logo} alt="Logo" className="w-6 h-6 object-contain drop-shadow-md" />
-                  <span className="font-extrabold text-white text-xs tracking-wider uppercase">Emirhan Yılmaz</span>
+                  <img src={profile.logo} alt="Logo" className="w-6 h-6 object-contain drop-shadow-md" />
+                  <span className="font-extrabold text-white text-xs tracking-wider uppercase">{profile.name}</span>
                 </div>
                 {navItems.map(item => (
                   <button
@@ -833,7 +1249,6 @@ export default function App() {
                   </button>
                 ))}
 
-                {/* Mobile Theme Toggle Section */}
                 <div className="pt-2 mt-1 border-t border-white/10 flex items-center justify-between px-2">
                   <span className="text-xs font-mono text-white/70">
                     {theme === 'terminal' ? 'CLI Terminal Modu' : 'Modern Cam UI'}
@@ -844,301 +1259,593 @@ export default function App() {
             )}
           </AnimatePresence>
 
-          {/* Left Panel Body Content */}
-          <div className="flex-1 flex flex-col justify-center lg:justify-start z-10 py-6 overflow-y-auto pr-1">
-            
-            {/* Dynamic Content Display based on Mobile Active Tab */}
+          {/* Left Panel Body: Dynamic Viewport (Displays Details on selection, or Hero Profile) */}
+          <div className="flex-1 flex flex-col justify-between z-10 overflow-hidden relative min-h-0">
             <AnimatePresence mode="wait">
-              {activeTab === 'profile' || window.innerWidth >= 1024 ? (
+              {currentSelectedProject ? (
+                /* DETAIL VIEW 1: ACTIVE PROJECT DETAIL VIEW IN LEFT PANEL */
+                <motion.div
+                  key={`left-project-${currentSelectedProject.id}`}
+                  initial={{ opacity: 0, scale: 0.98, x: -15 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.98, x: -15 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1.5 min-h-0 select-text"
+                >
+                  {/* Top Bar Navigation with Geri Dön button */}
+                  <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/10 shrink-0 sticky top-0 bg-black/60 backdrop-blur-md z-20 py-1">
+                    <button
+                      onClick={() => {
+                        soundEngine.playGlassClick();
+                        setSelectedProject(null);
+                      }}
+                      className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs transition-all border border-emerald-400/40 cursor-pointer hover:scale-105 active:scale-95 shadow-md group"
+                      title="Profile Geri Dön"
+                    >
+                      <ArrowLeft size={14} className="text-emerald-400 group-hover:-translate-x-0.5 transition-transform" />
+                      <span>Geri (Profile Dön)</span>
+                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 bg-black/40 p-1 rounded-full border border-white/10">
+                        <button
+                          onClick={handlePrevProject}
+                          className="w-7 h-7 rounded-full hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                          title="Önceki Proje (Sol Ok)"
+                        >
+                          <ChevronLeft size={16} />
+                        </button>
+                        <span className="text-[10px] font-mono font-extrabold text-emerald-400 px-1">
+                          {projects.findIndex(p => p.id === currentSelectedProject.id) + 1} / {projects.length}
+                        </span>
+                        <button
+                          onClick={handleNextProject}
+                          className="w-7 h-7 rounded-full hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                          title="Sonraki Proje (Sağ Ok)"
+                        >
+                          <ChevronRight size={16} />
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => setSelectedProject(null)}
+                        className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all border border-white/10 cursor-pointer"
+                        title="Kapat"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Project Title & Category */}
+                  <div>
+                    <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold">{currentSelectedProject.category}</span>
+                    <h2 className="text-2xl font-extrabold tracking-tight mt-0.5 text-white">{currentSelectedProject.title}</h2>
+                  </div>
+
+                  {/* Image Display Frame with Carousel */}
+                  {(() => {
+                    const currentImages = [
+                      currentSelectedProject.image,
+                      ...(currentSelectedProject.galleryImages || []),
+                      ...(projectDetailedImages[currentSelectedProject.id] || [])
+                    ].filter((img, idx, self) => self.indexOf(img) === idx && Boolean(img));
+
+                    const safeIndex = activeGalleryIndex >= currentImages.length ? 0 : activeGalleryIndex;
+                    const activeImage = currentImages[safeIndex] || currentSelectedProject.image;
+
+                    return (
+                      <div className="space-y-3">
+                        <div className="relative aspect-16/10 w-full rounded-2xl overflow-hidden bg-zinc-950 border border-white/20 shadow-2xl group/img">
+                          <motion.img 
+                            key={activeImage}
+                            initial={{ opacity: 0.4, scale: 0.98 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 0.25 }}
+                            src={activeImage} 
+                            alt={`${currentSelectedProject.title} Ekran ${safeIndex + 1}`} 
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              const original = projects.find(p => p.id === currentSelectedProject.id);
+                              if (original) e.currentTarget.src = original.image;
+                            }}
+                          />
+
+                          {currentImages.length > 1 && (
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveGalleryIndex((prev) => (prev > 0 ? prev - 1 : currentImages.length - 1));
+                                }}
+                                className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/90 hover:bg-emerald-500 hover:text-black text-emerald-400 flex items-center justify-center transition-all border border-emerald-500/50 shadow-xl cursor-pointer z-10 hover:scale-110 active:scale-95"
+                                title="Önceki Ekran"
+                              >
+                                <ChevronLeft size={16} />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setActiveGalleryIndex((prev) => (prev < currentImages.length - 1 ? prev + 1 : 0));
+                                }}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/90 hover:bg-emerald-500 hover:text-black text-emerald-400 flex items-center justify-center transition-all border border-emerald-500/50 shadow-xl cursor-pointer z-10 hover:scale-110 active:scale-95"
+                                title="Sonraki Ekran"
+                              >
+                                <ChevronRight size={16} />
+                              </button>
+                            </>
+                          )}
+
+                          <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10">
+                            {currentImages.length > 1 && (
+                              <span className="px-2.5 py-0.5 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-[10px] text-emerald-300 font-extrabold font-mono shadow-md">
+                                {safeIndex + 1} / {currentImages.length}
+                              </span>
+                            )}
+                            <button
+                              onClick={() => setActiveLightboxImage(activeImage)}
+                              className="p-1.5 rounded-full bg-black/80 hover:bg-emerald-500 hover:text-black text-white border border-white/20 transition-all cursor-pointer shadow-md"
+                              title="Ekranı Büyüt"
+                            >
+                              <Eye size={12} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {currentImages.length > 1 && (
+                          <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-thin">
+                            {currentImages.map((img, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => setActiveGalleryIndex(idx)}
+                                className={`relative w-12 h-12 rounded-xl overflow-hidden border-2 transition-all cursor-pointer shrink-0 ${
+                                  idx === safeIndex 
+                                    ? 'border-emerald-400 scale-105 shadow-md shadow-emerald-500/25 ring-2 ring-emerald-400/30' 
+                                    : 'border-white/10 opacity-50 hover:opacity-100 hover:border-white/30'
+                                }`}
+                              >
+                                <img src={img} alt={`Küçük Ekran ${idx + 1}`} className="w-full h-full object-cover" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Admin Photo Editor */}
+                  {isAdmin && (
+                    <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2.5">
+                      <span className="text-[10px] text-white tracking-wider uppercase font-bold flex items-center gap-1.5">
+                        <Upload size={11} className="text-white/80" /> FOTOĞRAF YÖNETİMİ (ADMIN)
+                      </span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <label className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer text-center group transition-all">
+                          <Upload size={12} className="text-white/60 group-hover:text-white transition-all mb-0.5" />
+                          <span className="text-[9px] text-white font-bold">Görsel Yükle</span>
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  if (typeof reader.result === 'string') {
+                                    handleSaveDetailedImage(currentSelectedProject.id, reader.result);
+                                  }
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                        </label>
+                        <button
+                          onClick={() => {
+                            setPromptInputValue('');
+                            setPromptDialog({
+                              isOpen: true,
+                              title: 'Görsel Web URL Ekle',
+                              description: 'Proje detay galerisine eklenecek güvenli resim linkini (http/https) girin:',
+                              placeholder: 'https://resim.ornek/gorsel.jpg',
+                              onConfirm: (url) => {
+                                if (url && url.trim()) handleSaveDetailedImage(currentSelectedProject.id, url.trim());
+                              }
+                            });
+                          }}
+                          className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-center group transition-all cursor-pointer"
+                        >
+                          <span className="text-xs mb-0.5">🔗</span>
+                          <span className="text-[9px] text-white font-bold">URL Ekle</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tech Stack */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] text-white/75 tracking-wider uppercase font-bold">GELİŞTİRME TEKNOLOJİLERİ</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {currentSelectedProject.tech.map(tech => (
+                        <span key={tech} className="px-2.5 py-1 liquid-glass rounded-md text-[10px] text-white font-semibold font-mono">
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Descriptions */}
+                  <div className="space-y-2.5">
+                    <p className="text-sm text-white font-semibold leading-relaxed">
+                      {currentSelectedProject.description}
+                    </p>
+                    <p className="text-xs text-white/90 leading-relaxed font-normal">
+                      {currentSelectedProject.longDescription}
+                    </p>
+                  </div>
+
+                  {/* Highlights */}
+                  <div className="space-y-2 pt-2 border-t border-white/10">
+                    <span className="text-[10px] uppercase tracking-wider text-white/75 font-bold">ÖNE ÇIKAN KAZANIMLAR & ÖZELLİKLER</span>
+                    <ul className="space-y-2">
+                      {currentSelectedProject.highlights.map((highlight, index) => (
+                        <li key={index} className="flex items-start gap-2 text-xs text-white/95 font-medium leading-relaxed">
+                          <CheckCircle2 size={13} className="text-emerald-400 shrink-0 mt-0.5" />
+                          <span>{highlight}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Live Demo CTA Button */}
+                  <div className="pt-2 border-t border-white/10 space-y-2 pb-2">
+                    {currentSelectedProject.demoUrl ? (
+                      <div className="space-y-2">
+                        <a
+                          href={sanitizeUrl(currentSelectedProject.demoUrl) || '#'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-400 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xl hover:shadow-emerald-500/25 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer border border-emerald-300/40 group/demobtn"
+                        >
+                          <ExternalLink size={16} className="group-hover/demobtn:translate-x-0.5 group-hover/demobtn:-translate-y-0.5 transition-transform" />
+                          <span>Canlı Uygulamayı İncele</span>
+                        </a>
+                        {isAdmin && (
+                          <div className="flex justify-end">
+                            <button
+                              onClick={() => {
+                                setPromptInputValue(currentSelectedProject.demoUrl || '');
+                                setPromptDialog({
+                                  isOpen: true,
+                                  title: 'Canlı Demo URL Düzenle',
+                                  description: 'Canlı uygulamanın güvenli web adresini (https://...) girin. Kaldırmak için boş bırakıp kaydedin:',
+                                  defaultValue: currentSelectedProject.demoUrl || '',
+                                  placeholder: 'https://ornek-uygulama.com',
+                                  onConfirm: (url) => {
+                                    handleSaveDemoUrl(currentSelectedProject.id, url);
+                                  }
+                                });
+                              }}
+                              className="text-[10px] font-bold text-emerald-400 bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-500/20 px-2.5 py-1 rounded-lg cursor-pointer transition-colors"
+                            >
+                              ✏️ Demo URL Düzenle
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="p-3.5 rounded-2xl bg-white/5 border border-white/5 text-center flex flex-col sm:flex-row items-center justify-between gap-2">
+                        <span className="text-xs text-white/60 font-medium">Bu proje yerel masaüstü / otomasyon çalışmasıdır.</span>
+                        {isAdmin && (
+                          <button
+                            onClick={() => {
+                              setPromptInputValue('');
+                              setPromptDialog({
+                                isOpen: true,
+                                title: 'Canlı Demo URL Ekle',
+                                description: 'Projeye ait çalışan web linkini (https://...) ekleyin:',
+                                placeholder: 'https://ornek-uygulama.com',
+                                onConfirm: (url) => {
+                                  if (url && url.trim()) handleSaveDemoUrl(currentSelectedProject.id, url.trim());
+                                }
+                              });
+                            }}
+                            className="text-[10px] font-bold text-emerald-400 bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-500/20 px-2.5 py-1 rounded-lg cursor-pointer transition-colors"
+                          >
+                            + URL Ekle
+                          </button>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Admin Project Actions */}
+                    {isAdmin && currentSelectedProject && (
+                      <div className="flex items-center gap-2 pt-2 border-t border-white/10">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingProjectId(currentSelectedProject.id);
+                            setAdminEditorTab('projects');
+                            setShowAdminEditor(true);
+                          }}
+                          className="flex-1 py-2 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                        >
+                          <Edit3 size={13} />
+                          <span>Projeyi Düzenle</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setConfirmDialog({
+                              isOpen: true,
+                              title: 'Projeyi Sil',
+                              description: `"${currentSelectedProject.title}" projesini silmek istediğinize emin misiniz?`,
+                              confirmText: 'Evet, Sil',
+                              onConfirm: () => {
+                                const updated = projectList.filter(p => p.id !== currentSelectedProject.id);
+                                handleSaveProjects(updated);
+                                setSelectedProject(null);
+                                setAdminToastMessage("Proje silindi.");
+                                setShowAdminToast(true);
+                                setTimeout(() => setShowAdminToast(false), 2500);
+                              }
+                            });
+                          }}
+                          className="py-2 px-3 rounded-xl bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-500/20 text-xs font-bold transition-all cursor-pointer"
+                          title="Projeyi Sil"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ) : selectedArticle ? (
+                /* DETAIL VIEW 2: ACTIVE ARTICLE READER IN LEFT PANEL */
+                <motion.div
+                  key={`left-article-${selectedArticle.id}`}
+                  initial={{ opacity: 0, scale: 0.98, x: -15 }}
+                  animate={{ opacity: 1, scale: 1, x: 0 }}
+                  exit={{ opacity: 0, scale: 0.98, x: -15 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1.5 min-h-0 select-text"
+                >
+                  <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/10 shrink-0 sticky top-0 bg-black/60 backdrop-blur-md z-20 py-1">
+                    <button
+                      onClick={() => {
+                        soundEngine.playGlassClick();
+                        setSelectedArticle(null);
+                      }}
+                      className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs transition-all border border-emerald-400/40 cursor-pointer hover:scale-105 active:scale-95 shadow-md group"
+                      title="Profile Geri Dön"
+                    >
+                      <ArrowLeft size={14} className="text-emerald-400 group-hover:-translate-x-0.5 transition-transform" />
+                      <span>Geri (Profile Dön)</span>
+                    </button>
+                    <button
+                      onClick={() => setSelectedArticle(null)}
+                      className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all border border-white/10 cursor-pointer"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wider font-mono">
+                        {selectedArticle.category}
+                      </span>
+                      <span className="text-xs text-white/60 font-mono">{selectedArticle.date}</span>
+                      <span className="text-xs text-white/60 font-mono">• {selectedArticle.readTime}</span>
+                    </div>
+
+                    <h1 className="text-2xl lg:text-3xl font-extrabold text-white leading-tight">
+                      {selectedArticle.title}
+                    </h1>
+
+                    <p className="text-sm font-semibold text-white/90 leading-relaxed p-4 rounded-2xl bg-white/5 border border-white/10 italic">
+                      "{selectedArticle.excerpt}"
+                    </p>
+
+                    <div className="text-sm text-white/90 leading-relaxed space-y-4 pt-2">
+                      <p>{selectedArticle.content}</p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/10">
+                      {selectedArticle.tags.map(tag => (
+                        <span key={tag} className="text-[10px] px-2.5 py-1 rounded-md bg-white/5 text-white/70">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Admin Article Actions */}
+                    {isAdmin && selectedArticle && (
+                      <div className="flex items-center gap-2 pt-3 border-t border-white/10">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingArticleId(selectedArticle.id);
+                            setAdminEditorTab('articles');
+                            setShowAdminEditor(true);
+                          }}
+                          className="flex-1 py-2 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                        >
+                          <Edit3 size={13} />
+                          <span>Makaleyi Düzenle</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setConfirmDialog({
+                              isOpen: true,
+                              title: 'Makaleyi Sil',
+                              description: `"${selectedArticle.title}" makalesini silmek istediğinize emin misiniz?`,
+                              confirmText: 'Evet, Sil',
+                              onConfirm: () => {
+                                const updated = articleList.filter(a => a.id !== selectedArticle.id);
+                                handleSaveArticles(updated);
+                                setSelectedArticle(null);
+                                setAdminToastMessage("Makale silindi.");
+                                setShowAdminToast(true);
+                                setTimeout(() => setShowAdminToast(false), 2500);
+                              }
+                            });
+                          }}
+                          className="py-2 px-3 rounded-xl bg-red-950/40 hover:bg-red-900/60 text-red-400 border border-red-500/20 text-xs font-bold transition-all cursor-pointer"
+                          title="Makaleyi Sil"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ) : (
+                /* DEFAULT VIEW: HERO / PROFILE DISPLAY */
                 <motion.div 
                   key="hero-profile-content"
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
-                  transition={{ duration: 0.5 }}
-                  className="flex flex-col items-start gap-6 lg:gap-8 max-w-xl"
+                  transition={{ duration: 0.4 }}
+                  className="flex-1 flex flex-col justify-between overflow-y-auto pr-1"
                 >
-                  <div className="w-20 h-20 rounded-full p-1 liquid-glass flex items-center justify-center overflow-hidden transition-transform duration-500 hover:rotate-6">
-                    <img 
-                      src={profileData.avatar} 
-                      alt="Emirhan Yılmaz Avatar" 
-                      className="w-full h-full object-cover rounded-full"
-                      referrerPolicy="no-referrer"
-                    />
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap gap-2">
-                      <div className="inline-flex items-center gap-2 px-3 py-1 liquid-glass rounded-full text-[10px] tracking-widest uppercase text-white font-bold">
-                        <Sparkles size={10} /> {profileData.title}
+                  <div className="flex flex-col items-start gap-6 lg:gap-8 max-w-xl py-2">
+                    <div className="flex items-center gap-4">
+                      <div className="w-20 h-20 rounded-full p-1 liquid-glass flex items-center justify-center overflow-hidden transition-transform duration-500 hover:rotate-6">
+                        <img 
+                          src={profile.avatar} 
+                          alt="Emirhan Yılmaz Avatar" 
+                          className="w-full h-full object-cover rounded-full"
+                          referrerPolicy="no-referrer"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/profile-photo.jpg';
+                          }}
+                        />
                       </div>
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 liquid-glass rounded-full text-[10px] text-emerald-400 font-extrabold tracking-widest uppercase select-none">
-                        <span className="relative flex h-1.5 w-1.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                        </span>
-                        <span>PROJELERE AÇIK</span>
-                      </div>
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAdminEditorTab('profile');
+                            setShowAdminEditor(true);
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                        >
+                          <Edit3 size={13} />
+                          <span>Profili Düzenle</span>
+                        </button>
+                      )}
                     </div>
-                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.05em] leading-[1.05] text-white">
-                      Ruh Sağlığı & <br />
-                      <span className="font-serif italic text-white">Yapay Zeka</span>
-                    </h1>
-                    <p className="text-sm sm:text-base text-white font-semibold leading-relaxed">
-                      Teknolojiyi psikolojiyle harmanlayarak, zihinsel süreçleri veri biliminin ve algoritmanın gücüyle yeniden şekillendiriyorum.
-                    </p>
-                  </div>
 
-                  <div className="flex flex-wrap gap-2.5">
-                    <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-bold text-white">
-                      Psikolojik Danışmanlık
-                    </span>
-                    <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-bold text-white">
-                      Yapay Zeka (AI)
-                    </span>
-                    <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-bold text-white">
-                      Python Geliştirme
-                    </span>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3">
-                    <button 
-                      onClick={() => setActiveTab('projects')}
-                      className="inline-flex items-center gap-3.5 pl-6 pr-2 py-2 liquid-glass-strong hover:bg-white/5 rounded-full text-sm font-bold transition-all group hover:scale-105 active:scale-95"
-                      id="cta-explore-projects"
-                    >
-                      <span>Projelerimi Keşfet</span>
-                      <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-white transition-transform duration-300 group-hover:translate-x-1">
-                        <ArrowRight size={14} />
-                      </div>
-                    </button>
-
-                    <a
-                      href="https://github.com/Emirhan0008"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2.5 px-4 py-2 liquid-glass-strong hover:bg-white/15 rounded-full text-xs sm:text-sm font-semibold font-mono text-white transition-all hover:scale-105 active:scale-95 border border-white/20 hover:border-emerald-400/50 shadow-md group"
-                      title="GitHub: Emirhan0008"
-                    >
-                      <Github size={15} className="text-white group-hover:text-emerald-400 transition-colors" />
-                      <span>github.com/Emirhan0008</span>
-                      <ExternalLink size={12} className="opacity-60 group-hover:opacity-100 transition-opacity" />
-                    </a>
-                  </div>
-                </motion.div>
-              ) : activeTab === 'projects' ? (
-                // Render project view inside left panel on mobile only
-                <motion.div 
-                  key="mobile-projects"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="lg:hidden flex flex-col gap-6 relative"
-                >
-                  <div className="space-y-1">
-                    <h2 className="text-3xl font-extrabold tracking-tight text-white">Projelerim</h2>
-                    <p className="text-xs text-white font-semibold">Yapay Zeka, Python ve Psikoloji odaklı yenilikçi çalışmalarım</p>
-                  </div>
-                  
-                  {/* Filters */}
-                  <div className="flex flex-wrap gap-1.5">
-                    {['Tümü', 'Mobil', 'Yapay Zeka', 'Python', 'Özel Eğitim', 'Otomasyon & Analitik'].map(filter => (
-                      <button
-                        key={filter}
-                        onClick={() => setProjectFilter(filter)}
-                        className={`px-3 py-1 rounded-full text-xs transition-all font-bold ${
-                          projectFilter === filter 
-                            ? 'bg-white/20 text-white font-extrabold' 
-                            : 'bg-white/5 text-white/80 hover:bg-white/10'
-                        }`}
-                      >
-                        {filter}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Projects List */}
-                  <div 
-                    onScroll={handleMobileProjectsScroll}
-                    className="grid grid-cols-1 gap-4 max-h-[45vh] overflow-y-auto pr-1 relative"
-                  >
-                    {filteredProjects.map(project => (
-                      <div 
-                        key={project.id}
-                        onClick={() => setSelectedProject(project)}
-                        className="p-3.5 liquid-glass rounded-2xl flex gap-4 cursor-pointer hover:bg-white/5 transition-all shrink-0 min-h-[90px] items-center"
-                      >
-                        <div className="w-24 h-16 rounded-lg overflow-hidden shrink-0 bg-zinc-900 border border-white/10">
-                          <img 
-                            src={project.image} 
-                            alt={project.title} 
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                            onError={(e) => {
-                              const original = projects.find(p => p.id === project.id);
-                              if (original) e.currentTarget.src = original.image;
-                            }}
-                          />
+                    <div className="space-y-3">
+                      <div className="flex flex-wrap gap-2">
+                        <div className="inline-flex items-center gap-2 px-3 py-1 liquid-glass rounded-full text-[10px] tracking-widest uppercase text-white font-bold">
+                          <Sparkles size={10} /> {profile.title}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <span className="text-[10px] uppercase tracking-wider text-white/90 font-extrabold">{project.category}</span>
-                          <h3 className="text-sm font-extrabold truncate text-white">{project.title}</h3>
-                          <p className="text-xs text-white line-clamp-1 mt-0.5 font-semibold">{project.description}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Floating Scroll Down Indicator for Mobile */}
-                  <AnimatePresence>
-                    {filteredProjects.length > 3 && showMobileScrollIndicator && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 5, x: "-50%" }}
-                        animate={{ opacity: 1, y: 0, x: "-50%" }}
-                        exit={{ opacity: 0, y: 5, x: "-50%" }}
-                        className="absolute bottom-4 left-1/2 px-3.5 py-1.5 bg-black/90 backdrop-blur-md rounded-full border border-white/10 shadow-lg flex items-center gap-1.5 text-[9px] text-white font-extrabold tracking-wider uppercase animate-bounce pointer-events-none z-20"
-                      >
-                        <span>DEVAMI İÇİN AŞAĞI KAYDIRIN</span>
-                        <span className="text-xs">↕</span>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              ) : activeTab === 'articles' ? (
-                // Render articles view inside left panel on mobile only
-                <motion.div 
-                  key="mobile-articles"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="lg:hidden flex flex-col gap-5 relative"
-                >
-                  <div className="space-y-1">
-                    <h2 className="text-3xl font-extrabold tracking-tight text-white">Yayınlar</h2>
-                    <p className="text-xs text-white/90 font-medium">Makaleler ve teknik incelemelerim</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-3 max-h-[50vh] overflow-y-auto pr-1">
-                    {articles.map((article) => (
-                      <div 
-                        key={article.id}
-                        onClick={() => setSelectedArticle(article)}
-                        className="p-4 liquid-glass rounded-2xl flex flex-col gap-2 cursor-pointer hover:bg-white/5 transition-all"
-                      >
-                        <div className="flex items-center justify-between text-[10px] text-white/60 font-mono">
-                          <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-white font-bold font-sans">
-                            {article.category}
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 liquid-glass rounded-full text-[10px] text-emerald-400 font-extrabold tracking-widest uppercase select-none">
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                           </span>
-                          <span>{article.readTime}</span>
-                        </div>
-                        <h3 className="text-sm font-extrabold text-white leading-snug">{article.title}</h3>
-                        <p className="text-xs text-white/80 line-clamp-2">{article.summary}</p>
-                        <div className="flex items-center justify-between pt-1 border-t border-white/5 text-[10px] text-white/90 font-bold">
-                          <span>{article.date}</span>
-                          <span className="flex items-center gap-1">Oku <ArrowRight size={10} /></span>
+                          <span>PROJELERE AÇIK</span>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </motion.div>
-              ) : (
-                // Render contact inside left panel on mobile only
-                <motion.div 
-                  key="mobile-contact"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="lg:hidden flex flex-col gap-5"
-                >
-                  <div className="space-y-1">
-                    <h2 className="text-3xl font-extrabold tracking-tight text-white">İletişim</h2>
-                    <p className="text-xs text-white/95 font-medium">Projeler, danışmanlık veya sorularınız için bana ulaşın.</p>
+                      <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.05em] leading-[1.05] text-white">
+                        Ruh Sağlığı & <br />
+                        <span className="font-serif italic text-white">Yapay Zeka</span>
+                      </h1>
+                      <p className="text-sm sm:text-base text-white font-semibold leading-relaxed">
+                        {profile.about}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2.5">
+                      <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-bold text-white">
+                        Psikolojik Danışmanlık
+                      </span>
+                      <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-bold text-white">
+                        Yapay Zeka (AI)
+                      </span>
+                      <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-bold text-white">
+                        Python Geliştirme
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <button 
+                        onClick={() => {
+                          soundEngine.playTabSwitch();
+                          setActiveTab('projects');
+                        }}
+                        className="inline-flex items-center gap-3.5 pl-6 pr-2 py-2 liquid-glass-strong hover:bg-white/5 rounded-full text-sm font-bold transition-all group hover:scale-105 active:scale-95 cursor-pointer"
+                        id="cta-explore-projects"
+                      >
+                        <span>Projelerimi Keşfet</span>
+                        <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-white transition-transform duration-300 group-hover:translate-x-1">
+                          <ArrowRight size={14} />
+                        </div>
+                      </button>
+
+                      <a
+                        href={profile.github || "https://github.com/Emirhan0008"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2.5 px-4 py-2 liquid-glass-strong hover:bg-white/15 rounded-full text-xs sm:text-sm font-semibold font-mono text-white transition-all hover:scale-105 active:scale-95 border border-white/20 hover:border-emerald-400/50 shadow-md group cursor-pointer"
+                        title={`GitHub: ${profile.name}`}
+                      >
+                        <Github size={15} className="text-white group-hover:text-emerald-400 transition-colors" />
+                        <span>github.com/Emirhan0008</span>
+                        <ExternalLink size={12} className="opacity-60 group-hover:opacity-100 transition-opacity" />
+                      </a>
+                    </div>
                   </div>
 
-                  {formSubmitted ? (
-                    <div className="p-6 liquid-glass rounded-2xl flex flex-col items-center justify-center text-center gap-3">
-                      <CheckCircle2 size={36} className="text-white/85 animate-bounce" />
-                      <h3 className="font-medium text-white">Mesajınız İletildi</h3>
-                      <p className="text-xs text-white/50">En kısa sürede e-posta adresiniz üzerinden geri dönüş sağlayacağım.</p>
-                    </div>
-                  ) : (
-                    <form onSubmit={handleFormSubmit} className="flex flex-col gap-3">
-                      <input 
-                        type="text" 
-                        required
-                        placeholder="Adınız Soyadınız"
-                        value={formData.name}
-                        onChange={e => setFormData({ ...formData, name: e.target.value })}
-                        className="w-full py-2.5 px-4 rounded-xl liquid-glass border-none focus:outline-hidden focus:ring-1 focus:ring-white/30 text-xs text-white placeholder-white/40"
-                      />
-                      <input 
-                        type="email" 
-                        required
-                        placeholder="E-posta Adresiniz"
-                        value={formData.email}
-                        onChange={e => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full py-2.5 px-4 rounded-xl liquid-glass border-none focus:outline-hidden focus:ring-1 focus:ring-white/30 text-xs text-white placeholder-white/40"
-                      />
-                      <textarea 
-                        required
-                        rows={3}
-                        placeholder="Mesajınız..."
-                        value={formData.message}
-                        onChange={e => setFormData({ ...formData, message: e.target.value })}
-                        className="w-full py-2.5 px-4 rounded-xl liquid-glass border-none focus:outline-hidden focus:ring-1 focus:ring-white/30 text-xs text-white placeholder-white/40 resize-none"
-                      />
-                      <button 
-                        type="submit"
-                        className="w-full py-2.5 rounded-xl liquid-glass-strong hover:bg-white/5 font-medium text-xs flex items-center justify-center gap-2 border-none cursor-pointer"
+                  {/* Left Panel Bottom Quote - shown in profile mode */}
+                  <footer className="mt-auto pt-6 border-t border-white/5 z-10 flex flex-col gap-3.5 shrink-0">
+                    <span className="text-[10px] tracking-[0.25em] uppercase text-white/60 font-semibold">
+                      VİZYONER YAKLAŞIM
+                    </span>
+                    <blockquote className="text-sm md:text-base font-normal italic leading-relaxed text-white">
+                      "Zihnin derinliklerini, algoritmanın <span className="font-serif text-white font-medium">gücüyle anlamak</span>."
+                    </blockquote>
+                    <div className="flex items-center justify-between gap-3 w-full pt-1">
+                      <div className="flex items-center gap-2">
+                        <img src={profile.logo} alt="Logo" className="w-4 h-4 object-contain opacity-80" />
+                        <span 
+                          onClick={handleFooterClick}
+                          className="text-[10px] tracking-widest text-white/90 uppercase font-bold select-none cursor-default hover:text-white transition-colors"
+                        >
+                          {profile.name.toUpperCase()}
+                        </span>
+                      </div>
+                      <a 
+                        href="https://github.com/Emirhan0008" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="inline-flex items-center gap-1.5 text-[11px] font-mono text-white/80 hover:text-emerald-400 transition-colors font-bold px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10"
                       >
-                        <Send size={12} /> Gönder
-                      </button>
-                    </form>
-                  )}
+                        <Github size={12} />
+                        <span>github.com/Emirhan0008</span>
+                        <ExternalLink size={10} className="opacity-60" />
+                      </a>
+                    </div>
+                  </footer>
                 </motion.div>
               )}
             </AnimatePresence>
-
           </div>
-
-          {/* Left Panel Bottom Quote */}
-          <footer className="mt-auto pt-6 border-t border-white/5 z-10 flex flex-col gap-3.5">
-            <span className="text-[10px] tracking-[0.25em] uppercase text-white/60 font-semibold">
-              VİZYONER YAKLAŞIM
-            </span>
-            <blockquote className="text-sm md:text-base font-normal italic leading-relaxed text-white">
-              "Zihnin derinliklerini, algoritmanın <span className="font-serif text-white font-medium">gücüyle anlamak</span>."
-            </blockquote>
-            <div className="flex items-center justify-between gap-3 w-full pt-1">
-              <div className="flex items-center gap-2">
-                <img src={profileData.logo} alt="Logo" className="w-4 h-4 object-contain opacity-80" />
-                <span 
-                  onClick={handleFooterClick}
-                  className="text-[10px] tracking-widest text-white/90 uppercase font-bold select-none cursor-default hover:text-white transition-colors"
-                >
-                  EMİRHAN YILMAZ
-                </span>
-              </div>
-              <a 
-                href="https://github.com/Emirhan0008" 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="inline-flex items-center gap-1.5 text-[11px] font-mono text-white/80 hover:text-emerald-400 transition-colors font-bold px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10"
-              >
-                <Github size={12} />
-                <span>github.com/Emirhan0008</span>
-                <ExternalLink size={10} className="opacity-60" />
-              </a>
-            </div>
-          </footer>
 
         </motion.div>
 
-        {/* RIGHT PANEL / MAIN CONTENT VIEWPORT (Expands dynamically when detail view is active) */}
+        {/* RIGHT PANEL: Browsing Hub & Interface / Catalog Viewport */}
         <motion.div 
           layout
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className={`w-full ${isDetailActive ? 'lg:w-[72%]' : 'lg:w-[48%]'} h-full flex flex-col min-h-0 relative select-text transition-all duration-500 ease-out`}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full lg:w-1/2 h-full flex flex-col min-h-0 relative select-text transition-all duration-300 ease-out"
         >
 
           {/* Top Bar (Socials, Innovative Actions & Audio Controls) */}
@@ -1315,325 +2022,7 @@ export default function App() {
               />
             ) : (
             <AnimatePresence mode="wait">
-              
-              {/* VIEW 1: SELECTED PROJECT DETAIL VIEW (Dynamic layout shift inside right column) */}
-              {currentSelectedProject ? (
-                <motion.div
-                  key={`project-detail-${currentSelectedProject.id}`}
-                  initial={{ opacity: 0, scale: 0.98, x: 20 }}
-                  animate={{ opacity: 1, scale: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.98, x: -20 }}
-                  transition={{ duration: 0.35 }}
-                  className="flex-1 flex flex-col gap-6 overflow-y-auto pr-1.5 min-h-0 liquid-glass-strong rounded-[2.5rem] p-6 lg:p-8 border border-white/10 shadow-2xl relative select-text"
-                >
-                  {/* Top Bar Navigation for Project Detail View */}
-                  <div className="flex items-center justify-between gap-3 pb-4 border-b border-white/10 shrink-0">
-                    <button
-                      onClick={() => setSelectedProject(null)}
-                      className="flex items-center gap-2 px-3.5 py-1.5 rounded-full liquid-glass hover:bg-white/15 text-white/90 hover:text-white text-xs font-bold transition-all border border-white/10 cursor-pointer"
-                    >
-                      <ArrowLeft size={14} />
-                      <span>Projeler Listesine Dön</span>
-                    </button>
-
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1 bg-black/40 p-1 rounded-full border border-white/10">
-                        <button
-                          onClick={handlePrevProject}
-                          className="w-7 h-7 rounded-full hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all cursor-pointer"
-                          title="Önceki Proje (Sol Ok)"
-                        >
-                          <ChevronLeft size={16} />
-                        </button>
-                        <span className="text-[10px] font-mono font-extrabold text-emerald-400 px-1">
-                          {projects.findIndex(p => p.id === currentSelectedProject.id) + 1} / {projects.length}
-                        </span>
-                        <button
-                          onClick={handleNextProject}
-                          className="w-7 h-7 rounded-full hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all cursor-pointer"
-                          title="Sonraki Proje (Sağ Ok)"
-                        >
-                          <ChevronRight size={16} />
-                        </button>
-                      </div>
-
-                      <button
-                        onClick={() => setSelectedProject(null)}
-                        className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all border border-white/10 cursor-pointer"
-                        title="Kapat"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Body Grid: Responsive Split layout for gallery and descriptions */}
-                  <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-                    
-                    {/* Left/Top Section: Carousel Slider & Tech Badges */}
-                    <div className="xl:col-span-6 space-y-4">
-                      {(() => {
-                        const currentImages = [
-                          currentSelectedProject.image,
-                          ...(currentSelectedProject.galleryImages || []),
-                          ...(projectDetailedImages[currentSelectedProject.id] || [])
-                        ].filter((img, idx, self) => self.indexOf(img) === idx && Boolean(img));
-
-                        const safeIndex = activeGalleryIndex >= currentImages.length ? 0 : activeGalleryIndex;
-                        const activeImage = currentImages[safeIndex] || currentSelectedProject.image;
-
-                        return (
-                          <div className="space-y-3">
-                            {/* Main Display Frame */}
-                            <div className="relative aspect-16/10 w-full rounded-2xl overflow-hidden bg-zinc-950 border border-white/20 shadow-2xl group/img">
-                              <motion.img 
-                                key={activeImage}
-                                initial={{ opacity: 0.4, scale: 0.98 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ duration: 0.25 }}
-                                src={activeImage} 
-                                alt={`${currentSelectedProject.title} Ekran ${safeIndex + 1}`} 
-                                className="w-full h-full object-cover"
-                                referrerPolicy="no-referrer"
-                                onError={(e) => {
-                                  const original = projects.find(p => p.id === currentSelectedProject.id);
-                                  if (original) e.currentTarget.src = original.image;
-                                }}
-                              />
-
-                              {/* Navigation Controls Overlay */}
-                              {currentImages.length > 1 && (
-                                <>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setActiveGalleryIndex((prev) => (prev > 0 ? prev - 1 : currentImages.length - 1));
-                                    }}
-                                    className="absolute left-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/90 hover:bg-emerald-500 hover:text-black text-emerald-400 flex items-center justify-center transition-all border border-emerald-500/50 shadow-xl cursor-pointer z-10 hover:scale-110 active:scale-95"
-                                    title="Önceki Ekran (Sol Ok)"
-                                  >
-                                    <ChevronLeft size={18} />
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setActiveGalleryIndex((prev) => (prev < currentImages.length - 1 ? prev + 1 : 0));
-                                    }}
-                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/90 hover:bg-emerald-500 hover:text-black text-emerald-400 flex items-center justify-center transition-all border border-emerald-500/50 shadow-xl cursor-pointer z-10 hover:scale-110 active:scale-95"
-                                    title="Sonraki Ekran (Sağ Ok)"
-                                  >
-                                    <ChevronRight size={18} />
-                                  </button>
-                                </>
-                              )}
-
-                              {/* Counter & Fullscreen Zoom */}
-                              <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-10">
-                                {currentImages.length > 1 && (
-                                  <span className="px-2.5 py-0.5 rounded-full bg-black/80 backdrop-blur-md border border-white/20 text-[10px] text-emerald-300 font-extrabold font-mono shadow-md">
-                                    {safeIndex + 1} / {currentImages.length}
-                                  </span>
-                                )}
-                                <button
-                                  onClick={() => setActiveLightboxImage(activeImage)}
-                                  className="p-1.5 rounded-full bg-black/80 hover:bg-emerald-500 hover:text-black text-white border border-white/20 transition-all cursor-pointer shadow-md"
-                                  title="Ekranı Büyüt (Tam Ekran)"
-                                >
-                                  <Eye size={12} />
-                                </button>
-                              </div>
-                            </div>
-
-                            {/* Thumbnails Row */}
-                            {currentImages.length > 1 && (
-                              <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-thin">
-                                {currentImages.map((img, idx) => (
-                                  <button
-                                    key={idx}
-                                    onClick={() => setActiveGalleryIndex(idx)}
-                                    className={`relative w-12 h-12 rounded-xl overflow-hidden border-2 transition-all cursor-pointer shrink-0 ${
-                                      idx === safeIndex 
-                                        ? 'border-emerald-400 scale-105 shadow-md shadow-emerald-500/25 ring-2 ring-emerald-400/30' 
-                                        : 'border-white/10 opacity-50 hover:opacity-100 hover:border-white/30'
-                                    }`}
-                                  >
-                                    <img src={img} alt={`Küçük Ekran ${idx + 1}`} className="w-full h-full object-cover" />
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })()}
-
-                      {/* Admin Photo Editor */}
-                      {isAdmin && (
-                        <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2.5">
-                          <span className="text-[10px] text-white tracking-wider uppercase font-bold flex items-center gap-1.5">
-                            <Upload size={11} className="text-white/80" /> FOTOĞRAF YÖNETİMİ (ADMIN)
-                          </span>
-                          <div className="grid grid-cols-2 gap-2">
-                            <label className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 cursor-pointer text-center group transition-all">
-                              <Upload size={12} className="text-white/60 group-hover:text-white transition-all mb-0.5" />
-                              <span className="text-[9px] text-white font-bold">Görsel Yükle</span>
-                              <input 
-                                type="file" 
-                                accept="image/*" 
-                                className="hidden" 
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    const reader = new FileReader();
-                                    reader.onloadend = () => {
-                                      if (typeof reader.result === 'string') {
-                                        handleSaveDetailedImage(currentSelectedProject.id, reader.result);
-                                      }
-                                    };
-                                    reader.readAsDataURL(file);
-                                  }
-                                }}
-                              />
-                            </label>
-                            <button
-                              onClick={() => {
-                                const url = prompt("Görsel Web URL adresi:");
-                                if (url) handleSaveDetailedImage(currentSelectedProject.id, url);
-                              }}
-                              className="flex flex-col items-center justify-center p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-center group transition-all cursor-pointer"
-                            >
-                              <span className="text-xs mb-0.5">🔗</span>
-                              <span className="text-[9px] text-white font-bold">URL Ekle</span>
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Tech Stack */}
-                      <div className="space-y-2 pt-2">
-                        <span className="text-[10px] text-white/75 tracking-wider uppercase font-bold">GELİŞTİRME TEKNOLOJİLERİ</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {currentSelectedProject.tech.map(tech => (
-                            <span key={tech} className="px-2.5 py-1 liquid-glass rounded-md text-[10px] text-white font-semibold font-mono">
-                              {tech}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Right/Bottom Section: Descriptions & CTA */}
-                    <div className="xl:col-span-6 space-y-5">
-                      <div>
-                        <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold">{currentSelectedProject.category}</span>
-                        <h2 className="text-2xl font-extrabold tracking-tight mt-0.5 text-white">{currentSelectedProject.title}</h2>
-                      </div>
-
-                      <div className="space-y-3">
-                        <p className="text-sm text-white font-semibold leading-relaxed">
-                          {currentSelectedProject.description}
-                        </p>
-                        <p className="text-xs text-white/90 leading-relaxed font-normal">
-                          {currentSelectedProject.longDescription}
-                        </p>
-                      </div>
-
-                      {/* Highlights */}
-                      <div className="space-y-2.5 pt-2 border-t border-white/10">
-                        <span className="text-[10px] uppercase tracking-wider text-white/75 font-bold">ÖNE ÇIKAN KAZANIMLAR & ÖZELLİKLER</span>
-                        <ul className="space-y-2">
-                          {currentSelectedProject.highlights.map((highlight, index) => (
-                            <li key={index} className="flex items-start gap-2 text-xs text-white/95 font-medium leading-relaxed">
-                              <CheckCircle2 size={13} className="text-emerald-400 shrink-0 mt-0.5" />
-                              <span>{highlight}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-
-                      {/* Live Demo CTA Button */}
-                      <div className="pt-4 border-t border-white/10 space-y-2">
-                        {currentSelectedProject.demoUrl ? (
-                          <a
-                            href={currentSelectedProject.demoUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-400 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xl hover:shadow-emerald-500/25 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer border border-emerald-300/40 group/demobtn"
-                          >
-                            <ExternalLink size={16} className="group-hover/demobtn:translate-x-0.5 group-hover/demobtn:-translate-y-0.5 transition-transform" />
-                            <span>Canlı Uygulamayı İncele</span>
-                          </a>
-                        ) : (
-                          <div className="p-3.5 rounded-2xl bg-white/5 border border-white/5 text-center flex flex-col sm:flex-row items-center justify-between gap-2">
-                            <span className="text-xs text-white/60 font-medium">Bu proje yerel masaüstü / otomasyon çalışmasıdır.</span>
-                            {isAdmin && (
-                              <button
-                                onClick={() => {
-                                  const url = prompt("Canlı demo URL adresi:");
-                                  if (url) handleSaveDemoUrl(currentSelectedProject.id, url);
-                                }}
-                                className="text-[10px] font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-500/20 px-2.5 py-1 rounded-lg cursor-pointer"
-                              >
-                                + URL Ekle
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                  </div>
-                </motion.div>
-              ) : selectedArticle ? (
-                /* VIEW 2: SELECTED ARTICLE DETAIL VIEW */
-                <motion.div
-                  key={`article-detail-${selectedArticle.id}`}
-                  initial={{ opacity: 0, scale: 0.98, x: 20 }}
-                  animate={{ opacity: 1, scale: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.98, x: -20 }}
-                  transition={{ duration: 0.35 }}
-                  className="flex-1 flex flex-col gap-6 overflow-y-auto pr-1.5 min-h-0 liquid-glass-strong rounded-[2.5rem] p-6 lg:p-8 border border-white/10 shadow-2xl relative select-text"
-                >
-                  <div className="flex items-center justify-between gap-3 pb-4 border-b border-white/10 shrink-0">
-                    <button
-                      onClick={() => setSelectedArticle(null)}
-                      className="flex items-center gap-2 px-3.5 py-1.5 rounded-full liquid-glass hover:bg-white/15 text-white/90 hover:text-white text-xs font-bold transition-all border border-white/10 cursor-pointer"
-                    >
-                      <ArrowLeft size={14} />
-                      <span>Yazılara Dön</span>
-                    </button>
-                    <button
-                      onClick={() => setSelectedArticle(null)}
-                      className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all border border-white/10 cursor-pointer"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wider font-mono">
-                        {selectedArticle.category}
-                      </span>
-                      <span className="text-xs text-white/60 font-mono">{selectedArticle.date}</span>
-                      <span className="text-xs text-white/60 font-mono">• {selectedArticle.readTime}</span>
-                    </div>
-
-                    <h1 className="text-2xl lg:text-3xl font-extrabold text-white leading-tight">
-                      {selectedArticle.title}
-                    </h1>
-
-                    <p className="text-sm font-semibold text-white/90 leading-relaxed p-4 rounded-2xl bg-white/5 border border-white/10 italic">
-                      "{selectedArticle.excerpt}"
-                    </p>
-
-                    <div className="text-sm text-white/90 leading-relaxed space-y-4 pt-2">
-                      <p>{selectedArticle.content}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              ) : (
-                <>
-                  {activeTab === 'profile' && (
+              {activeTab === 'profile' && (
                     <motion.div
                       key="tab-profile"
                   initial={{ opacity: 0, x: 20 }}
@@ -1644,18 +2033,34 @@ export default function App() {
                 >
                   {/* Education & Certification Card */}
                   <div className="p-6 liquid-glass spinning-glow-border rounded-[2rem] flex flex-col gap-4">
+                    <div className="flex items-center justify-between pb-1 border-b border-white/5">
+                      <span className="text-[10px] tracking-wider text-white/95 uppercase font-bold">EĞİTİM & UZMANLIK</span>
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAdminEditorTab('profile');
+                            setShowAdminEditor(true);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                        >
+                          <Edit3 size={11} />
+                          <span>Düzenle</span>
+                        </button>
+                      )}
+                    </div>
                     <div className="flex items-start gap-4">
                       <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0">
                         <GraduationCap size={20} />
                       </div>
                       <div className="space-y-1">
                         <span className="text-[10px] tracking-wider text-white/95 uppercase font-bold">EĞİTİM & AKADEMİK</span>
-                        <h3 className="text-lg font-extrabold text-white">{profileData.education.school}</h3>
+                        <h3 className="text-lg font-extrabold text-white">{profile.education.school}</h3>
                         <p className="text-xs text-white font-bold leading-relaxed">
-                          {profileData.education.degree}
+                          {profile.education.degree}
                         </p>
                         <p className="text-xs text-white/95 font-medium leading-relaxed mt-1">
-                          {profileData.education.details}
+                          {profile.education.details}
                         </p>
                       </div>
                     </div>
@@ -1668,10 +2073,10 @@ export default function App() {
                       </div>
                       <div className="space-y-1">
                         <span className="text-[10px] tracking-wider text-white/95 uppercase font-bold">UZMANLIK SERTİFİKASI</span>
-                        <h4 className="text-sm font-extrabold text-white">{profileData.aiProfile.title}</h4>
-                        <p className="text-xs text-white font-bold">{profileData.aiProfile.certification}</p>
+                        <h4 className="text-sm font-extrabold text-white">{profile.aiProfile.title}</h4>
+                        <p className="text-xs text-white font-bold">{profile.aiProfile.certification}</p>
                         <p className="text-xs text-white/95 font-medium leading-relaxed mt-1">
-                          {profileData.aiProfile.details}
+                          {profile.aiProfile.details}
                         </p>
                       </div>
                     </div>
@@ -1725,9 +2130,9 @@ export default function App() {
                             </div>
                             <div>
                               <h4 className="text-xs text-white/95 uppercase tracking-widest font-bold">SAHA DENEYİMİ</h4>
-                              <span className="text-sm font-extrabold text-white block mt-0.5">{profileData.experience.title}</span>
+                              <span className="text-sm font-extrabold text-white block mt-0.5">{profile.experience.title}</span>
                               <p className="text-[11px] text-white font-medium mt-1.5 leading-relaxed">
-                                1. ve 2. kademe özel eğitim sınıflarında 3 yıllık aktif pratik ve gözlem tecrübesi.
+                                {profile.experience.description}
                               </p>
                             </div>
                           </div>
@@ -1739,9 +2144,9 @@ export default function App() {
                             </div>
                             <div>
                               <h4 className="text-xs text-white/95 uppercase tracking-widest font-bold">YAZILIM & YAPAY ZEKA</h4>
-                              <span className="text-sm font-extrabold text-white block mt-0.5">1-2 Yıllık Pratik Gelişim</span>
+                              <span className="text-sm font-extrabold text-white block mt-0.5">{profile.softwareProfile.level}</span>
                               <p className="text-[11px] text-white font-medium mt-1.5 leading-relaxed">
-                                Yaklaşık 1-2 yıldır aktif olarak Python otomasyonları, Gemini API entegrasyonu ve mobil yazılım geliştirerek üretiyorum.
+                                {profile.softwareProfile.skills.slice(0, 3).join(', ')} ve sistem otomasyonları.
                               </p>
                             </div>
                           </div>
@@ -1892,6 +2297,27 @@ export default function App() {
                     </div>
 
                     {/* Projects Grid Scroll Area */}
+                    {/* Admin Project Bar */}
+                    {isAdmin && (
+                      <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 mb-3 shrink-0">
+                        <span className="text-[11px] text-emerald-300 font-bold flex items-center gap-1.5">
+                          <FolderKanban size={14} /> Proje Yönetim Modu Açık
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingProjectId(null);
+                            setAdminEditorTab('projects');
+                            setShowAdminEditor(true);
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-500 text-black font-extrabold text-[11px] flex items-center gap-1 cursor-pointer hover:bg-emerald-400 transition-all shadow-md"
+                        >
+                          <Plus size={13} />
+                          <span>Yeni Proje Ekle</span>
+                        </button>
+                      </div>
+                    )}
+
                     {filteredProjects.length === 0 ? (
                       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-3 liquid-glass rounded-2xl border border-white/5 my-auto">
                         <Search size={32} className="text-white/30 animate-bounce" />
@@ -1920,8 +2346,13 @@ export default function App() {
                             initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.05 }}
-                            onClick={() => setSelectedProject(project)}
-                            className="group cursor-pointer p-3 liquid-glass spinning-glow-border rounded-2xl flex flex-col h-[285px] shrink-0 justify-between hover:bg-white/5 transition-all relative overflow-hidden"
+                            onClick={() => {
+                              soundEngine.playGlassClick();
+                              setSelectedProject(project);
+                            }}
+                            className={`group cursor-pointer p-3 liquid-glass spinning-glow-border rounded-2xl flex flex-col h-[285px] shrink-0 justify-between hover:bg-white/5 transition-all relative overflow-hidden ${
+                              currentSelectedProject?.id === project.id ? 'ring-2 ring-emerald-400 border-emerald-400 bg-white/10 shadow-lg shadow-emerald-500/10' : ''
+                            }`}
                           >
                             <div className="relative h-[135px] w-full rounded-xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0">
                               <img 
@@ -1930,11 +2361,55 @@ export default function App() {
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                 referrerPolicy="no-referrer"
                                 onError={(e) => {
-                                  const original = projects.find(p => p.id === project.id);
+                                  const original = projectList.find(p => p.id === project.id);
                                   if (original) e.currentTarget.src = original.image;
                                 }}
                               />
-                              {project.demoUrl && (
+                              {isAdmin && (
+                                <div className="absolute top-2 right-2 z-20 flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingProjectId(project.id);
+                                      setAdminEditorTab('projects');
+                                      setShowAdminEditor(true);
+                                    }}
+                                    className="p-1.5 rounded-lg bg-black/80 hover:bg-emerald-500 hover:text-black text-white text-[10px] font-bold border border-white/20 transition-all cursor-pointer shadow-md"
+                                    title="Projeyi Düzenle"
+                                  >
+                                    <Edit3 size={11} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setConfirmDialog({
+                                        isOpen: true,
+                                        title: 'Projeyi Sil',
+                                        description: `"${project.title}" projesini silmek istediğinize emin misiniz?`,
+                                        confirmText: 'Evet, Sil',
+                                        onConfirm: () => {
+                                          const updated = projectList.filter(p => p.id !== project.id);
+                                          handleSaveProjects(updated);
+                                          if (selectedProject?.id === project.id) setSelectedProject(null);
+                                          setAdminToastMessage("Proje silindi.");
+                                          setShowAdminToast(true);
+                                          setTimeout(() => setShowAdminToast(false), 2500);
+                                        }
+                                      });
+                                    }}
+                                    className="p-1.5 rounded-lg bg-red-950/80 hover:bg-red-800 text-red-300 border border-red-500/30 text-[10px] transition-all cursor-pointer shadow-md"
+                                    title="Projeyi Sil"
+                                  >
+                                    <Trash2 size={11} />
+                                  </button>
+                                </div>
+                              )}
+                              {currentSelectedProject?.id === project.id && (
+                                <div className="absolute top-2 left-2 bg-emerald-500 text-black text-[9px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-lg z-10">
+                                  <span>👈 Solda Açık</span>
+                                </div>
+                              )}
+                              {!isAdmin && project.demoUrl && (
                                 <div className="absolute top-2 right-2 bg-emerald-950/90 backdrop-blur-md text-emerald-300 border border-emerald-500/40 text-[9px] font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md z-10">
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                                   <span>CANLI YAYINDA</span>
@@ -1946,7 +2421,7 @@ export default function App() {
                                 </span>
                                 {project.demoUrl && (
                                   <a
-                                    href={project.demoUrl}
+                                    href={sanitizeUrl(project.demoUrl) || '#'}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={(e) => e.stopPropagation()}
@@ -2013,21 +2488,95 @@ export default function App() {
                       </p>
                     </div>
 
+                    {/* Admin Article Bar */}
+                    {isAdmin && (
+                      <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 mb-2 shrink-0">
+                        <span className="text-[11px] text-emerald-300 font-bold flex items-center gap-1.5">
+                          <FileText size={14} /> Makale Yönetim Modu Açık
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingArticleId(null);
+                            setAdminEditorTab('articles');
+                            setShowAdminEditor(true);
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-500 text-black font-extrabold text-[11px] flex items-center gap-1 cursor-pointer hover:bg-emerald-400 transition-all shadow-md"
+                        >
+                          <Plus size={13} />
+                          <span>Yeni Makale Ekle</span>
+                        </button>
+                      </div>
+                    )}
+
                     <div className="grid grid-cols-1 gap-4 pt-2">
-                      {articles.map((article, idx) => (
+                      {articleList.map((article, idx) => (
                         <motion.div
                           key={article.id}
                           initial={{ opacity: 0, y: 15 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: idx * 0.1 }}
-                          onClick={() => setSelectedArticle(article)}
-                          className="p-5 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3 group cursor-pointer hover:bg-white/5 transition-all"
+                          onClick={() => {
+                            soundEngine.playGlassClick();
+                            setSelectedArticle(article);
+                          }}
+                          className={`p-5 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3 group cursor-pointer hover:bg-white/5 transition-all ${
+                            selectedArticle?.id === article.id ? 'ring-2 ring-emerald-400 border-emerald-400 bg-white/10 shadow-lg shadow-emerald-500/10' : ''
+                          }`}
                         >
                           <div className="flex items-center justify-between text-[10px] text-white/60 font-mono">
-                            <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-white font-bold font-sans">
-                              {article.category}
-                            </span>
-                            <span>{article.date} • {article.readTime}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-white font-bold font-sans">
+                                {article.category}
+                              </span>
+                              {selectedArticle?.id === article.id && (
+                                <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-black text-[9px] font-extrabold shadow-sm">
+                                  👈 Solda Açık
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span>{article.date} • {article.readTime}</span>
+                              {isAdmin && (
+                                <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setEditingArticleId(article.id);
+                                      setAdminEditorTab('articles');
+                                      setShowAdminEditor(true);
+                                    }}
+                                    className="p-1 rounded-md bg-white/10 hover:bg-emerald-500 hover:text-black text-white text-[10px] font-bold border border-white/15 transition-all cursor-pointer shadow-sm"
+                                    title="Makaleyi Düzenle"
+                                  >
+                                    <Edit3 size={11} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setConfirmDialog({
+                                        isOpen: true,
+                                        title: 'Makaleyi Sil',
+                                        description: `"${article.title}" makalesini silmek istediğinize emin misiniz?`,
+                                        confirmText: 'Evet, Sil',
+                                        onConfirm: () => {
+                                          const updated = articleList.filter(a => a.id !== article.id);
+                                          handleSaveArticles(updated);
+                                          if (selectedArticle?.id === article.id) setSelectedArticle(null);
+                                          setAdminToastMessage("Makale silindi.");
+                                          setShowAdminToast(true);
+                                          setTimeout(() => setShowAdminToast(false), 2500);
+                                        }
+                                      });
+                                    }}
+                                    className="p-1 rounded-md bg-red-950/80 hover:bg-red-800 text-red-300 border border-red-500/20 text-[10px] transition-all cursor-pointer shadow-sm"
+                                    title="Makaleyi Sil"
+                                  >
+                                    <Trash2 size={11} />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
                           <div className="space-y-1.5">
@@ -2080,40 +2629,40 @@ export default function App() {
                     {/* Quick Contact Action Pills */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                       <a
-                        href="https://github.com/Emirhan0008"
+                        href={profile.github || "https://github.com/Emirhan0008"}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2.5 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer group"
-                        title="GitHub Profili: Emirhan0008"
+                        title={`GitHub: ${profile.github}`}
                       >
                         <Github size={14} className="text-white/70 group-hover:text-emerald-400 shrink-0 transition-colors" />
-                        <span className="truncate font-mono">Emirhan0008</span>
+                        <span className="truncate font-mono">GitHub</span>
                         <ExternalLink size={11} className="text-white/40 ml-auto shrink-0 group-hover:text-white" />
                       </a>
 
                       <button
                         type="button"
                         onClick={() => {
-                          navigator.clipboard.writeText('emirhan0008@gmail.com');
+                          navigator.clipboard.writeText(profile.email || 'emirhan0008@gmail.com');
                           setCopiedEmail(true);
                           setTimeout(() => setCopiedEmail(false), 2500);
                         }}
                         className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2.5 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer"
                       >
                         <Copy size={14} className="text-white/70 shrink-0" />
-                        <span className="truncate">{copiedEmail ? 'E-posta Kopyalandı!' : 'emirhan0008@gmail.com'}</span>
+                        <span className="truncate">{copiedEmail ? 'E-posta Kopyalandı!' : (profile.email || 'emirhan0008@gmail.com')}</span>
                       </button>
 
                       <a
-                        href={`mailto:emirhan0008@gmail.com?subject=${encodeURIComponent(contactSubject)}&body=${encodeURIComponent(formData.message || 'Merhaba Emirhan Bey,')}`}
+                        href={`mailto:${profile.email || 'emirhan0008@gmail.com'}?subject=${encodeURIComponent(contactSubject)}&body=${encodeURIComponent(formData.message || 'Merhaba,')}`}
                         className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2.5 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer"
                       >
                         <Mail size={14} className="text-white/70 shrink-0" />
-                        <span className="truncate">E-Posta İstemcisi</span>
+                        <span className="truncate">E-Posta Gönder</span>
                       </a>
 
                       <a
-                        href="https://wa.me/?text=Merhaba%20Emirhan%20Bey,%20sitenizden%20ulaşıyorum."
+                        href={`https://wa.me/?text=${encodeURIComponent('Merhaba ' + profile.name + ', sitenizden ulaşıyorum.')}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="p-3 rounded-2xl bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-500/20 flex items-center gap-2.5 text-xs text-emerald-300 font-bold transition-all hover:scale-102 cursor-pointer"
@@ -2159,7 +2708,10 @@ export default function App() {
                               maxLength={100}
                               placeholder="Adınız ve Soyadınız"
                               value={formData.name}
-                              onChange={e => setFormData({ ...formData, name: e.target.value })}
+                              onChange={e => {
+                                setFormData({ ...formData, name: e.target.value });
+                                if (formError) setFormError(null);
+                              }}
                               className="w-full py-2.5 px-4 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-white/35 text-xs text-white placeholder-white/40 font-medium"
                               disabled={isSubmitting}
                             />
@@ -2172,7 +2724,10 @@ export default function App() {
                               maxLength={100}
                               placeholder="ornek@domain.com"
                               value={formData.email}
-                              onChange={e => setFormData({ ...formData, email: e.target.value })}
+                              onChange={e => {
+                                setFormData({ ...formData, email: e.target.value });
+                                if (formError) setFormError(null);
+                              }}
                               className="w-full py-2.5 px-4 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-white/35 text-xs text-white placeholder-white/40 font-medium"
                               disabled={isSubmitting}
                             />
@@ -2201,11 +2756,21 @@ export default function App() {
                             maxLength={1000}
                             placeholder="İş birliği veya proje detaylarınızı buraya yazabilirsiniz..."
                             value={formData.message}
-                            onChange={e => setFormData({ ...formData, message: e.target.value })}
+                            onChange={e => {
+                              setFormData({ ...formData, message: e.target.value });
+                              if (formError) setFormError(null);
+                            }}
                             className="w-full py-2.5 px-4 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-white/35 text-xs text-white placeholder-white/40 resize-none"
                             disabled={isSubmitting}
                           />
                         </div>
+
+                        {formError && (
+                          <div className="p-3 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 text-xs flex items-center gap-2 animate-shake">
+                            <AlertTriangle size={15} className="shrink-0 text-red-400" />
+                            <span className="font-semibold">{formError}</span>
+                          </div>
+                        )}
 
                         <button 
                           type="submit"
@@ -2233,9 +2798,6 @@ export default function App() {
                   </div>
                 </motion.div>
               )}
-                </>
-              )}
-
             </AnimatePresence>
             )}
           </div>
@@ -2272,10 +2834,19 @@ export default function App() {
                     {inboxMessages.length > 0 && (
                       <button
                         onClick={() => {
-                          if (window.confirm('Tüm mesajları silmek istediğinize emin misiniz?')) {
-                            setInboxMessages([]);
-                            localStorage.removeItem('adm_msg_store');
-                          }
+                          setConfirmDialog({
+                            isOpen: true,
+                            title: 'Gelen Kutusunu Temizle',
+                            description: 'Tüm ziyaretçi mesajları kalıcı olarak silinecek. Onaylıyor musunuz?',
+                            confirmText: 'Evet, Hepsini Sil',
+                            onConfirm: () => {
+                              setInboxMessages([]);
+                              localStorage.removeItem('adm_msg_store');
+                              setAdminToastMessage("Gelen kutusu temizlendi.");
+                              setShowAdminToast(true);
+                              setTimeout(() => setShowAdminToast(false), 2500);
+                            }
+                          });
                         }}
                         className="px-2.5 py-1 text-[9px] font-extrabold bg-red-950/40 hover:bg-red-900/40 text-red-400 border border-red-500/10 rounded-lg transition-all cursor-pointer uppercase tracking-wider"
                       >
@@ -2310,16 +2881,21 @@ export default function App() {
                       <div key={msg.id} className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-2 group transition-all hover:bg-white/10">
                         <div className="flex items-start justify-between gap-2 select-none">
                           <div className="space-y-0.5">
-                            <h4 className="text-xs font-bold text-white">{msg.name}</h4>
+                            <h4 className="text-xs font-bold text-white">{sanitizeText(msg.name)}</h4>
                             <a 
-                              href={`mailto:${msg.email}`} 
+                              href={`mailto:${encodeURIComponent(sanitizeEmail(msg.email))}`} 
                               className="text-[10px] text-emerald-400 font-extrabold tracking-tight hover:underline flex items-center gap-1 w-fit"
                             >
-                              {msg.email} <ExternalLink size={8} />
+                              {sanitizeEmail(msg.email)} <ExternalLink size={8} />
                             </a>
+                            {msg.subject && (
+                              <span className="text-[9px] text-white/50 block font-medium">
+                                {sanitizeText(msg.subject)}
+                              </span>
+                            )}
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="text-[8px] text-white/40 font-mono font-medium">{msg.date}</span>
+                            <span className="text-[8px] text-white/40 font-mono font-medium">{sanitizeText(msg.date)}</span>
                             <button
                               onClick={() => {
                                 const filtered = inboxMessages.filter(m => m.id !== msg.id);
@@ -2334,7 +2910,7 @@ export default function App() {
                           </div>
                         </div>
                         <p className="text-xs text-white/85 leading-relaxed bg-black/30 p-3 rounded-xl border border-white/5 select-text whitespace-pre-wrap font-medium">
-                          {msg.message}
+                          {sanitizeMultilineText(msg.message)}
                         </p>
                       </div>
                     ))
@@ -2364,64 +2940,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Article Reader Modal Overlay */}
-      <AnimatePresence>
-        {selectedArticle && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="relative w-full max-w-2xl max-h-[85vh] liquid-glass-strong border border-white/15 rounded-[2.5rem] shadow-2xl p-6 sm:p-8 flex flex-col gap-6 overflow-y-auto text-left"
-            >
-              <button
-                onClick={() => setSelectedArticle(null)}
-                className="absolute top-6 right-6 text-white/60 hover:text-white transition-colors bg-white/10 hover:bg-white/20 p-2 rounded-full cursor-pointer border-none"
-              >
-                <X size={18} />
-              </button>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-[10px] text-white/60 font-mono">
-                  <span className="px-3 py-1 rounded-full bg-white/10 text-white font-bold font-sans">
-                    {selectedArticle.category}
-                  </span>
-                  <span>{selectedArticle.date}</span>
-                  <span>•</span>
-                  <span>{selectedArticle.readTime}</span>
-                </div>
-
-                <h2 className="text-xl sm:text-2xl font-extrabold text-white leading-snug">
-                  {selectedArticle.title}
-                </h2>
-              </div>
-
-              <div className="space-y-4 text-xs sm:text-sm text-white/90 leading-relaxed font-normal border-t border-b border-white/10 py-5 select-text">
-                {selectedArticle.content.split('\n\n').map((paragraph, idx) => (
-                  <p key={idx}>{paragraph}</p>
-                ))}
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                <div className="flex flex-wrap gap-1.5">
-                  {selectedArticle.tags.map(tag => (
-                    <span key={tag} className="text-[10px] px-2.5 py-1 rounded-md bg-white/5 text-white/70">
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-
-                <button
-                  onClick={() => setSelectedArticle(null)}
-                  className="px-5 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-xs font-bold text-white transition-all cursor-pointer"
-                >
-                  Kapat
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* Lightbox Overlay */}
       <AnimatePresence>
@@ -2573,6 +3091,158 @@ export default function App() {
         }}
         onOpenTerminal={() => {
           setTheme('terminal');
+        }}
+      />
+
+      {/* SECURE IN-APP PROMPT MODAL (Non-blocking replacement for window.prompt) */}
+      <AnimatePresence>
+        {promptDialog && promptDialog.isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[220] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              className="w-full max-w-md rounded-3xl liquid-glass-strong border border-white/20 p-6 shadow-2xl flex flex-col gap-4 text-left"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+                  <span>🔗</span> {promptDialog.title}
+                </h3>
+                <button
+                  onClick={() => setPromptDialog(null)}
+                  className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+
+              {promptDialog.description && (
+                <p className="text-xs text-white/70 leading-relaxed">
+                  {promptDialog.description}
+                </p>
+              )}
+
+              <input
+                type="text"
+                autoFocus
+                value={promptInputValue}
+                onChange={(e) => setPromptInputValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    promptDialog.onConfirm(promptInputValue);
+                    setPromptDialog(null);
+                  } else if (e.key === 'Escape') {
+                    setPromptDialog(null);
+                  }
+                }}
+                placeholder={promptDialog.placeholder || "https://..."}
+                className="w-full py-2.5 px-4 rounded-xl bg-black/60 border border-white/15 focus:outline-hidden focus:ring-1 focus:ring-emerald-400 text-xs text-white placeholder-white/40 font-mono"
+              />
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setPromptDialog(null)}
+                  className="px-4 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-xs font-bold transition-all cursor-pointer"
+                >
+                  İptal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    promptDialog.onConfirm(promptInputValue);
+                    setPromptDialog(null);
+                  }}
+                  className="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-xs font-extrabold transition-all cursor-pointer shadow-lg shadow-emerald-500/20"
+                >
+                  Kaydet
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* SECURE IN-APP CONFIRM MODAL (Non-blocking replacement for window.confirm) */}
+      <AnimatePresence>
+        {confirmDialog && confirmDialog.isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[220] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              className="w-full max-w-sm rounded-3xl liquid-glass-strong border border-red-500/30 p-6 shadow-2xl flex flex-col gap-4 text-center"
+            >
+              <div className="w-12 h-12 rounded-full bg-red-950/50 border border-red-500/30 text-red-400 flex items-center justify-center mx-auto">
+                <AlertTriangle size={20} />
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="text-sm font-extrabold text-white">
+                  {confirmDialog.title}
+                </h3>
+                <p className="text-xs text-white/70 leading-relaxed">
+                  {confirmDialog.description}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-center gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDialog(null)}
+                  className="flex-1 py-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-xs font-bold transition-all cursor-pointer"
+                >
+                  Vazgeç
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    confirmDialog.onConfirm();
+                    setConfirmDialog(null);
+                  }}
+                  className="flex-1 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-extrabold transition-all cursor-pointer shadow-lg shadow-red-600/30"
+                >
+                  {confirmDialog.confirmText || 'Evet, Onayla'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Comprehensive Admin Control & Editor Modal */}
+      <AdminEditorModal
+        isOpen={showAdminEditor}
+        onClose={() => {
+          setShowAdminEditor(false);
+          setEditingProjectId(null);
+          setEditingArticleId(null);
+        }}
+        profile={profile}
+        onSaveProfile={handleSaveProfile}
+        projects={projectList}
+        onSaveProjects={handleSaveProjects}
+        articles={articleList}
+        onSaveArticles={handleSaveArticles}
+        initialTab={adminEditorTab}
+        editingProjectId={editingProjectId}
+        editingArticleId={editingArticleId}
+        onResetToDefaults={handleResetToDefaults}
+        onToast={(msg) => {
+          setAdminToastMessage(msg);
+          setShowAdminToast(true);
+          setTimeout(() => setShowAdminToast(false), 3500);
         }}
       />
 

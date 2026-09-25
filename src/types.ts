@@ -42,3 +42,28 @@ export interface Article {
   content: string[];
   tags: string[];
 }
+
+export interface ProfileData {
+  name: string;
+  title: string;
+  avatar: string;
+  logo: string;
+  about: string;
+  education: Education;
+  softwareProfile: {
+    language: string;
+    level: string;
+    skills: string[];
+  };
+  aiProfile: {
+    title: string;
+    certification: string;
+    details: string;
+  };
+  github: string;
+  email: string;
+  whatsapp: string;
+  telegram: string;
+  instagram: string;
+  experience: Experience;
+}

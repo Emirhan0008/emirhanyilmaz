@@ -101,7 +101,12 @@ export function DeveloperTerminalModal({ isOpen, onClose, onNavigateTab, onSelec
       setCommand('');
       return;
     } else if (cmd.startsWith('ai ')) {
-      const prompt = raw.slice(3);
+      const prompt = raw.slice(3).trim();
+      if (!prompt) {
+        setLines(prev => [...prev, inputLine, { id: Date.now().toString(), type: 'system', text: 'Usage: ai <your question>' }]);
+        setCommand('');
+        return;
+      }
       setLines(prev => [...prev, inputLine, { id: Date.now().toString(), type: 'system', text: 'Querying Gemini AI...' }]);
       setCommand('');
       
@@ -112,7 +117,8 @@ export function DeveloperTerminalModal({ isOpen, onClose, onNavigateTab, onSelec
           body: JSON.stringify({ prompt })
         });
         const data = await res.json();
-        setLines(prev => [...prev, { id: (Date.now() + 1).toString(), type: 'output', text: `AI: ${data.reply}` }]);
+        const replyText = data?.reply || data?.error || 'AI query failed.';
+        setLines(prev => [...prev, { id: (Date.now() + 1).toString(), type: 'output', text: `AI: ${replyText}` }]);
       } catch (err) {
         setLines(prev => [...prev, { id: (Date.now() + 1).toString(), type: 'output', text: 'AI query failed.' }]);
       }
