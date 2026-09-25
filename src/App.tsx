@@ -69,6 +69,7 @@ import {
   sanitizeUrl, 
   sanitizeImageSource 
 } from './utils/sanitize';
+import { validateContactForm, passcodeSchema } from './utils/validationSchemas';
 
 export interface ContactMessage {
    id: string;
@@ -259,10 +260,23 @@ export default function App() {
          e.preventDefault();
          handleAdminTrigger();
        }
+       // Accessibility: Escape key closes any active modals or drawers
+       if (e.key === 'Escape') {
+         if (showAdminModal) {
+           setShowAdminModal(false);
+           setAdminPasscode('');
+         } else if (showAdminEditor) {
+           setShowAdminEditor(false);
+         } else if (selectedProject) {
+           setSelectedProject(null);
+         } else if (selectedArticle) {
+           setSelectedArticle(null);
+         }
+       }
      };
      window.addEventListener('keydown', handleKeyDown);
      return () => window.removeEventListener('keydown', handleKeyDown);
-   }, [isAdmin]);
+   }, [isAdmin, showAdminModal, showAdminEditor, selectedProject, selectedArticle]);
  
    // Helper function for secure SHA-256 browser hashing
    const sha256 = async (str: string): Promise<string> => {
@@ -354,6 +368,15 @@ export default function App() {
      if (e) e.preventDefault();
 
      try {
+       // Validate against SQL injection & format violations
+       const validation = passcodeSchema.safeParse(adminPasscode);
+       if (!validation.success) {
+         setAdminToastMessage(validation.error.issues[0]?.message || 'Geçersiz anahtar formatı');
+         setShowAdminToast(true);
+         setTimeout(() => setShowAdminToast(false), 3500);
+         return;
+       }
+
        const cleanPasscode = (adminPasscode || '').trim();
        const customPass = (localStorage.getItem('emirhan_admin_pass') || '').trim();
 
@@ -814,27 +837,20 @@ export default function App() {
       return;
     }
 
-    // Comprehensive sanitization layer via DOMPurify
-    const cleanName = sanitizeText(formData.name).slice(0, 100);
-    const cleanEmail = sanitizeEmail(formData.email).slice(0, 120);
-    const cleanSubject = sanitizeText(contactSubject).slice(0, 150);
-    const cleanMessage = sanitizeMultilineText(formData.message).slice(0, 2000);
+    // Comprehensive Zod validation against SQL Injection (SQLi), XSS and invalid formats
+    const validation = validateContactForm({
+      name: formData.name,
+      email: formData.email,
+      subject: contactSubject,
+      message: formData.message
+    });
 
-    // Strict validation constraints
-    if (!cleanName || cleanName.length < 2) {
-      setFormError('Lütfen ad ve soyadınızı eksiksiz giriniz (en az 2 karakter).');
+    if (!validation.success) {
+      setFormError(validation.error || 'Doğrulama hatası oluştu.');
       return;
     }
 
-    if (!isValidEmail(cleanEmail)) {
-      setFormError('Lütfen geçerli bir e-posta adresi giriniz (örn: isim@domain.com).');
-      return;
-    }
-
-    if (!cleanMessage || cleanMessage.length < 5) {
-      setFormError('Lütfen mesajınızı en az 5 karakter olacak şekilde yazınız.');
-      return;
-    }
+    const { name: cleanName, email: cleanEmail, subject: cleanSubject, message: cleanMessage } = validation.data!;
 
     setIsSubmitting(true);
     
@@ -877,6 +893,11 @@ export default function App() {
 
   return (
     <div className={`relative min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden w-full bg-black text-white ${theme === 'terminal' ? 'theme-terminal font-mono' : 'theme-normal font-sans'} overflow-x-hidden antialiased select-none`}>
+      
+      {/* Accessibility Keyboard Skip Link (WCAG 2.1 AA) */}
+      <a href="#main-nav" className="skip-to-content">
+        Navigasyona Atla (Klavye Gezintisi)
+      </a>
       
       {/* IMMERSIVE THEME BACKGROUNDS & CRT SCANLINE EFFECTS */}
       <div className="fixed inset-0 w-full h-full z-0 overflow-hidden select-none pointer-events-none bg-[#030408]">
@@ -1178,7 +1199,7 @@ export default function App() {
             </div>
 
             {/* Desktop Navigation Tabs */}
-            <nav className="hidden md:flex items-center gap-1.5 p-1 liquid-glass rounded-full text-xs shrink-0">
+            <nav id="main-nav" aria-label="Ana Gezinti Menüsü" className="hidden md:flex items-center gap-1.5 p-1 liquid-glass rounded-full text-xs shrink-0">
               {navItems.map(item => (
                 <button
                   key={item.id}
