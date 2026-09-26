@@ -9,7 +9,9 @@ export interface Project {
   tech: string[];
   highlights: string[];
   demoUrl?: string;
+  deploy?: string;
   githubUrl?: string;
+  folder?: string;
   isLive?: boolean;
 }
 

@@ -140,7 +140,13 @@ export default function App() {
    const [projectList, setProjectList] = useState<Project[]>(() => {
      try {
        const saved = localStorage.getItem('emirhan_custom_projects');
-       return saved ? JSON.parse(saved) : projects;
+       if (saved) {
+         const parsed = JSON.parse(saved);
+         if (Array.isArray(parsed) && parsed.some(p => p.id === 'kpss-calisma-takibi')) {
+           return parsed;
+         }
+       }
+       return projects;
      } catch {
        return projects;
      }
@@ -791,21 +797,33 @@ export default function App() {
   const mappedProjects = projectList.map(project => {
     const customImg = projectImages[project.id];
     const customDemo = projectDemoUrls[project.id];
+    const resolvedDemo = (customDemo !== undefined ? sanitizeUrl(customDemo) : (sanitizeUrl(project.demoUrl) || sanitizeUrl(project.deploy))) || undefined;
     return {
       ...project,
-      image: (customImg && sanitizeImageSource(customImg)) || project.image,
-      demoUrl: (customDemo !== undefined ? sanitizeUrl(customDemo) : sanitizeUrl(project.demoUrl)) || undefined
+      image: (customImg && sanitizeImageSource(customImg)) || (project.image && sanitizeImageSource(project.image)) || project.image || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80',
+      demoUrl: resolvedDemo,
+      isLive: Boolean(resolvedDemo)
     };
   });
 
   // Filter projects based on selected filter pill and search query
   const filteredProjects = mappedProjects.filter(project => {
     let matchesCategory = true;
-    if (projectFilter === 'Mobil') matchesCategory = project.category.includes('Mobil') || project.tech.includes('React Native') || project.tech.includes('Expo');
-    else if (projectFilter === 'Yapay Zeka') matchesCategory = project.category.includes('Yapay Zeka') || project.title.includes('Yapay Zeka') || project.tech.includes('Gemini API') || project.tech.includes('AI Studio') || project.tech.includes('Google AI Studio');
-    else if (projectFilter === 'Python') matchesCategory = project.tech.includes('Python');
-    else if (projectFilter === 'Özel Eğitim') matchesCategory = project.category.includes('Özel Eğitim');
-    else if (projectFilter === 'Otomasyon & Analitik') matchesCategory = project.category.includes('Otomasyon') || project.category.includes('Analitik') || project.category.includes('Kazıma');
+    if (projectFilter === 'Web & Bulut') {
+      matchesCategory = project.category.includes('Web') || project.category.includes('Bulut');
+    } else if (projectFilter === 'Mobil') {
+      matchesCategory = project.category.includes('Mobil') || project.tech.some(t => ['React Native', 'Expo', 'Android', 'Kotlin'].includes(t));
+    } else if (projectFilter === 'Yapay Zeka') {
+      matchesCategory = project.category.includes('Yapay Zeka') || project.title.includes('Yapay Zeka') || project.tech.some(t => t.includes('Gemini') || t.includes('AI') || t.includes('LLM'));
+    } else if (projectFilter === 'Python & Otomasyon') {
+      matchesCategory = project.category.includes('Python') || project.category.includes('Otomasyon') || project.tech.includes('Python');
+    } else if (projectFilter === 'Masaüstü') {
+      matchesCategory = project.category.includes('Masaüstü');
+    } else if (projectFilter === 'Özel Eğitim') {
+      matchesCategory = project.category.includes('Özel Eğitim');
+    } else if (projectFilter === 'Veri & Finans') {
+      matchesCategory = project.category.includes('Veri') || project.category.includes('Kazıma') || project.category.includes('Finans');
+    }
 
     if (!matchesCategory) return false;
     const sanitizedSearch = sanitizeText(searchQuery);
@@ -2301,7 +2319,7 @@ export default function App() {
 
                       {/* Filter Pills */}
                       <div className="flex flex-wrap gap-1.5 p-1 liquid-glass spinning-glow-border rounded-xl text-[10px]">
-                        {['Tümü', 'Mobil', 'Yapay Zeka', 'Python', 'Özel Eğitim', 'Otomasyon & Analitik'].map(filter => (
+                        {['Tümü', 'Web & Bulut', 'Mobil', 'Yapay Zeka', 'Python & Otomasyon', 'Masaüstü', 'Özel Eğitim', 'Veri & Finans'].map(filter => (
                           <button
                             key={filter}
                             onClick={() => setProjectFilter(filter)}

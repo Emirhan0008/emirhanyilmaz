@@ -199,12 +199,14 @@ export function AdminEditorModal({
       category: sanitizeText(projectForm.category || 'Genel'),
       description: sanitizeMultilineText(projectForm.description || ''),
       longDescription: sanitizeMultilineText(projectForm.longDescription || projectForm.description || ''),
-      image: sanitizeImageSource(projectForm.image) || projectForm.image || '',
+      image: (projectForm.image ? (sanitizeImageSource(projectForm.image) || projectForm.image) : '') || '',
       tech: techArray.length ? techArray : ['Yazılım'],
       highlights: highlightsArray.length ? highlightsArray : ['Gelişmiş mimari'],
-      demoUrl: projectForm.demoUrl ? (sanitizeUrl(projectForm.demoUrl) || '') : '',
+      demoUrl: projectForm.demoUrl ? (sanitizeUrl(projectForm.demoUrl) || '') : (projectForm.deploy ? (sanitizeUrl(projectForm.deploy) || '') : ''),
+      deploy: projectForm.deploy ? (sanitizeUrl(projectForm.deploy) || '') : (projectForm.demoUrl ? (sanitizeUrl(projectForm.demoUrl) || '') : ''),
       githubUrl: projectForm.githubUrl ? (sanitizeUrl(projectForm.githubUrl) || '') : '',
-      isLive: Boolean(projectForm.demoUrl),
+      folder: projectForm.folder ? sanitizeText(projectForm.folder) : '',
+      isLive: Boolean(projectForm.demoUrl || projectForm.deploy),
       galleryImages: projectForm.galleryImages || []
     };
 
@@ -773,32 +775,57 @@ export function AdminEditorModal({
                         />
                       </div>
 
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         <label className="text-xs font-bold text-white/80">Kategori</label>
                         <input
                           type="text"
                           value={projectForm.category || ''}
                           onChange={e => setProjectForm({ ...projectForm, category: e.target.value })}
                           className="w-full py-2 px-3 rounded-xl bg-black/40 border border-white/10 text-xs text-white"
-                          placeholder="Örn: Mobil Uygulama, Yapay Zeka, Web Portalı"
+                          placeholder="Örn: Mobil Uygulama, Yapay Zeka & Psikoloji, Web Portalı & Bulut"
                         />
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {[
+                            'Web Portalı & Bulut',
+                            'Mobil Uygulama',
+                            'Yapay Zeka & Psikoloji',
+                            'Python & Otomasyon',
+                            'Masaüstü & Otomasyon',
+                            'Yapay Zeka & Özel Eğitim',
+                            'Veri Analitiği & Kazıma',
+                            'Finans & Kreatif'
+                          ].map(cat => (
+                            <button
+                              key={cat}
+                              type="button"
+                              onClick={() => setProjectForm({ ...projectForm, category: cat })}
+                              className={`text-[9px] px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
+                                projectForm.category === cat
+                                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                  : 'bg-white/5 text-white/60 border-white/10 hover:text-white hover:bg-white/10'
+                              }`}
+                            >
+                              {cat}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-white/80">Canlı Demo URL (Canlı Uygulama Linki)</label>
+                        <label className="text-xs font-bold text-white/80">Canlı Demo URL</label>
                         <input
                           type="url"
-                          value={projectForm.demoUrl || ''}
-                          onChange={e => setProjectForm({ ...projectForm, demoUrl: e.target.value })}
+                          value={projectForm.demoUrl || projectForm.deploy || ''}
+                          onChange={e => setProjectForm({ ...projectForm, demoUrl: e.target.value, deploy: e.target.value })}
                           className="w-full py-2 px-3 rounded-xl bg-black/40 border border-white/10 text-xs text-white font-mono"
                           placeholder="https://projeniz.com"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-white/80">GitHub / Kaynak Kod URL</label>
+                        <label className="text-xs font-bold text-white/80">GitHub / Repo URL</label>
                         <input
                           type="url"
                           value={projectForm.githubUrl || ''}
@@ -807,11 +834,22 @@ export function AdminEditorModal({
                           placeholder="https://github.com/..."
                         />
                       </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-bold text-white/80">Proje Klasörü (Folder)</label>
+                        <input
+                          type="text"
+                          value={projectForm.folder || ''}
+                          onChange={e => setProjectForm({ ...projectForm, folder: e.target.value })}
+                          className="w-full py-2 px-3 rounded-xl bg-black/40 border border-white/10 text-xs text-white font-mono"
+                          placeholder="Örn: AGS, Anti-AI, Botlar"
+                        />
+                      </div>
                     </div>
 
-                    {/* Image URL & File Upload */}
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-white/80">Kapak Görseli</label>
+                    {/* Image URL & File Upload with Live Preview */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-white/80">Kapak Görseli / Fotoğraf</label>
                       <div className="flex gap-2">
                         <input
                           type="text"
@@ -822,7 +860,7 @@ export function AdminEditorModal({
                         />
                         <label className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 shrink-0 transition-all">
                           <Upload size={13} />
-                          <span>Yükle</span>
+                          <span>Cihazdan Yükle</span>
                           <input
                             type="file"
                             accept="image/*"
@@ -842,6 +880,22 @@ export function AdminEditorModal({
                           />
                         </label>
                       </div>
+
+                      {projectForm.image && (
+                        <div className="flex items-center gap-3 p-2 rounded-xl bg-black/50 border border-white/10">
+                          <div className="w-16 h-12 rounded-lg overflow-hidden border border-white/20 shrink-0 bg-zinc-900">
+                            <img
+                              src={projectForm.image}
+                              alt="Önizleme"
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                (e.currentTarget as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                          </div>
+                          <span className="text-[11px] text-white/60">Görsel / Fotoğraf Önizlemesi</span>
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-1">

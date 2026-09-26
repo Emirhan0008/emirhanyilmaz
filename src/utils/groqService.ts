@@ -29,7 +29,12 @@ function getLiveSiteSystemPrompt(): string {
       if (savedProf) activeProfile = JSON.parse(savedProf);
 
       const savedProj = localStorage.getItem('emirhan_custom_projects');
-      if (savedProj) activeProjects = JSON.parse(savedProj);
+      if (savedProj) {
+        const parsed = JSON.parse(savedProj);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          activeProjects = parsed;
+        }
+      }
 
       const savedArt = localStorage.getItem('emirhan_custom_articles');
       if (savedArt) activeArticles = JSON.parse(savedArt);
@@ -39,7 +44,7 @@ function getLiveSiteSystemPrompt(): string {
   }
 
   const projectSummaries = activeProjects
-    .map(p => `${p.title} (${p.category} | ${p.tech.join(', ')})`)
+    .map(p => `${p.title} (${p.category} | ${p.tech.join(', ')} | ${p.description})`)
     .join('; ');
   
   const articleSummaries = activeArticles
