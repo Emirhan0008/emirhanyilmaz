@@ -119,11 +119,7 @@ export default function App() {
    const [searchQuery, setSearchQuery] = useState<string>('');
    const [contactSubject, setContactSubject] = useState<string>('Proje Teklifi / Danışmanlık');
    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-   const [formSubmitted, setFormSubmitted] = useState(false);
-   const [isSubmitting, setIsSubmitting] = useState(false);
-   const [formError, setFormError] = useState<string | null>(null);
-   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
-   const [honeypot, setHoneypot] = useState('');
+   const [formData, setFormData] = useState({ name: '', message: '' });
    const [copiedEmail, setCopiedEmail] = useState(false);
    const [inboxMessages, setInboxMessages] = useState<ContactMessage[]>([]);
  
@@ -252,38 +248,6 @@ export default function App() {
        setIsAmbientPlaying(playing);
        setCurrentMusicTrack(track);
      });
-
-     // Synchronize messages from server repository
-     try {
-       const local = localStorage.getItem('adm_msg_store');
-       if (local) {
-         setInboxMessages(JSON.parse(local));
-       }
-     } catch {}
-
-     fetch('/api/messages')
-       .then(res => res.json())
-       .then(data => {
-         if (Array.isArray(data.messages) && data.messages.length > 0) {
-           setInboxMessages(prev => {
-             const existingIds = new Set(prev.map(m => m.id));
-             const combined = [...prev];
-             for (const m of data.messages) {
-               if (!existingIds.has(m.id)) {
-                 combined.push(m);
-                 existingIds.add(m.id);
-               }
-             }
-             combined.sort((a, b) => b.timestamp - a.timestamp);
-             try {
-               localStorage.setItem('adm_msg_store', JSON.stringify(combined));
-             } catch {}
-             return combined;
-           });
-         }
-       })
-       .catch(() => {});
-
      return unsubscribe;
    }, []);
 
@@ -876,83 +840,13 @@ export default function App() {
     ? mappedProjects.find(p => p.id === selectedProject.id) || selectedProject
     : null;
 
-  const handleFormSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    setFormError(null);
-    
-    // Honeypot trap check - block automated bots from submitting spam
-    if (honeypot.trim()) {
-      setFormData({ name: '', email: '', message: '' });
-      setHoneypot('');
-      return;
-    }
-
-    // Comprehensive Zod validation against SQL Injection (SQLi), XSS and invalid formats
-    const validation = validateContactForm({
-      name: formData.name,
-      email: formData.email,
-      subject: contactSubject,
-      message: formData.message
-    });
-
-    if (!validation.success) {
-      setFormError(validation.error || 'Doğrulama hatası oluştu.');
-      return;
-    }
-
-    const { name: cleanName, email: cleanEmail, subject: cleanSubject, message: cleanMessage } = validation.data!;
-
-    setIsSubmitting(true);
-    
-    // Save to local inbox storage with strictly sanitized fields
-    const newMessage: ContactMessage = {
-      id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2),
-      name: cleanName,
-      email: cleanEmail,
-      subject: cleanSubject,
-      message: cleanMessage,
-      date: new Date().toLocaleString('tr-TR'),
-      timestamp: Date.now()
-    };
-    
-    const updatedMessages = [newMessage, ...inboxMessages];
-    setInboxMessages(updatedMessages);
-    try {
-      localStorage.setItem('adm_msg_store', JSON.stringify(updatedMessages));
-    } catch (err) {
-      console.error("Storage error:", err);
-    }
-    
-    // Transmit to server API which forwards email directly to emirhan0008@gmail.com
-    fetch('/api/contact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: cleanName,
-        email: cleanEmail,
-        subject: cleanSubject,
-        message: cleanMessage
-      })
-    })
-      .then(res => res.json())
-      .then(() => {
-        setIsSubmitting(false);
-        setFormSubmitted(true);
-        setTimeout(() => {
-          setFormSubmitted(false);
-          setFormData({ name: '', email: '', message: '' });
-        }, 6000);
-      })
-      .catch(err => {
-        console.warn("Contact transmission notice:", err);
-        // Fallback: even in case of offline/network glitch, local copy is saved
-        setIsSubmitting(false);
-        setFormSubmitted(true);
-        setTimeout(() => {
-          setFormSubmitted(false);
-          setFormData({ name: '', email: '', message: '' });
-        }, 6000);
-      });
+  const handleDirectEmailOpen = (e?: FormEvent) => {
+    if (e) e.preventDefault();
+    const subject = encodeURIComponent(`[Portfolyo] ${contactSubject || 'İletişim & İş Birliği'}`);
+    const namePrefix = formData.name ? `Ad Soyad: ${formData.name}\n\n` : '';
+    const bodyContent = encodeURIComponent(`${namePrefix}${formData.message || 'Merhaba Emirhan Bey,\n\n'}`);
+    const mailtoUrl = `mailto:${profile.email || 'emirhan0008@gmail.com'}?subject=${subject}&body=${bodyContent}`;
+    window.location.href = mailtoUrl;
   };
 
   const navItems = [
@@ -2764,149 +2658,102 @@ export default function App() {
                       </a>
                     </div>
 
-                    {formSubmitted ? (
-                      <motion.div 
-                        initial={{ scale: 0.95, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="p-8 liquid-glass spinning-glow-border rounded-3xl flex flex-col items-center justify-center text-center gap-4 border border-emerald-500/30 my-auto"
-                      >
-                        <CheckCircle2 size={48} className="text-emerald-400 animate-pulse" />
-                        <div className="space-y-1.5">
-                          <h3 className="text-lg font-bold text-white">Mesajınız Başarıyla İletildi!</h3>
-                          <p className="text-xs text-emerald-300 font-semibold leading-relaxed max-w-md">
-                            Mesajınız doğrudan <strong>emirhan0008@gmail.com</strong> adresine aktarılmıştır.
-                          </p>
-                          <p className="text-[11px] text-white/70 leading-relaxed max-w-md pt-1">
-                            Ayrıca yönetici gelen kutusuna da kaydedildi. En kısa süre içinde belirttiğiniz e-posta adresinize geri dönüş yapılacaktır.
-                          </p>
+                    {/* Email Compose Card */}
+                    <div className="p-6 rounded-3xl liquid-glass border border-white/10 flex flex-col gap-5">
+                      <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                            <Mail size={16} />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-white">Doğrudan E-Posta İle İletişim</h3>
+                            <p className="text-[11px] text-white/60">Mesajınız gerçek e-posta istemciniz üzerinden güvenle iletilir</p>
+                          </div>
                         </div>
-                      </motion.div>
-                    ) : (
-                      <form onSubmit={handleFormSubmit} className="flex flex-col gap-4">
-                        {/* Honeypot Spam Trap */}
-                        <input 
-                          type="text" 
-                          name="website_trap" 
-                          value={honeypot} 
-                          onChange={e => setHoneypot(e.target.value)} 
-                          className="absolute -top-[9999px] -left-[9999px] h-0 w-0 opacity-0 pointer-events-none" 
-                          tabIndex={-1} 
-                          autoComplete="off" 
-                        />
+                        <span className="text-[10px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/30">
+                          {profile.email || 'emirhan0008@gmail.com'}
+                        </span>
+                      </div>
 
-                        {/* Direct Transmission Notice */}
-                        <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px] flex items-center gap-2">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                          <span>Bu form ile gönderilen mesajlar doğrudan <strong>emirhan0008@gmail.com</strong> e-posta kutunuza ve yönetici paneline anlık iletilir.</span>
-                        </div>
-
+                      <form onSubmit={handleDirectEmailOpen} className="flex flex-col gap-4">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="space-y-1.5">
-                            <label className="text-[10px] uppercase tracking-wider text-white/95 font-bold px-1">Ad Soyad</label>
+                            <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">Adınız / Kurumunuz</label>
                             <input 
                               type="text" 
-                              required
                               maxLength={100}
-                              placeholder="Adınız ve Soyadınız"
+                              placeholder="Adınız Soyadınız veya Kurum Adı"
                               value={formData.name}
-                              onChange={e => {
-                                setFormData({ ...formData, name: e.target.value });
-                                if (formError) setFormError(null);
-                              }}
-                              className="w-full py-2.5 px-4 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-white/35 text-xs text-white placeholder-white/40 font-medium"
-                              disabled={isSubmitting}
+                              onChange={e => setFormData({ ...formData, name: e.target.value })}
+                              className="w-full py-2.5 px-4 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 font-medium"
                             />
                           </div>
+
                           <div className="space-y-1.5">
-                            <label className="text-[10px] uppercase tracking-wider text-white/95 font-bold px-1">E-posta</label>
-                            <input 
-                              type="email" 
-                              required
-                              maxLength={100}
-                              placeholder="ornek@domain.com"
-                              value={formData.email}
-                              onChange={e => {
-                                setFormData({ ...formData, email: e.target.value });
-                                if (formError) setFormError(null);
-                              }}
-                              className="w-full py-2.5 px-4 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-white/35 text-xs text-white placeholder-white/40 font-medium"
-                              disabled={isSubmitting}
-                            />
+                            <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">Konu Başlığı</label>
+                            <select
+                              value={contactSubject}
+                              onChange={e => setContactSubject(e.target.value)}
+                              className="w-full py-2.5 px-4 rounded-xl bg-black/60 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white font-medium"
+                            >
+                              <option value="Proje Teklifi / Danışmanlık" className="bg-zinc-900">Proje Teklifi / Danışmanlık</option>
+                              <option value="Akademik & PDR Çalışması" className="bg-zinc-900">Akademik & PDR Çalışması</option>
+                              <option value="Yazılım & Yapay Zeka Entegrasyonu" className="bg-zinc-900">Yazılım & Yapay Zeka Entegrasyonu</option>
+                              <option value="Genel İletişim / Soru" className="bg-zinc-900">Genel İletişim / Soru</option>
+                            </select>
                           </div>
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase tracking-wider text-white/95 font-bold px-1">Konu / Kategori</label>
-                          <select
-                            value={contactSubject}
-                            onChange={e => setContactSubject(e.target.value)}
-                            className="w-full py-2.5 px-4 rounded-xl bg-black/60 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-white/35 text-xs text-white font-medium"
-                          >
-                            <option value="Proje Teklifi / Danışmanlık" className="bg-zinc-900">Proje Teklifi / Danışmanlık</option>
-                            <option value="Akademik & PDR Çalışması" className="bg-zinc-900">Akademik & PDR Çalışması</option>
-                            <option value="Yazılım & Yapay Zeka Entegrasyonu" className="bg-zinc-900">Yazılım & Yapay Zeka Entegrasyonu</option>
-                            <option value="Genel İletişim / Soru" className="bg-zinc-900">Genel İletişim / Soru</option>
-                          </select>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase tracking-wider text-white/95 font-bold px-1">Mesajınız</label>
+                          <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">Mesaj Taslağınız (İsteğe Bağlı)</label>
                           <textarea 
-                            required
-                            rows={3}
-                            maxLength={1000}
-                            placeholder="İş birliği veya proje detaylarınızı buraya yazabilirsiniz..."
+                            rows={4}
+                            maxLength={2000}
+                            placeholder="İş birliği, danışmanlık veya projeniz hakkında aktarmak istediklerinizi yazabilirsiniz..."
                             value={formData.message}
-                            onChange={e => {
-                              setFormData({ ...formData, message: e.target.value });
-                              if (formError) setFormError(null);
-                            }}
-                            className="w-full py-2.5 px-4 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-white/35 text-xs text-white placeholder-white/40 resize-none"
-                            disabled={isSubmitting}
+                            onChange={e => setFormData({ ...formData, message: e.target.value })}
+                            className="w-full py-2.5 px-4 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 resize-none font-sans"
                           />
                         </div>
 
-                        {formError && (
-                          <div className="p-3 rounded-xl bg-red-950/60 border border-red-500/40 text-red-200 text-xs flex items-center gap-2 animate-shake">
-                            <AlertTriangle size={15} className="shrink-0 text-red-400" />
-                            <span className="font-semibold">{formError}</span>
+                        {/* Informative Security Banner */}
+                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-start gap-3 text-xs text-white/80">
+                          <div className="p-1 rounded-lg bg-emerald-500/20 text-emerald-400 shrink-0 mt-0.5">
+                            <Send size={13} />
                           </div>
-                        )}
+                          <div className="space-y-0.5 leading-relaxed">
+                            <span className="font-bold text-white block">Güvenli & Doğrudan Gönderim</span>
+                            <span className="text-[11px] text-white/60">
+                              Butona bastığınızda cihazınızdaki varsayılan e-posta uygulaması (Gmail, Apple Mail, Outlook vb.) yazdığınız konu ve metinle birlikte otomatik açılır. Böylece mesajınız sahte formlara takılmadan, doğrudan kendi onayınızla gönderilir.
+                            </span>
+                          </div>
+                        </div>
 
-                        <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                        {/* Action Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
                           <button 
                             type="submit"
-                            disabled={isSubmitting}
-                            className={`flex-1 py-3 rounded-xl liquid-glass-strong spinning-glow-border font-bold text-xs flex items-center justify-center gap-2 border-none transition-all cursor-pointer ${
-                              isSubmitting 
-                                ? 'opacity-60 cursor-not-allowed bg-white/5 text-white/50' 
-                                : 'hover:bg-white/10 hover:scale-102 text-white'
-                            }`}
+                            className="flex-1 py-3 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-2 transition-all hover:scale-102 cursor-pointer shadow-lg shadow-emerald-500/20"
                           >
-                            {isSubmitting ? (
-                              <>
-                                <div className="w-3 h-3 rounded-full border-2 border-t-transparent border-white/80 animate-spin shrink-0" />
-                                <span>İletiliyor...</span>
-                              </>
-                            ) : (
-                              <>
-                                <Send size={13} className="text-emerald-400" />
-                                <span>Mesajı Gönder (emirhan0008@gmail.com'a İlet)</span>
-                              </>
-                            )}
+                            <Mail size={15} />
+                            <span>E-posta Uygulamasını Aç ve Gönder</span>
                           </button>
 
-                          <a
-                            href={`mailto:emirhan0008@gmail.com?subject=${encodeURIComponent(contactSubject || 'Portfolyo İletişim Mesajı')}&body=${encodeURIComponent((formData.name ? 'Gönderen: ' + formData.name + '\n' : '') + (formData.message || ''))}`}
-                            className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0"
-                            title="Kendi e-posta programınızla doğrudan göndermek için tıklayın"
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(profile.email || 'emirhan0008@gmail.com');
+                              setCopiedEmail(true);
+                              setTimeout(() => setCopiedEmail(false), 2500);
+                            }}
+                            className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0"
                           >
-                            <Mail size={13} />
-                            <span>E-posta Uygulamasıyla Aç</span>
-                          </a>
+                            <Copy size={13} className="text-white/70" />
+                            <span>{copiedEmail ? 'Adres Kopyalandı!' : 'E-Postayı Kopyala'}</span>
+                          </button>
                         </div>
                       </form>
-                    )}
+                    </div>
                   </div>
                 </motion.div>
               )}

@@ -22,7 +22,7 @@ app.use((_req, res, next) => {
   // CSP allows local resources, safe data images, Google Fonts, and AI API endpoints
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https://api.groq.com https://generativelanguage.googleapis.com https://formsubmit.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors *;"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https://api.groq.com https://generativelanguage.googleapis.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors *;"
   );
   next();
 });
@@ -450,122 +450,6 @@ app.post("/api/cat-assistant", async (req, res) => {
       reply: "Miyav! 🐾 Şu an dinleniyorum, Projeler sekmesindeki çalışmalara göz atabilirsin!"
     });
   }
-});
-
-// Server-side persistent message storage
-interface ServerContactMessage {
-  id: string;
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-  date: string;
-  timestamp: number;
-}
-
-const MESSAGES_FILE = path.join(process.cwd(), "messages.json");
-
-function loadServerMessages(): ServerContactMessage[] {
-  try {
-    if (fs.existsSync(MESSAGES_FILE)) {
-      const content = fs.readFileSync(MESSAGES_FILE, "utf-8");
-      return JSON.parse(content);
-    }
-  } catch (e) {
-    console.error("Failed to read messages file:", e);
-  }
-  return [];
-}
-
-function saveServerMessages(msgs: ServerContactMessage[]) {
-  try {
-    fs.writeFileSync(MESSAGES_FILE, JSON.stringify(msgs.slice(0, 300), null, 2), "utf-8");
-  } catch (e) {
-    console.error("Failed to write messages file:", e);
-  }
-}
-
-// API 4: Contact Form Dispatch & Email Forwarding to emirhan0008@gmail.com
-app.post("/api/contact", async (req, res) => {
-  try {
-    const { name, email, subject, message } = req.body;
-    if (!name || !email || !message) {
-      return res.status(400).json({ error: "Lütfen ad, e-posta ve mesaj alanlarını eksiksiz doldurun." });
-    }
-
-    const safeName = String(name).slice(0, 100).trim();
-    const safeEmail = String(email).slice(0, 120).trim();
-    const safeSubject = String(subject || "Portfolyo İletişim Formu").slice(0, 150).trim();
-    const safeMessage = String(message).slice(0, 2500).trim();
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(safeEmail)) {
-      return res.status(400).json({ error: "Lütfen geçerli bir e-posta adresi girin." });
-    }
-
-    const newRecord: ServerContactMessage = {
-      id: (typeof crypto !== "undefined" && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2),
-      name: safeName,
-      email: safeEmail,
-      subject: safeSubject,
-      message: safeMessage,
-      date: new Date().toLocaleString("tr-TR"),
-      timestamp: Date.now()
-    };
-
-    // 1. Save message to server persistent storage
-    const allMsgs = loadServerMessages();
-    allMsgs.unshift(newRecord);
-    saveServerMessages(allMsgs);
-
-    // 2. Real email forwarding to emirhan0008@gmail.com via FormSubmit
-    let emailDispatched = false;
-    try {
-      const emailRes = await fetch("https://formsubmit.co/ajax/emirhan0008@gmail.com", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
-        body: JSON.stringify({
-          name: safeName,
-          email: safeEmail,
-          _replyto: safeEmail,
-          subject: safeSubject,
-          message: safeMessage,
-          _subject: `[Portfolyo Mesajı] ${safeName}: ${safeSubject}`,
-          _template: "table"
-        }),
-        signal: AbortSignal.timeout(6000)
-      });
-      if (emailRes.ok) {
-        emailDispatched = true;
-      }
-    } catch (e) {
-      console.warn("Notice on email forwarder:", e);
-    }
-
-    return res.json({
-      success: true,
-      message: "Mesajınız başarıyla iletildi! Emirhan Yılmaz'a bildirim ulaştırıldı.",
-      emailDispatched,
-      data: newRecord
-    });
-  } catch (err: any) {
-    console.error("Contact API error:", err);
-    return res.status(500).json({ error: "Mesaj işlenirken bir sunucu hatası oluştu." });
-  }
-});
-
-// API 5: Sync messages for admin panel across all browsers/devices
-app.get("/api/messages", (_req, res) => {
-  const msgs = loadServerMessages();
-  res.json({ messages: msgs });
-});
-
-app.delete("/api/messages", (_req, res) => {
-  saveServerMessages([]);
-  res.json({ success: true });
 });
 
 // Serve public static assets with high priority
