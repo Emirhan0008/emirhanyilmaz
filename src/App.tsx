@@ -1319,10 +1319,10 @@ export default function App() {
                 className="mt-8 space-y-3"
               >
                 <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-wider drop-shadow-[0_0_20px_rgba(255,255,255,0.7)] font-serif italic">
-                  Ayşegül ❤️
+                  Seviyorum, hem de çok. ❤️
                 </h2>
                 <p className="text-xs sm:text-sm text-red-200/90 font-medium tracking-widest uppercase">
-                  Dünya eriyip yok olsa da geriye sadece bu sevgi kalır.
+                  Dünya eriyip yok olsa da sevgim bakidir kar tanem.
                 </p>
                 <div className="pt-4">
                   <button
