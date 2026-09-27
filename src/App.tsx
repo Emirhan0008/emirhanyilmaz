@@ -47,7 +47,8 @@ import {
   Plus,
   Key,
   FolderKanban,
-  Settings
+  Settings,
+  Heart
  } from 'lucide-react';
  
  import { profileData, projects, articles } from './data';
@@ -175,6 +176,17 @@ export default function App() {
    const [showAdminModal, setShowAdminModal] = useState(false);
    const [adminPasscode, setAdminPasscode] = useState('');
    const [showPasscode, setShowPasscode] = useState(false);
+
+  // Easter Egg: Ayşegül 6-click Profile Avatar Sequence
+  const [avatarClickCount, setAvatarClickCount] = useState(0);
+  const [lastAvatarClickTime, setLastAvatarClickTime] = useState(0);
+  const [showEasterEggLogin, setShowEasterEggLogin] = useState(false);
+  const [easterUsername, setEasterUsername] = useState('');
+  const [easterPassword, setEasterPassword] = useState('');
+  const [easterError, setEasterError] = useState('');
+  const [showEasterPassword, setShowEasterPassword] = useState(false);
+  const [isMeltingSite, setIsMeltingSite] = useState(false);
+  const [showMeltingSlagHeart, setShowMeltingSlagHeart] = useState(false);
    
    // Security rate limits and persistent tab-session lockout
    const [failedAttempts, setFailedAttempts] = useState(0);
@@ -320,7 +332,115 @@ export default function App() {
      setTimeout(() => setShowAdminToast(false), 3500);
    };
 
-   const handleAdminTrigger = () => {
+   // Easter Egg Trigger (6 Clicks on Avatar)
+  const handleAvatarEasterClick = () => {
+    const now = Date.now();
+    let newCount = 1;
+    if (now - lastAvatarClickTime < 1800) {
+      newCount = avatarClickCount + 1;
+    }
+    setLastAvatarClickTime(now);
+    setAvatarClickCount(newCount);
+
+    if (newCount >= 6) {
+      setAvatarClickCount(0);
+      setEasterUsername('');
+      setEasterPassword('');
+      setEasterError('');
+      setShowEasterEggLogin(true);
+      soundEngine.playGlassClick();
+    } else {
+      soundEngine.playGlassClick();
+    }
+  };
+
+  const handleEasterLoginSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setEasterError('');
+
+    try {
+      const cleanUser = easterUsername.trim();
+      const cleanPass = easterPassword.trim();
+
+      // Normalize Turkish characters and casing safely
+      const normUser = cleanUser
+        .toLocaleLowerCase('tr-TR')
+        .replace(/ı/g, 'i')
+        .replace(/ğ/g, 'g')
+        .replace(/ü/g, 'u')
+        .replace(/ş/g, 's')
+        .replace(/ö/g, 'o')
+        .replace(/ç/g, 'c');
+
+      // 1. Unicode code-points verification (zero plain text literal)
+      // "aysegul": [97, 121, 115, 101, 103, 117, 108]
+      // "ayşegül": [97, 121, 351, 101, 103, 252, 108]
+      // "25092025": [50, 53, 48, 57, 50, 48, 50, 53]
+      const targetUserCodesNorm = [97, 121, 115, 101, 103, 117, 108];
+      const targetPassCodes = [50, 53, 48, 57, 50, 48, 50, 53];
+
+      const matchCodes = (str: string, codes: number[]) => {
+        if (str.length !== codes.length) return false;
+        for (let i = 0; i < codes.length; i++) {
+          if (str.charCodeAt(i) !== codes[i]) return false;
+        }
+        return true;
+      };
+
+      const userCodeMatch = matchCodes(normUser, targetUserCodesNorm) || 
+                            matchCodes(cleanUser.toLowerCase(), [97, 121, 351, 101, 103, 252, 108]) ||
+                            matchCodes(cleanUser.toLowerCase(), [97, 121, 115, 101, 103, 117, 108]);
+
+      const passCodeMatch = matchCodes(cleanPass, targetPassCodes);
+
+      // 2. SHA-256 Hashes verification
+      let userHashMatch = false;
+      let passHashMatch = false;
+
+      try {
+        const userHash = await sha256(cleanUser.toLowerCase());
+        const passHash = await sha256(cleanPass);
+
+        const VALID_USER_HASHES = [
+          '01249fee9f5804d3e264fb8335c08c477e44d2863da57e095e7cfd3031b08952', // ayşegül
+          'b305181f3d0d419c88694e4b2cb80bb77799fcaebf0f83ab773dfc98c2d5d036', // aysegul
+          '505bfd97d80f12b1e6eeceda822fdc4329b3c92b50df9c3540d1490ded24d027', // Ayşegül
+          '0828a7fa0faea89debda2863bda1a9ebdff1834cf53b7e5af63f5d153a43d3f4'  // Aysegul
+        ];
+
+        const VALID_PASS_HASHES = [
+          '9493da555ac7a9cb08899c5f6017a9193874918a3577e9138712d71a9551b61c'  // 25092025
+        ];
+
+        userHashMatch = VALID_USER_HASHES.includes(userHash);
+        passHashMatch = VALID_PASS_HASHES.includes(passHash);
+      } catch {
+        // Fallback to code points
+      }
+
+      const isValidUser = userCodeMatch || userHashMatch;
+      const isValidPass = passCodeMatch || passHashMatch;
+
+      if (isValidUser && isValidPass) {
+        setShowEasterEggLogin(false);
+        soundEngine.playSuccessChime();
+        // Start melting the entire site
+        setIsMeltingSite(true);
+
+        // After melting slag drippings accumulate, emerge the glowing giant red heart
+        setTimeout(() => {
+          setShowMeltingSlagHeart(true);
+        }, 2200);
+      } else {
+        setEasterError('Kullanıcı adı veya şifre geçersiz.');
+        soundEngine.playGlassClick();
+      }
+    } catch {
+      setEasterError('Doğrulama sırasında bir hata oluştu.');
+    }
+  };
+
+  const handleAdminTrigger = () => {
      if (isAdmin) {
        setShowAdminEditor(true);
      } else {
@@ -840,13 +960,30 @@ export default function App() {
     ? mappedProjects.find(p => p.id === selectedProject.id) || selectedProject
     : null;
 
+  const getPreparedMessage = () => {
+    const namePrefix = formData.name ? `Ad Soyad / Kurum: ${formData.name}\n\n` : '';
+    const rawMessage = formData.message.trim();
+    if (!rawMessage) {
+      return `${namePrefix}Merhaba Emirhan Bey,\n\nSiteniz üzerinden ulaşıyorum.`;
+    }
+    // If message already starts with a greeting like "Merhaba Emirhan Bey", don't duplicate
+    if (rawMessage.startsWith('Merhaba')) {
+      return `${namePrefix}${rawMessage}`;
+    }
+    return `${namePrefix}Merhaba Emirhan Bey,\n\n${rawMessage}`;
+  };
+
   const handleDirectEmailOpen = (e?: FormEvent) => {
     if (e) e.preventDefault();
     const subject = encodeURIComponent(`[Portfolyo] ${contactSubject || 'İletişim & İş Birliği'}`);
-    const namePrefix = formData.name ? `Ad Soyad: ${formData.name}\n\n` : '';
-    const bodyContent = encodeURIComponent(`${namePrefix}${formData.message || 'Merhaba Emirhan Bey,\n\n'}`);
+    const bodyContent = encodeURIComponent(getPreparedMessage());
     const mailtoUrl = `mailto:${profile.email || 'emirhan0008@gmail.com'}?subject=${subject}&body=${bodyContent}`;
     window.location.href = mailtoUrl;
+  };
+
+  const handleWhatsAppOpen = () => {
+    const text = encodeURIComponent(getPreparedMessage());
+    window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener,noreferrer');
   };
 
   const navItems = [
@@ -1037,6 +1174,175 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* EASTER EGG AUTHENTICATION MODAL (Ayşegül & 25092025) */}
+      <AnimatePresence>
+        {showEasterEggLogin && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl"
+            onClick={() => setShowEasterEggLogin(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-sm rounded-[2.5rem] liquid-glass-strong border border-rose-500/30 p-7 shadow-2xl relative text-center space-y-5"
+            >
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setShowEasterEggLogin(false)}
+                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-white/10"
+              >
+                <X size={15} />
+              </button>
+
+              {/* Heart Lock Icon */}
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-600/30 to-red-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center mx-auto shadow-lg shadow-rose-500/20">
+                <Heart size={26} className="fill-rose-500/30 text-rose-400 animate-pulse" />
+              </div>
+
+              {/* Title & Desc */}
+              <div className="space-y-1.5">
+                <h3 className="text-lg font-bold tracking-tight text-white flex items-center justify-center gap-2">
+                  Özel Erişim Portalı
+                </h3>
+                <p className="text-xs text-white/60 leading-relaxed max-w-[280px] mx-auto">
+                  Lütfen yetkili kullanıcı adı ve şifrenizi girin.
+                </p>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleEasterLoginSubmit} className="space-y-3.5 text-left">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-rose-300/80 px-1">Kullanıcı Adı</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Kullanıcı adı..."
+                    value={easterUsername}
+                    onChange={e => setEasterUsername(e.target.value)}
+                    className="w-full py-2.5 px-3.5 rounded-xl bg-white/5 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-rose-400 text-xs text-white placeholder-white/30 font-medium"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-rose-300/80 px-1">Şifre</label>
+                  <div className="relative">
+                    <input
+                      type={showEasterPassword ? 'text' : 'password'}
+                      required
+                      placeholder="Şifre..."
+                      value={easterPassword}
+                      onChange={e => setEasterPassword(e.target.value)}
+                      className="w-full py-2.5 pl-3.5 pr-10 rounded-xl bg-white/5 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-rose-400 text-xs text-white placeholder-white/30 font-mono tracking-widest"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowEasterPassword(!showEasterPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
+                    >
+                      {showEasterPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+
+                {easterError && (
+                  <span className="text-[10px] text-rose-400 font-bold block text-center">
+                    ⚠️ {easterError}
+                  </span>
+                )}
+
+                <button
+                  type="submit"
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer text-white shadow-lg shadow-rose-600/30 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Heart size={14} className="fill-white" />
+                  <span>Giriş Yap ve Kilidi Aç</span>
+                </button>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* EASTER EGG FULL-SCREEN SLAG & GIANT RED HEART OVERLAY */}
+      <AnimatePresence>
+        {showMeltingSlagHeart && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/95 overflow-hidden select-none"
+          >
+            {/* Ambient Lava Embers & Slag Flares */}
+            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_center,_rgba(220,38,38,0.3)_0%,_rgba(0,0,0,0.95)_70%)]" />
+
+            {/* Center Stage: Emerged Giant Red Heart */}
+            <div className="relative flex flex-col items-center justify-center z-10 text-center px-4">
+              <motion.div
+                initial={{ scale: 0.1, opacity: 0 }}
+                animate={{ scale: [0.1, 1.25, 0.95, 1.05, 1], opacity: 1 }}
+                transition={{ duration: 1.8, ease: "easeOut" }}
+                className="easter-heart-beating cursor-pointer transition-transform duration-300 hover:scale-110"
+                onClick={() => soundEngine.playSuccessChime()}
+              >
+                <svg
+                  className="w-48 h-48 sm:w-64 sm:h-64 lg:w-80 lg:h-80 drop-shadow-[0_0_60px_rgba(239,68,68,0.95)] filter"
+                  viewBox="0 0 24 24"
+                  fill="url(#heartGrad)"
+                  stroke="#ff4d4d"
+                  strokeWidth="0.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <defs>
+                    <radialGradient id="heartGrad" cx="35%" cy="35%" r="65%">
+                      <stop offset="0%" stopColor="#ff4d6d" />
+                      <stop offset="50%" stopColor="#e11d48" />
+                      <stop offset="100%" stopColor="#9f1239" />
+                    </radialGradient>
+                  </defs>
+                  <path d="M19.5 12.572l-7.5 7.428l-7.5 -7.428a5 5 0 1 1 7.5 -6.566a5 5 0 1 1 7.5 6.572" />
+                </svg>
+              </motion.div>
+
+              {/* Heart Dedication Message */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.2, duration: 1 }}
+                className="mt-8 space-y-3"
+              >
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-white tracking-wider drop-shadow-[0_0_20px_rgba(255,255,255,0.7)] font-serif italic">
+                  Ayşegül ❤️
+                </h2>
+                <p className="text-xs sm:text-sm text-red-200/90 font-medium tracking-widest uppercase">
+                  Dünya eriyip yok olsa da geriye sadece bu sevgi kalır.
+                </p>
+                <div className="pt-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMeltingSlagHeart(false);
+                      setIsMeltingSite(false);
+                      soundEngine.playGlassClick();
+                    }}
+                    className="px-6 py-2.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/20 text-white text-xs font-bold transition-all cursor-pointer shadow-lg hover:scale-105 active:scale-95"
+                  >
+                    Siteye Geri Dön
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* FLOATING TOP ADMIN BAR */}
       {isAdmin && (
         <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[140] flex items-center gap-2 px-3.5 py-1.5 rounded-full liquid-glass-strong border border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.3)] backdrop-blur-xl animate-fade-in text-white max-w-[95vw] overflow-x-auto scrollbar-none">
@@ -1114,7 +1420,7 @@ export default function App() {
       )}
 
       {/* MAIN CONTAINER */}
-      <div className="relative z-10 h-auto lg:h-screen lg:max-h-screen w-full flex flex-col lg:flex-row p-4 lg:p-6 gap-6 lg:overflow-hidden">
+      <div className={`relative z-10 h-auto lg:h-screen lg:max-h-screen w-full flex flex-col lg:flex-row p-4 lg:p-6 gap-6 lg:overflow-hidden transition-all duration-1000 ${isMeltingSite ? "melting-slag-site" : ""}`}>
         
         {/* LEFT PANEL: Dynamic Viewport & Primary Presenter (Hosts Profile or Active Project / Article Details) */}
         <motion.div 
@@ -1704,7 +2010,9 @@ export default function App() {
                       <div className="w-20 h-20 rounded-full p-1 liquid-glass flex items-center justify-center overflow-hidden transition-transform duration-500 hover:rotate-6">
                         <img 
                           src={profile.avatar} 
-                          alt="Emirhan Yılmaz Avatar" 
+                          alt="Emirhan Yılmaz Avatar"
+                        onClick={handleAvatarEasterClick}
+                        style={{ cursor: "pointer" }} 
                           className="w-full h-full object-cover rounded-full"
                           referrerPolicy="no-referrer"
                           onError={(e) => {
@@ -1835,7 +2143,7 @@ export default function App() {
         >
 
           {/* Top Bar (Socials, Innovative Actions & Audio Controls) */}
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3 shrink-0">
             <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-full overflow-x-auto transition-all duration-300">
               {/* Dual-Theme Skeuomorphic Switch (Normal vs Terminal Mode) */}
               <ThemeToggle theme={theme} onToggle={toggleTheme} className="shrink-0" />
@@ -1982,7 +2290,7 @@ export default function App() {
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-full text-xs font-extrabold text-white transition-all cursor-pointer shadow-lg hover:scale-105 border border-emerald-300/30"
               >
                 <Wand2 size={13} />
-                <span>Proje Mimarisi Oluştur</span>
+                <span>Proje Mimarisi Oluştur ve Teklif Al</span>
               </button>
             </div>
           </div>
@@ -2005,22 +2313,27 @@ export default function App() {
                   setActiveTab('articles');
                   setSelectedArticle(a);
                 }}
+                onOpenEstimator={() => {
+                  setSelectedProject(null);
+                  setSelectedArticle(null);
+                  setShowEstimatorModal(true);
+                }}
               />
             ) : (
             <AnimatePresence mode="wait">
               {activeTab === 'profile' && (
-                    <motion.div
-                      key="tab-profile"
+                <motion.div
+                  key="tab-profile"
                   initial={{ opacity: 0, x: 20 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.4 }}
-                  className="flex-1 flex flex-col gap-6 overflow-y-auto pr-1 min-h-0"
+                  className="flex-1 flex flex-col gap-3.5 overflow-y-auto pr-1 min-h-0 scrollbar-thin scrollbar-thumb-white/20"
                 >
                   {/* Education & Certification Card */}
-                  <div className="p-6 liquid-glass spinning-glow-border rounded-[2rem] flex flex-col gap-4">
+                  <div className="p-4 sm:p-5 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3">
                     <div className="flex items-center justify-between pb-1 border-b border-white/5">
-                      <span className="text-[10px] tracking-wider text-white/95 uppercase font-bold">EĞİTİM & UZMANLIK</span>
+                      <span className="text-[9px] tracking-wider text-white/95 uppercase font-bold">EĞİTİM & UZMANLIK</span>
                       {isAdmin && (
                         <button
                           type="button"
@@ -2028,24 +2341,24 @@ export default function App() {
                             setAdminEditorTab('profile');
                             setShowAdminEditor(true);
                           }}
-                          className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                          className="px-2 py-0.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-[9px] font-bold flex items-center gap-1 transition-all cursor-pointer"
                         >
-                          <Edit3 size={11} />
+                          <Edit3 size={10} />
                           <span>Düzenle</span>
                         </button>
                       )}
                     </div>
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0">
-                        <GraduationCap size={20} />
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white shrink-0">
+                        <GraduationCap size={16} />
                       </div>
-                      <div className="space-y-1">
-                        <span className="text-[10px] tracking-wider text-white/95 uppercase font-bold">EĞİTİM & AKADEMİK</span>
-                        <h3 className="text-lg font-extrabold text-white">{profile.education.school}</h3>
+                      <div className="space-y-0.5">
+                        <span className="text-[9px] tracking-wider text-white/95 uppercase font-bold">EĞİTİM & AKADEMİK</span>
+                        <h3 className="text-base font-extrabold text-white">{profile.education.school}</h3>
                         <p className="text-xs text-white font-bold leading-relaxed">
                           {profile.education.degree}
                         </p>
-                        <p className="text-xs text-white/95 font-medium leading-relaxed mt-1">
+                        <p className="text-xs text-white/95 font-medium leading-relaxed">
                           {profile.education.details}
                         </p>
                       </div>
@@ -2053,15 +2366,15 @@ export default function App() {
 
                     <div className="h-[1px] bg-white/10 w-full" />
 
-                    <div className="flex items-start gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-white shrink-0">
-                        <Brain size={20} />
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white shrink-0">
+                        <Brain size={16} />
                       </div>
-                      <div className="space-y-1">
-                        <span className="text-[10px] tracking-wider text-white/95 uppercase font-bold">UZMANLIK SERTİFİKASI</span>
+                      <div className="space-y-0.5">
+                        <span className="text-[9px] tracking-wider text-white/95 uppercase font-bold">UZMANLIK SERTİFİKASI</span>
                         <h4 className="text-sm font-extrabold text-white">{profile.aiProfile.title}</h4>
                         <p className="text-xs text-white font-bold">{profile.aiProfile.certification}</p>
-                        <p className="text-xs text-white/95 font-medium leading-relaxed mt-1">
+                        <p className="text-xs text-white/95 font-medium leading-relaxed">
                           {profile.aiProfile.details}
                         </p>
                       </div>
@@ -2069,15 +2382,15 @@ export default function App() {
                   </div>
 
                   {/* Feature Section Box (Experience & Skills & Mini Project Highlight) */}
-                  <div className="mt-auto p-6 liquid-glass spinning-glow-border rounded-[2.5rem] flex flex-col gap-5">
+                  <div className="p-4 sm:p-5 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3">
                     
                     {/* Header with Switcher */}
-                    <div className="flex items-center justify-between border-b border-white/5 pb-2.5">
-                      <span className="text-[10px] tracking-widest text-white/95 uppercase font-bold">PROFESYONEL ODAK</span>
-                      <div className="flex gap-1.5 p-0.5 rounded-full bg-white/5 border border-white/10">
+                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
+                      <span className="text-[9px] tracking-widest text-white/95 uppercase font-bold">PROFESYONEL ODAK</span>
+                      <div className="flex gap-1 p-0.5 rounded-full bg-white/5 border border-white/10">
                         <button
                           onClick={() => setProfileViewMode('summary')}
-                          className={`px-3 py-1 rounded-full text-[9px] font-extrabold tracking-wide uppercase transition-all cursor-pointer ${
+                          className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wide uppercase transition-all cursor-pointer ${
                             profileViewMode === 'summary' 
                               ? 'bg-white/15 text-white' 
                               : 'text-white/60 hover:text-white/90'
@@ -2087,13 +2400,13 @@ export default function App() {
                         </button>
                         <button
                           onClick={() => setProfileViewMode('timeline')}
-                          className={`px-3 py-1 rounded-full text-[9px] font-extrabold tracking-wide uppercase transition-all cursor-pointer ${
+                          className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wide uppercase transition-all cursor-pointer ${
                             profileViewMode === 'timeline' 
                               ? 'bg-white/15 text-white' 
                               : 'text-white/60 hover:text-white/90'
                           }`}
                         >
-                          Serüven (Timeline)
+                          Serüven
                         </button>
                       </div>
                     </div>
@@ -2107,31 +2420,31 @@ export default function App() {
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
                           transition={{ duration: 0.2 }}
-                          className="grid grid-cols-2 gap-4"
+                          className="grid grid-cols-2 gap-3"
                         >
                           {/* Special Edu Card */}
-                          <div className="p-5 liquid-glass spinning-glow-border rounded-3xl flex flex-col gap-3 group transition-all hover:bg-white/5">
-                            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white transition-transform group-hover:scale-110">
-                              <Wand2 size={16} />
+                          <div className="p-3.5 sm:p-4 liquid-glass spinning-glow-border rounded-xl flex flex-col gap-2 group transition-all hover:bg-white/5">
+                            <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-white transition-transform group-hover:scale-110">
+                              <Wand2 size={14} />
                             </div>
                             <div>
-                              <h4 className="text-xs text-white/95 uppercase tracking-widest font-bold">SAHA DENEYİMİ</h4>
-                              <span className="text-sm font-extrabold text-white block mt-0.5">{profile.experience.title}</span>
-                              <p className="text-[11px] text-white font-medium mt-1.5 leading-relaxed">
+                              <h4 className="text-[10px] text-white/95 uppercase tracking-widest font-bold">SAHA DENEYİMİ</h4>
+                              <span className="text-xs sm:text-sm font-extrabold text-white block mt-0.5">{profile.experience.title}</span>
+                              <p className="text-[10px] sm:text-[11px] text-white font-medium mt-1 leading-relaxed line-clamp-3">
                                 {profile.experience.description}
                               </p>
                             </div>
                           </div>
 
                           {/* Python & AI Card */}
-                          <div className="p-5 liquid-glass spinning-glow-border rounded-3xl flex flex-col gap-3 group transition-all hover:bg-white/5">
-                            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white transition-transform group-hover:scale-110">
-                              <BookOpen size={16} />
+                          <div className="p-3.5 sm:p-4 liquid-glass spinning-glow-border rounded-xl flex flex-col gap-2 group transition-all hover:bg-white/5">
+                            <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-white transition-transform group-hover:scale-110">
+                              <BookOpen size={14} />
                             </div>
                             <div>
-                              <h4 className="text-xs text-white/95 uppercase tracking-widest font-bold">YAZILIM & YAPAY ZEKA</h4>
-                              <span className="text-sm font-extrabold text-white block mt-0.5">{profile.softwareProfile.level}</span>
-                              <p className="text-[11px] text-white font-medium mt-1.5 leading-relaxed">
+                              <h4 className="text-[10px] text-white/95 uppercase tracking-widest font-bold">YAZILIM & YAPAY ZEKA</h4>
+                              <span className="text-xs sm:text-sm font-extrabold text-white block mt-0.5">{profile.softwareProfile.level}</span>
+                              <p className="text-[10px] sm:text-[11px] text-white font-medium mt-1 leading-relaxed line-clamp-3">
                                 {profile.softwareProfile.skills.slice(0, 3).join(', ')} ve sistem otomasyonları.
                               </p>
                             </div>
@@ -2324,7 +2637,7 @@ export default function App() {
                     ) : (
                       <div 
                         onScroll={handleProjectsScroll}
-                        className="flex-1 overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-4"
+                        className="flex-1 overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-3 scrollbar-thin scrollbar-thumb-white/20"
                       >
                         {filteredProjects.map((project, idx) => (
                           <motion.div
@@ -2336,11 +2649,11 @@ export default function App() {
                               soundEngine.playGlassClick();
                               setSelectedProject(project);
                             }}
-                            className={`group cursor-pointer p-3 liquid-glass spinning-glow-border rounded-2xl flex flex-col h-[285px] shrink-0 justify-between hover:bg-white/5 transition-all relative overflow-hidden ${
+                            className={`group cursor-pointer p-2.5 liquid-glass spinning-glow-border rounded-xl flex flex-col h-[255px] shrink-0 justify-between hover:bg-white/5 transition-all relative overflow-hidden ${
                               currentSelectedProject?.id === project.id ? 'ring-2 ring-emerald-400 border-emerald-400 bg-white/10 shadow-lg shadow-emerald-500/10' : ''
                             }`}
                           >
-                            <div className="relative h-[135px] w-full rounded-xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0">
+                            <div className="relative h-[115px] w-full rounded-lg overflow-hidden bg-zinc-900 border border-white/10 shrink-0">
                               <img 
                                 src={project.image} 
                                 alt={project.title} 
@@ -2463,12 +2776,12 @@ export default function App() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.4 }}
-                  className="flex-1 flex flex-col gap-6 min-h-0 relative"
+                  className="flex-1 flex flex-col gap-3 min-h-0 relative"
                 >
-                  <div className="p-6 liquid-glass spinning-glow-border rounded-3xl flex flex-col gap-4 min-h-0 flex-1 relative overflow-y-auto pr-1">
-                    <div className="space-y-1">
-                      <span className="text-[10px] uppercase tracking-wider text-white/90 font-extrabold">YAYINLAR & DÜŞÜNCELER</span>
-                      <h2 className="text-xl font-extrabold text-white">Makaleler ve Teknik İncelemeler</h2>
+                  <div className="p-4 sm:p-5 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3 min-h-0 flex-1 relative overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20">
+                    <div className="space-y-0.5">
+                      <span className="text-[9px] uppercase tracking-wider text-white/90 font-extrabold">YAYINLAR & DÜŞÜNCELER</span>
+                      <h2 className="text-lg sm:text-xl font-extrabold text-white">Makaleler ve Teknik İncelemeler</h2>
                       <p className="text-xs text-white/70 leading-relaxed max-w-xl">
                         Psikolojik danışmanlık kuramları, özel eğitim teknolojileri, büyük dil modelleri (LLM) ve Python otomasyonları üzerine kaleme aldığım makaleler.
                       </p>
@@ -2476,9 +2789,9 @@ export default function App() {
 
                     {/* Admin Article Bar */}
                     {isAdmin && (
-                      <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 mb-2 shrink-0">
+                      <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-500/30 mb-1 shrink-0">
                         <span className="text-[11px] text-emerald-300 font-bold flex items-center gap-1.5">
-                          <FileText size={14} /> Makale Yönetim Modu Açık
+                          <FileText size={13} /> Makale Yönetim Modu Açık
                         </span>
                         <button
                           type="button"
@@ -2487,15 +2800,15 @@ export default function App() {
                             setAdminEditorTab('articles');
                             setShowAdminEditor(true);
                           }}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-500 text-black font-extrabold text-[11px] flex items-center gap-1 cursor-pointer hover:bg-emerald-400 transition-all shadow-md"
+                          className="px-2.5 py-1 rounded-lg bg-emerald-500 text-black font-extrabold text-[11px] flex items-center gap-1 cursor-pointer hover:bg-emerald-400 transition-all shadow-md"
                         >
-                          <Plus size={13} />
+                          <Plus size={12} />
                           <span>Yeni Makale Ekle</span>
                         </button>
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 gap-4 pt-2">
+                    <div className="grid grid-cols-1 gap-3 pt-1">
                       {articleList.map((article, idx) => (
                         <motion.div
                           key={article.id}
@@ -2506,13 +2819,13 @@ export default function App() {
                             soundEngine.playGlassClick();
                             setSelectedArticle(article);
                           }}
-                          className={`p-5 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3 group cursor-pointer hover:bg-white/5 transition-all ${
+                          className={`p-3.5 sm:p-4 liquid-glass spinning-glow-border rounded-xl flex flex-col gap-2 group cursor-pointer hover:bg-white/5 transition-all ${
                             selectedArticle?.id === article.id ? 'ring-2 ring-emerald-400 border-emerald-400 bg-white/10 shadow-lg shadow-emerald-500/10' : ''
                           }`}
                         >
                           <div className="flex items-center justify-between text-[10px] text-white/60 font-mono">
                             <div className="flex items-center gap-2">
-                              <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-white font-bold font-sans">
+                              <span className="px-2 py-0.5 rounded-full bg-white/10 text-white font-bold font-sans text-[10px]">
                                 {article.category}
                               </span>
                               {selectedArticle?.id === article.id && (
@@ -2522,7 +2835,7 @@ export default function App() {
                               )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <span>{article.date} • {article.readTime}</span>
+                              <span className="text-[10px]">{article.date} • {article.readTime}</span>
                               {isAdmin && (
                                 <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
                                   <button
@@ -2565,8 +2878,8 @@ export default function App() {
                             </div>
                           </div>
 
-                          <div className="space-y-1.5">
-                            <h3 className="text-base font-extrabold text-white group-hover:text-emerald-300 transition-colors">
+                          <div className="space-y-1">
+                            <h3 className="text-sm sm:text-base font-extrabold text-white group-hover:text-emerald-300 transition-colors leading-snug">
                               {article.title}
                             </h3>
                             <p className="text-xs text-white/80 leading-relaxed line-clamp-2">
@@ -2574,10 +2887,10 @@ export default function App() {
                             </p>
                           </div>
 
-                          <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                            <div className="flex flex-wrap gap-1.5">
-                              {article.tags.map(tag => (
-                                <span key={tag} className="text-[9px] px-2 py-0.5 rounded-md bg-white/5 text-white/60">
+                          <div className="flex items-center justify-between pt-1.5 border-t border-white/5">
+                            <div className="flex flex-wrap gap-1">
+                              {article.tags.slice(0, 3).map(tag => (
+                                <span key={tag} className="text-[8.5px] px-1.5 py-0.5 rounded-md bg-white/5 text-white/60">
                                   #{tag}
                                 </span>
                               ))}
@@ -2601,29 +2914,29 @@ export default function App() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.4 }}
-                  className="flex-1 flex flex-col gap-6 overflow-y-auto pr-1 min-h-0"
+                  className="flex-1 flex flex-col gap-3.5 overflow-y-auto pr-1 min-h-0 scrollbar-thin scrollbar-thumb-white/20"
                 >
-                  <div className="p-6 lg:p-8 liquid-glass spinning-glow-border rounded-[2.5rem] flex-1 flex flex-col gap-6 justify-start">
-                    <div className="space-y-2">
-                      <span className="text-[10px] uppercase tracking-wider text-white/95 font-bold">İLETİŞİM ALTYAPISI</span>
-                      <h2 className="text-2xl font-extrabold text-white">Birlikte Çalışalım</h2>
-                      <p className="text-xs sm:text-sm text-white font-semibold leading-relaxed">
+                  <div className="p-4 sm:p-5 lg:p-6 liquid-glass spinning-glow-border rounded-[2rem] flex flex-col gap-3.5 justify-start">
+                    <div className="space-y-1">
+                      <span className="text-[9px] uppercase tracking-wider text-white/95 font-bold">İLETİŞİM ALTYAPISI</span>
+                      <h2 className="text-xl sm:text-2xl font-extrabold text-white">Birlikte Çalışalım</h2>
+                      <p className="text-xs text-white/80 font-medium leading-relaxed">
                         Akademik projeler, psikolojik danışmanlık süreçlerinde teknoloji entegrasyonu, Python otomasyonları veya vaka analizi üzerine iş birlikleri için yazabilirsiniz.
                       </p>
                     </div>
 
                     {/* Quick Contact Action Pills */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       <a
                         href={profile.github || "https://github.com/Emirhan0008"}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2.5 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer group"
+                        className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer group"
                         title={`GitHub: ${profile.github}`}
                       >
-                        <Github size={14} className="text-white/70 group-hover:text-emerald-400 shrink-0 transition-colors" />
+                        <Github size={13} className="text-white/70 group-hover:text-emerald-400 shrink-0 transition-colors" />
                         <span className="truncate font-mono">GitHub</span>
-                        <ExternalLink size={11} className="text-white/40 ml-auto shrink-0 group-hover:text-white" />
+                        <ExternalLink size={10} className="text-white/40 ml-auto shrink-0 group-hover:text-white" />
                       </a>
 
                       <button
@@ -2633,51 +2946,53 @@ export default function App() {
                           setCopiedEmail(true);
                           setTimeout(() => setCopiedEmail(false), 2500);
                         }}
-                        className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2.5 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer"
+                        className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer"
                       >
-                        <Copy size={14} className="text-white/70 shrink-0" />
-                        <span className="truncate">{copiedEmail ? 'E-posta Kopyalandı!' : (profile.email || 'emirhan0008@gmail.com')}</span>
+                        <Copy size={13} className="text-white/70 shrink-0" />
+                        <span className="truncate">{copiedEmail ? 'Kopyalandı!' : (profile.email || 'emirhan0008@gmail.com')}</span>
                       </button>
 
-                      <a
-                        href={`mailto:${profile.email || 'emirhan0008@gmail.com'}?subject=${encodeURIComponent(contactSubject)}&body=${encodeURIComponent(formData.message || 'Merhaba,')}`}
-                        className="p-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2.5 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer"
+                      <button
+                        type="button"
+                        onClick={handleDirectEmailOpen}
+                        className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer"
+                        title="Hazırlanan mesajla e-posta uygulamasını açar"
                       >
-                        <Mail size={14} className="text-white/70 shrink-0" />
-                        <span className="truncate">E-Posta Gönder</span>
-                      </a>
+                        <Mail size={13} className="text-white/70 shrink-0" />
+                        <span className="truncate">E-Posta Aç</span>
+                      </button>
 
-                      <a
-                        href={`https://wa.me/?text=${encodeURIComponent('Merhaba ' + profile.name + ', sitenizden ulaşıyorum.')}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-3 rounded-2xl bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-500/20 flex items-center gap-2.5 text-xs text-emerald-300 font-bold transition-all hover:scale-102 cursor-pointer"
+                      <button
+                        type="button"
+                        onClick={handleWhatsAppOpen}
+                        className="p-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-500/20 flex items-center gap-2 text-xs text-emerald-300 font-bold transition-all hover:scale-102 cursor-pointer"
+                        title="Hazırlanan mesajla WhatsApp uygulamasını açar"
                       >
-                        <Phone size={14} className="text-emerald-400 shrink-0" />
-                        <span className="truncate">WhatsApp Mesajı</span>
-                      </a>
+                        <Phone size={13} className="text-emerald-400 shrink-0" />
+                        <span className="truncate">WhatsApp</span>
+                      </button>
                     </div>
 
                     {/* Email Compose Card */}
-                    <div className="p-6 rounded-3xl liquid-glass border border-white/10 flex flex-col gap-5">
-                      <div className="flex items-center justify-between border-b border-white/10 pb-3">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                            <Mail size={16} />
+                    <div className="p-4 sm:p-5 rounded-2xl liquid-glass border border-white/10 flex flex-col gap-3.5">
+                      <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                            <Mail size={14} />
                           </div>
                           <div>
-                            <h3 className="text-sm font-bold text-white">Doğrudan E-Posta İle İletişim</h3>
-                            <p className="text-[11px] text-white/60">Mesajınız gerçek e-posta istemciniz üzerinden güvenle iletilir</p>
+                            <h3 className="text-xs sm:text-sm font-bold text-white">Doğrudan İletişim Formu</h3>
+                            <p className="text-[10px] text-white/60">Mesajınız gerçek istemciniz (E-Posta / WhatsApp) üzerinden iletilir</p>
                           </div>
                         </div>
-                        <span className="text-[10px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/30">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/30 truncate max-w-[150px]">
                           {profile.email || 'emirhan0008@gmail.com'}
                         </span>
                       </div>
 
-                      <form onSubmit={handleDirectEmailOpen} className="flex flex-col gap-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div className="space-y-1.5">
+                      <form onSubmit={handleDirectEmailOpen} className="flex flex-col gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          <div className="space-y-1">
                             <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">Adınız / Kurumunuz</label>
                             <input 
                               type="text" 
@@ -2685,16 +3000,16 @@ export default function App() {
                               placeholder="Adınız Soyadınız veya Kurum Adı"
                               value={formData.name}
                               onChange={e => setFormData({ ...formData, name: e.target.value })}
-                              className="w-full py-2.5 px-4 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 font-medium"
+                              className="w-full py-2 px-3 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 font-medium"
                             />
                           </div>
 
-                          <div className="space-y-1.5">
+                          <div className="space-y-1">
                             <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">Konu Başlığı</label>
                             <select
                               value={contactSubject}
                               onChange={e => setContactSubject(e.target.value)}
-                              className="w-full py-2.5 px-4 rounded-xl bg-black/60 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white font-medium"
+                              className="w-full py-2 px-3 rounded-xl bg-black/60 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white font-medium"
                             >
                               <option value="Proje Teklifi / Danışmanlık" className="bg-zinc-900">Proje Teklifi / Danışmanlık</option>
                               <option value="Akademik & PDR Çalışması" className="bg-zinc-900">Akademik & PDR Çalışması</option>
@@ -2704,39 +3019,48 @@ export default function App() {
                           </div>
                         </div>
 
-                        <div className="space-y-1.5">
-                          <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">Mesaj Taslağınız (İsteğe Bağlı)</label>
-                          <textarea 
-                            rows={4}
-                            maxLength={2000}
-                            placeholder="İş birliği, danışmanlık veya projeniz hakkında aktarmak istediklerinizi yazabilirsiniz..."
-                            value={formData.message}
-                            onChange={e => setFormData({ ...formData, message: e.target.value })}
-                            className="w-full py-2.5 px-4 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 resize-none font-sans"
-                          />
-                        </div>
-
-                        {/* Informative Security Banner */}
-                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 flex items-start gap-3 text-xs text-white/80">
-                          <div className="p-1 rounded-lg bg-emerald-500/20 text-emerald-400 shrink-0 mt-0.5">
-                            <Send size={13} />
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between px-1">
+                            <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold">Mesaj Metni & Proje Detayı</label>
+                            {formData.message && (
+                              <button
+                                type="button"
+                                onClick={() => setFormData({ ...formData, message: '' })}
+                                className="text-[10px] text-white/50 hover:text-red-400 transition-colors cursor-pointer"
+                              >
+                                Temizle
+                              </button>
+                            )}
                           </div>
-                          <div className="space-y-0.5 leading-relaxed">
-                            <span className="font-bold text-white block">Güvenli & Doğrudan Gönderim</span>
-                            <span className="text-[11px] text-white/60">
-                              Butona bastığınızda cihazınızdaki varsayılan e-posta uygulaması (Gmail, Apple Mail, Outlook vb.) yazdığınız konu ve metinle birlikte otomatik açılır. Böylece mesajınız sahte formlara takılmadan, doğrudan kendi onayınızla gönderilir.
-                            </span>
+                          <div className="relative w-full rounded-xl bg-black/60 border border-white/15 focus-within:border-emerald-400/80 focus-within:ring-1 focus-within:ring-emerald-400/50 transition-all p-2.5">
+                            <textarea 
+                              rows={4}
+                              maxLength={3500}
+                              placeholder="İş birliği, teklif veya projeniz hakkında aktarmak istediklerinizi yazabilirsiniz..."
+                              value={formData.message}
+                              onChange={e => setFormData({ ...formData, message: e.target.value })}
+                              className="w-full h-28 max-h-48 min-h-[70px] bg-transparent text-xs text-white placeholder-white/40 resize-y font-sans overflow-y-scroll leading-relaxed focus:outline-hidden"
+                            />
                           </div>
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
+                        <div className="flex flex-col sm:flex-row gap-2 pt-0.5">
                           <button 
                             type="submit"
-                            className="flex-1 py-3 px-5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-2 transition-all hover:scale-102 cursor-pointer shadow-lg shadow-emerald-500/20"
+                            className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md shadow-emerald-500/20"
                           >
-                            <Mail size={15} />
-                            <span>E-posta Uygulamasını Aç ve Gönder</span>
+                            <Mail size={14} />
+                            <span>E-Postayla Gönder</span>
+                          </button>
+
+                          <button 
+                            type="button"
+                            onClick={handleWhatsAppOpen}
+                            className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md shadow-emerald-950/40"
+                          >
+                            <Phone size={14} className="text-emerald-400" />
+                            <span>WhatsApp ile Gönder</span>
                           </button>
 
                           <button
@@ -2746,10 +3070,10 @@ export default function App() {
                               setCopiedEmail(true);
                               setTimeout(() => setCopiedEmail(false), 2500);
                             }}
-                            className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0"
+                            className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
                           >
-                            <Copy size={13} className="text-white/70" />
-                            <span>{copiedEmail ? 'Adres Kopyalandı!' : 'E-Postayı Kopyala'}</span>
+                            <Copy size={12} className="text-white/70" />
+                            <span>{copiedEmail ? 'Kopyalandı!' : 'Kopyala'}</span>
                           </button>
                         </div>
                       </form>
@@ -2937,19 +3261,27 @@ export default function App() {
       {/* Project Estimator Modal Overlay */}
       <AnimatePresence>
         {showEstimatorModal && (
-          <div className="fixed inset-0 z-[160] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+          <div className="fixed inset-0 z-[160] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="w-full max-w-3xl my-8"
+              className="w-full max-w-5xl my-4 sm:my-8"
             >
               <ProjectEstimator
                 onClose={() => setShowEstimatorModal(false)}
-                onApplyToContact={(msg) => {
+                onApplyToContact={(msg, subject) => {
                   setFormData(prev => ({ ...prev, message: msg }));
+                  if (subject) setContactSubject(subject);
                   setShowEstimatorModal(false);
+                  // Ensure if user was in terminal mode, we transition to normal mode so contact tab is visible!
+                  if (theme === 'terminal') {
+                    setTheme('normal');
+                  }
                   setActiveTab('contact');
+                  setAdminToastMessage("Proje teklif taslağı hazırlandı ve iletişime aktarıldı!");
+                  setShowAdminToast(true);
+                  setTimeout(() => setShowAdminToast(false), 3500);
                 }}
               />
             </motion.div>

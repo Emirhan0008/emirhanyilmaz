@@ -158,28 +158,49 @@
 
 /* SLEEK CUSTOM GLOWING SCROLLBARS */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(16, 185, 129, 0.4);
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(52, 211, 153, 0.7);
+}
+
+/* Specific textarea visible scrollbar */
+textarea::-webkit-scrollbar {
+  width: 8px;
+}
+
+textarea::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.6);
+  border-radius: 8px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 211, 153, 0.9);
 }
 
 /* Firefox scrollbar styles */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: rgba(16, 185, 129, 0.5) rgba(0, 0, 0, 0.2);
 }
 
 /* GORGEOUS AMBIENT DRIFTING BLOBS FOR INSTANT PREMIUM LOOK */
@@ -359,5 +380,59 @@
 .skip-to-content:focus {
   top: 1rem;
 }
+
+/* ==========================================================================
+   Easter Egg: Melting Slag & Pulsing Heart Animations
+   ========================================================================== */
+@keyframes melt-dripping {
+  0% {
+    filter: blur(0px) hue-rotate(0deg);
+    transform: translateY(0) scaleY(1);
+    opacity: 1;
+  }
+  25% {
+    filter: blur(5px) hue-rotate(30deg) drop-shadow(0 20px 30px rgba(239, 68, 68, 0.6));
+    transform: translateY(20px) scaleY(1.08) skewX(1deg);
+  }
+  60% {
+    filter: blur(14px) contrast(200%) hue-rotate(90deg) drop-shadow(0 60px 70px rgba(185, 28, 28, 0.9));
+    transform: translateY(90px) scaleY(1.35) skewX(-2.5deg);
+    opacity: 0.5;
+  }
+  100% {
+    filter: blur(28px) contrast(320%) drop-shadow(0 140px 120px rgba(153, 27, 27, 1));
+    transform: translateY(260px) scaleY(2) scaleX(0.85);
+    opacity: 0;
+  }
+}
+
+.melting-slag-site {
+  animation: melt-dripping 3.2s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+@keyframes heart-pulse-glow {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 35px rgba(239, 68, 68, 0.95)) drop-shadow(0 0 75px rgba(220, 38, 38, 0.8));
+  }
+  30% {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 65px rgba(255, 30, 80, 1)) drop-shadow(0 0 115px rgba(239, 68, 68, 0.95));
+  }
+  45% {
+    transform: scale(1.02);
+  }
+  60% {
+    transform: scale(1.12);
+    filter: drop-shadow(0 0 80px rgba(255, 30, 80, 1)) drop-shadow(0 0 140px rgba(239, 68, 68, 1));
+  }
+}
+
+.easter-heart-beating {
+  animation: heart-pulse-glow 1.35s ease-in-out infinite;
+}
+
 
 

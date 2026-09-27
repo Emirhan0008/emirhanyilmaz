@@ -16,6 +16,7 @@ interface PowerShellTerminalWorkspaceProps {
   onSwitchToNormal: (tab?: 'profile' | 'projects' | 'articles' | 'contact') => void;
   onOpenProjectModal?: (project: Project) => void;
   onOpenArticleModal?: (article: Article) => void;
+  onOpenEstimator?: () => void;
 }
 
 export const PulsingNormalOpenButton: React.FC<{
@@ -49,6 +50,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
   onSwitchToNormal,
   onOpenProjectModal,
   onOpenArticleModal,
+  onOpenEstimator,
 }) => {
   const [currentPath, setCurrentPath] = useState<string>('C:\\Users\\Emirhan\\portfolio');
   const [commandInput, setCommandInput] = useState<string>('');
@@ -206,6 +208,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
               <div className="bg-emerald-950/20 p-2.5 rounded-lg border border-emerald-500/20">
                 <div className="text-amber-400 font-bold mb-1">🤖 Yapay Zeka & İletişim:</div>
                 <div className="space-y-1 text-white/90">
+                  <div><span className="text-emerald-400 font-bold">New-Architecture</span> (veya <span className="text-emerald-400">teklif</span>, <span className="text-emerald-400">estimate</span>) : Yapay zeka mimari ve teklif sihirbazını açar</div>
                   <div><span className="text-emerald-400 font-bold">Ask-Gemini &lt;soru&gt;</span> (veya <span className="text-emerald-400">ai</span>) : Doğrudan Gemini AI&apos;ya soru sorar</div>
                   <div><span className="text-emerald-400 font-bold">Send-Mail</span> : Emirhan&apos;a doğrudan terminalden mesaj iletir</div>
                   <div><span className="text-emerald-400 font-bold">Test-NetConnection</span> (veya <span className="text-emerald-400">ping</span>) : Sunucu bağlantısını test eder</div>
@@ -252,6 +255,33 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
       setTimeout(() => {
         onSwitchToNormal();
       }, 350);
+      return;
+    }
+
+    // ==========================================
+    // 3.1 NEW-ARCHITECTURE / TEKLIF / ESTIMATE
+    // ==========================================
+    if (mainCmd === 'new-architecture' || mainCmd === 'get-architecture' || mainCmd === 'teklif' || mainCmd === 'estimate' || mainCmd === 'mimari') {
+      soundEngine.playGlassClick();
+      setLines(prev => [
+        ...prev,
+        {
+          id: `arch-${Date.now()}`,
+          type: 'output',
+          elements: (
+            <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 space-y-1.5 my-1">
+              <div className="font-bold flex items-center gap-2 text-white">
+                <Sparkles size={14} className="text-emerald-400 animate-pulse" />
+                <span>Akıllı Proje Mimarisi ve Teklif Sihirbazı Başlatılıyor...</span>
+              </div>
+              <div className="text-white/70 text-xs">
+                Yapay zeka destekli modüler mimari ve süre hesaplama penceresi açıldı.
+              </div>
+            </div>
+          )
+        }
+      ]);
+      onOpenEstimator?.();
       return;
     }
 
@@ -1362,6 +1392,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
   // Quick Action Buttons
   const quickActions = [
     { label: 'help', cmd: 'help', title: 'Komut Kılavuzu' },
+    { label: '⚡ Proje Mimarisi', cmd: 'New-Architecture', title: 'Yapay Zeka Mimari ve Teklif Oluşturucu' },
     { label: 'dir', cmd: 'dir', title: 'Dizin İçeriği' },
     { label: 'Get-Projects', cmd: 'Get-Projects', title: 'Projeler Tablosu' },
     { label: 'Get-Articles', cmd: 'Get-Articles', title: 'Makaleler' },

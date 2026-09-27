@@ -230,46 +230,85 @@ app.post("/api/ai-assistant", async (req, res) => {
 
 // API 2: Project Architecture & Scope Estimator Endpoint
 app.post("/api/estimate-project", async (req, res) => {
-  try {
-    const { projectType, complexity, features } = req.body;
+  const { projectType, complexity, features } = req.body || {};
 
-    // Validate inputs
-    const safeType = typeof projectType === "string" ? projectType.slice(0, 100) : "Web & Mobil";
-    const safeComplexity = typeof complexity === "string" ? complexity.slice(0, 50) : "MVP";
-    const safeFeatures = Array.isArray(features) 
-      ? features.filter((f): f is string => typeof f === "string").slice(0, 10).map(f => f.slice(0, 80))
-      : [];
+  // Validate inputs
+  const safeType = typeof projectType === "string" ? projectType.slice(0, 100) : "Web & Mobil";
+  const safeComplexity = typeof complexity === "string" ? complexity.slice(0, 50) : "MVP";
+  const safeFeatures = Array.isArray(features) 
+    ? features.filter((f): f is string => typeof f === "string").slice(0, 10).map(f => f.slice(0, 80))
+    : [];
+
+  const getMaintenanceDuration = (comp: string) => {
+    if (comp === 'Büyük Ölçek') return '90 Gün (3 Ay) Ücretsiz Kapsamlı Teknik Destek & Bakım Garantisi';
+    if (comp === 'Orta Ölçek') return '60 Gün (2 Ay) Ücretsiz Teknik Destek & Bakım Garantisi';
+    return '30 Gün (1 Ay) Ücretsiz Teknik Destek & Bakım Garantisi';
+  };
+
+  const getBudgetRange = (comp: string) => {
+    if (comp === 'Büyük Ölçek') return '₺15.000 - ₺20.000';
+    if (comp === 'Orta Ölçek') return '₺10.000 - ₺15.000';
+    return '₺5.000 - ₺9.000';
+  };
+
+  try {
 
     const ai = getGeminiClient();
     if (!ai) {
       return res.json({
         summary: `${safeType} projesi için ${safeComplexity} ölçeğinde ve seçilen ${safeFeatures.length} ana özellikle optimize edilmiş modern bir mimari önerilmektedir.`,
-        estimatedWeeks: safeComplexity === 'MVP' ? '2 - 3 Hafta' : safeComplexity === 'Orta Ölçek' ? '4 - 6 Hafta' : '8 - 12 Hafta',
+        estimatedWeeks: safeComplexity === 'MVP' ? '1 - 2 Hafta' : safeComplexity === 'Orta Ölçek' ? '2 - 4 Hafta' : '4 - 6 Hafta',
+        budgetRange: getBudgetRange(safeComplexity),
         recommendedStack: ['React / Next.js', 'Python FastAPI / Node.js', 'PyTorch / Gemini API', 'Tailwind CSS', 'Docker / Cloud Run'],
         architectureHighlights: [
           'Ölçeklenebilir Mikroservis / Serverless Katmanı',
           'Sıvı Cam (Liquid UX) ve Yüksek Performanslı Ön Yüz',
           'Yapay Zeka ve Veri Güvenliği Standardı (OWASP compliant)'
-        ]
+        ],
+        deliverables: [
+          'Eksiksiz GitHub Kaynak Kodları & CI/CD Pipeline',
+          'Canlı Bulut Dağıtımı & SSL Yapılandırması',
+          'RESTful API Dokümantasyonu & Veri Şeması',
+          getMaintenanceDuration(safeComplexity)
+        ],
+        slaAndSupport: `${getMaintenanceDuration(safeComplexity)} • 7/24 Sistem İzleme`
       });
     }
 
     const estimatorPrompt = `
-Bir yazılım projesi için teknik mimari ve süre tahmini yapacaksın.
+Bir yazılım ve yapay zeka mühendisi olarak profesyonel proje mimarisi ve teklif analizi yapacaksın.
 Proje Tipi: ${safeType}
 Ölçek/Karmaşıklık: ${safeComplexity}
-Seçilen Özellikler: ${safeFeatures.length > 0 ? safeFeatures.join(", ") : "Varsayılan Özellikler"}
+Seçilen Özellikler: ${safeFeatures.length > 0 ? safeFeatures.join(", ") : "Varsayılan Temel Özellikler"}
 
-Lütfen şu formatta JSON çıktı ver (başka yazı ekleme, sadece saf JSON):
+ÖNEMLİ KURALLAR:
+1. Bütçe aralığı (budgetRange) KESİNLİKLE en az 5.000 TL'den başlayıp en fazla 20.000 TL aralığında olmalıdır.
+   - MVP / Basit ölçek: ₺5.000 - ₺9.000
+   - Orta Ölçek: ₺10.000 - ₺15.000
+   - Büyük Ölçek: ₺15.000 - ₺20.000
+2. Ücretsiz bakım süresi teslimatlarda ve slaAndSupport kısmında projenin zorluğuna ve uzunluğuna göre uzatılmalıdır:
+   - MVP: 30 Gün (1 Ay) Ücretsiz Teknik Destek ve Bakım Garantisi
+   - Orta Ölçek: 60 Gün (2 Ay) Ücretsiz Teknik Destek ve Bakım Garantisi
+   - Büyük Ölçek / Karmaşık: 90 Gün (3 Ay) Ücretsiz Kapsamlı Teknik Destek ve Bakım Garantisi
+
+Lütfen şu formatta saf JSON çıktı ver (kesinlikle markdown bloğu dışında hiçbir metin ekleme):
 {
-  "summary": "Projenin 2 cümlelik özeti ve vizyonu",
-  "estimatedWeeks": "Örn: 3 - 5 Hafta",
-  "recommendedStack": ["Teknoloji 1", "Teknoloji 2", "Teknoloji 3", "Teknoloji 4"],
+  "summary": "Projenin 2 cümlelik teknik ve stratejik vizyon özeti",
+  "estimatedWeeks": "Örn: 1 - 2 Hafta veya 2 - 4 Hafta veya 4 - 6 Hafta",
+  "budgetRange": "Örn: ₺5.000 - ₺9.000 veya ₺10.000 - ₺15.000 veya ₺15.000 - ₺20.000",
+  "recommendedStack": ["React / Vite", "Python FastAPI", "Gemini 2.5 Flash", "PostgreSQL / Supabase", "Tailwind CSS"],
   "architectureHighlights": [
-    "Önemli Mimari Avantaj 1",
-    "Önemli Mimari Avantaj 2",
-    "Önemli Mimari Avantaj 3"
-  ]
+    "Mimari Güçlü Yan 1",
+    "Mimari Güçlü Yan 2",
+    "Mimari Güçlü Yan 3"
+  ],
+  "deliverables": [
+    "Eksiksiz GitHub Kaynak Kodları",
+    "Canlı Bulut Dağıtımı & SSL",
+    "API & Mimari Dokümantasyonu",
+    "${getMaintenanceDuration(safeComplexity)}"
+  ],
+  "slaAndSupport": "${getMaintenanceDuration(safeComplexity)}"
 }
 `;
 
@@ -304,14 +343,19 @@ Lütfen şu formatta JSON çıktı ver (başka yazı ekleme, sadece saf JSON):
     const parsedData = JSON.parse(cleanedJsonStr);
     // Sanitize output keys to prevent object pollution
     const safeOutput = {
-      summary: typeof parsedData.summary === "string" ? parsedData.summary.slice(0, 500) : "Özel proje mimarisi.",
-      estimatedWeeks: typeof parsedData.estimatedWeeks === "string" ? parsedData.estimatedWeeks.slice(0, 50) : "3 - 5 Hafta",
+      summary: typeof parsedData.summary === "string" ? parsedData.summary.slice(0, 600) : "Özel proje mimarisi.",
+      estimatedWeeks: typeof parsedData.estimatedWeeks === "string" ? parsedData.estimatedWeeks.slice(0, 50) : (safeComplexity === 'MVP' ? '1 - 2 Hafta' : safeComplexity === 'Orta Ölçek' ? '2 - 4 Hafta' : '4 - 6 Hafta'),
+      budgetRange: typeof parsedData.budgetRange === "string" ? parsedData.budgetRange.slice(0, 60) : getBudgetRange(safeComplexity),
       recommendedStack: Array.isArray(parsedData.recommendedStack) 
         ? parsedData.recommendedStack.filter((s: unknown): s is string => typeof s === "string").slice(0, 8) 
         : ["React", "Python FastAPI", "Gemini API"],
       architectureHighlights: Array.isArray(parsedData.architectureHighlights)
         ? parsedData.architectureHighlights.filter((h: unknown): h is string => typeof h === "string").slice(0, 6)
-        : ["Yüksek Performans", "Güvenli Mimari"]
+        : ["Yüksek Performans", "Güvenli Mimari", "Modüler Yapı"],
+      deliverables: Array.isArray(parsedData.deliverables)
+        ? parsedData.deliverables.filter((d: unknown): d is string => typeof d === "string").slice(0, 5)
+        : ["Eksiksiz GitHub Repo", "Canlı Dağıtım & SSL", "RESTful API Dokümantasyonu", getMaintenanceDuration(safeComplexity)],
+      slaAndSupport: typeof parsedData.slaAndSupport === "string" ? parsedData.slaAndSupport.slice(0, 120) : getMaintenanceDuration(safeComplexity)
     };
     return res.json(safeOutput);
 
@@ -319,12 +363,21 @@ Lütfen şu formatta JSON çıktı ver (başka yazı ekleme, sadece saf JSON):
     console.error("Estimator Error:", err?.message || err);
     return res.json({
       summary: "Özel projeniz için yüksek ölçekli ve yapay zeka destekli modern bir mimari planlanmaktadır.",
-      estimatedWeeks: "3 - 6 Hafta",
+      estimatedWeeks: safeComplexity === 'MVP' ? '1 - 2 Hafta' : safeComplexity === 'Orta Ölçek' ? '2 - 4 Hafta' : '4 - 6 Hafta',
+      budgetRange: safeComplexity === 'Büyük Ölçek' ? '₺15.000 - ₺20.000' : safeComplexity === 'Orta Ölçek' ? '₺10.000 - ₺15.000' : '₺5.000 - ₺9.000',
       recommendedStack: ["React", "Python FastAPI", "Gemini API", "Tailwind CSS"],
       architectureHighlights: [
-        "Sıvı Arayüz ve Kullanıcı Deneyimi",
-        "Güvenli ve Hızlı Sunucu Katmanı"
-      ]
+        "Sıvı Arayüz ve Akıcı Kullanıcı Deneyimi",
+        "Güvenli ve Hızlı Python FastAPI Backend",
+        "Ölçeklenebilir Bulut Dağıtım Mimarisi"
+      ],
+      deliverables: [
+        "Temiz & Dokümante Kaynak Kodları (GitHub)",
+        "Canlı Bulut Dağıtımı & SSL",
+        "RESTful API & Dokümantasyon",
+        safeComplexity === 'Büyük Ölçek' ? '90 Gün (3 Ay) Ücretsiz Kapsamlı Teknik Destek & Bakım' : safeComplexity === 'Orta Ölçek' ? '60 Gün (2 Ay) Ücretsiz Teknik Destek & Bakım' : '30 Gün (1 Ay) Ücretsiz Teknik Destek'
+      ],
+      slaAndSupport: safeComplexity === 'Büyük Ölçek' ? '90 Gün Garanti & Kapsamlı Bakım' : safeComplexity === 'Orta Ölçek' ? '60 Gün Garanti & Bakım' : '30 Gün Garanti & Destek'
     });
   }
 });

@@ -171,7 +171,7 @@ export function AiAssistantDrawer({ onNavigateToTab, onOpenEstimator, onFillCont
                       }}
                       className="px-2 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 font-bold transition-all cursor-pointer"
                     >
-                      Proje Mimarisi Oluştur
+                      Proje Mimarisi Oluştur ve Teklif Al
                     </button>
                   )}
                   <button
