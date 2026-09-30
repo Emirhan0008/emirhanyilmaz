@@ -24,7 +24,9 @@ import {
   sanitizeText, 
   sanitizeMultilineText, 
   sanitizeUrl, 
-  sanitizeImageSource 
+  sanitizeImageSource,
+  safeJsonParse,
+  hashStringSha256 
 } from '../utils/sanitize';
 
 interface AdminEditorModalProps {
@@ -111,12 +113,12 @@ export function AdminEditorModal({
   const [articleContentInput, setArticleContentInput] = useState('');
   const [articleTagsInput, setArticleTagsInput] = useState('');
 
-  // Password / Security State
-  const [customPassword, setCustomPassword] = useState(() => {
+  // Password / Security State (SHA-256 Hashed, never stored plain-text)
+  const [hasCustomPassword, setHasCustomPassword] = useState(() => {
     try {
-      return localStorage.getItem('emirhan_admin_pass') || '';
+      return Boolean(localStorage.getItem('emirhan_admin_pass_hash') || localStorage.getItem('emirhan_admin_pass'));
     } catch {
-      return '';
+      return false;
     }
   });
   const [newPasswordInput, setNewPasswordInput] = useState('');
@@ -323,21 +325,29 @@ export function AdminEditorModal({
     }
   };
 
-  // Save Custom Password
-  const handleSavePassword = (e: React.FormEvent) => {
+  // Save Custom Password (Secure Cryptographic SHA-256 Hashing)
+  const handleSavePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanPass = newPasswordInput.trim();
     if (!cleanPass) {
       localStorage.removeItem('emirhan_admin_pass');
-      setCustomPassword('');
+      localStorage.removeItem('emirhan_admin_pass_hash');
+      setHasCustomPassword(false);
       setNewPasswordInput('');
       onToast("Özel şifre kaldırıldı. Sistem anahtarı geçerlidir.");
       return;
     }
-    localStorage.setItem('emirhan_admin_pass', cleanPass);
-    setCustomPassword(cleanPass);
-    setNewPasswordInput('');
-    onToast(`✅ Yeni yönetici şifreniz ayarlandı: "${cleanPass}"`);
+
+    try {
+      const passHash = await hashStringSha256(cleanPass);
+      localStorage.setItem('emirhan_admin_pass_hash', passHash);
+      localStorage.removeItem('emirhan_admin_pass'); // Remove plain-text legacy entry
+      setHasCustomPassword(true);
+      setNewPasswordInput('');
+      onToast("✅ Yeni yönetici anahtarınız SHA-256 ile kriptografik olarak kaydedildi.");
+    } catch {
+      onToast("⚠️ Şifre karma işlemi sırasında bir hata oluştu.");
+    }
   };
 
   // Export JSON Backup
@@ -359,29 +369,82 @@ export function AdminEditorModal({
     onToast("💾 Portfolyo verileri JSON olarak indirildi.");
   };
 
-  // Import JSON Backup
+  // Import JSON Backup (Hardened against Prototype Pollution & Malicious Payloads)
   const handleImportJson = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const data = JSON.parse(event.target?.result as string);
-        if (data.profile) {
-          setProfileForm(data.profile);
-          onSaveProfile(data.profile);
+        const rawContent = event.target?.result as string;
+        const data = safeJsonParse(rawContent, null);
+        if (!data || typeof data !== 'object') {
+          onToast("⚠️ Geçersiz veya bozuk JSON yedek dosyası!");
+          return;
         }
+
+        if (data.profile && typeof data.profile === 'object') {
+          const sanitizedProfile: ProfileData = {
+            ...profileForm,
+            name: sanitizeText(data.profile.name || profileForm.name),
+            title: sanitizeText(data.profile.title || profileForm.title),
+            about: sanitizeMultilineText(data.profile.about || profileForm.about),
+            github: sanitizeUrl(data.profile.github) || profileForm.github,
+            email: sanitizeText(data.profile.email || profileForm.email),
+            whatsapp: sanitizeText(data.profile.whatsapp || profileForm.whatsapp),
+            telegram: sanitizeText(data.profile.telegram || profileForm.telegram),
+            instagram: sanitizeText(data.profile.instagram || profileForm.instagram),
+            avatar: sanitizeImageSource(data.profile.avatar) || profileForm.avatar,
+            logo: sanitizeImageSource(data.profile.logo) || profileForm.logo
+          };
+          setProfileForm(sanitizedProfile);
+          onSaveProfile(sanitizedProfile);
+        }
+
         if (Array.isArray(data.projects)) {
-          setProjectList(data.projects);
-          onSaveProjects(data.projects);
+          const sanitizedProjects: Project[] = data.projects
+            .filter((p: any) => p && typeof p === 'object' && p.id && p.title)
+            .map((p: any) => ({
+              ...p,
+              id: sanitizeText(p.id),
+              title: sanitizeText(p.title),
+              category: sanitizeText(p.category || 'Web & Bulut'),
+              description: sanitizeText(p.description || ''),
+              longDescription: sanitizeMultilineText(p.longDescription || ''),
+              tech: Array.isArray(p.tech) ? p.tech.map((t: any) => sanitizeText(String(t))) : [],
+              demoUrl: sanitizeUrl(p.demoUrl) || undefined,
+              deploy: sanitizeUrl(p.deploy) || undefined,
+              github: sanitizeUrl(p.github) || undefined,
+              image: sanitizeImageSource(p.image) || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80'
+            }));
+          if (sanitizedProjects.length > 0) {
+            setProjectList(sanitizedProjects);
+            onSaveProjects(sanitizedProjects);
+          }
         }
+
         if (Array.isArray(data.articles)) {
-          setArticleList(data.articles);
-          onSaveArticles(data.articles);
+          const sanitizedArticles: Article[] = data.articles
+            .filter((a: any) => a && typeof a === 'object' && a.id && a.title)
+            .map((a: any) => ({
+              ...a,
+              id: sanitizeText(a.id),
+              title: sanitizeText(a.title),
+              date: sanitizeText(a.date || ''),
+              readTime: sanitizeText(a.readTime || '5 dk okuma'),
+              summary: sanitizeText(a.summary || ''),
+              content: sanitizeMultilineText(a.content || ''),
+              link: sanitizeUrl(a.link) || undefined,
+              tags: Array.isArray(a.tags) ? a.tags.map((t: any) => sanitizeText(String(t))) : []
+            }));
+          if (sanitizedArticles.length > 0) {
+            setArticleList(sanitizedArticles);
+            onSaveArticles(sanitizedArticles);
+          }
         }
-        onToast("✅ Yedek başarıyla yüklendi ve tüm veriler güncellendi!");
+        onToast("✅ Yedek güvenle doğrulandı ve portfolyo güncellendi!");
       } catch (err) {
-        onToast("⚠️ Geçersiz JSON yedek dosyası!");
+        onToast("⚠️ Yedek yüklenirken güvenlik veya ayrıştırma hatası oluştu!");
       }
     };
     reader.readAsText(file);
@@ -1250,11 +1313,11 @@ export function AdminEditorModal({
                       Aktif (SHA-256 Korumalı)
                     </span>
                   </div>
-                  {customPassword && (
+                  {hasCustomPassword && (
                     <div className="flex items-center justify-between text-white/80">
                       <span className="font-bold">Mevcut Özel Anahtarınız:</span>
                       <span className="font-mono bg-emerald-500/20 px-2 py-0.5 rounded text-emerald-300 font-extrabold">
-                        ••••••••••••
+                        Aktif (SHA-256 Korumalı)
                       </span>
                     </div>
                   )}
@@ -1273,12 +1336,13 @@ export function AdminEditorModal({
                   </div>
 
                   <div className="flex items-center justify-between gap-3">
-                    {customPassword && (
+                    {hasCustomPassword && (
                       <button
                         type="button"
                         onClick={() => {
                           localStorage.removeItem('emirhan_admin_pass');
-                          setCustomPassword('');
+                          localStorage.removeItem('emirhan_admin_pass_hash');
+                          setHasCustomPassword(false);
                           onToast("Özel anahtar sıfırlandı. Sistem anahtarı devrede.");
                         }}
                         className="text-xs text-red-400 hover:text-red-300 font-bold cursor-pointer"

@@ -106,6 +106,9 @@ export function sanitizeUrl(url: unknown): string | null {
   const purified = sanitizeText(raw);
   if (!purified) return null;
 
+  // Reject protocol-relative URLs that attempt scheme manipulation (e.g. "//attacker.com")
+  if (purified.startsWith('//')) return null;
+
   try {
     const parsed = new URL(purified);
     if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
@@ -118,7 +121,7 @@ export function sanitizeUrl(url: unknown): string | null {
   } catch {
     // Attempt standard https:// prefix if user provided a plain domain like "example.com/demo"
     try {
-      if (!purified.includes('://') && purified.includes('.')) {
+      if (!purified.includes('://') && purified.includes('.') && !purified.includes(' ')) {
         const withProtocol = new URL(`https://${purified}`);
         if (withProtocol.protocol === 'https:' && !withProtocol.username && !withProtocol.password) {
           return withProtocol.href;
@@ -155,3 +158,37 @@ export function sanitizeImageSource(src: unknown): string | null {
   // Safe HTTP/HTTPS web image URLs
   return sanitizeUrl(trimmed);
 }
+
+/**
+ * Secure JSON parser with Prototype Pollution Defense.
+ * Recursively removes dangerous prototype keys (__proto__, constructor, prototype)
+ * that could be used to poison JavaScript objects in memory.
+ */
+export function safeJsonParse<T = any>(jsonString: string | null | undefined, fallback: T): T {
+  if (!jsonString || typeof jsonString !== 'string') return fallback;
+  try {
+    const parsed = JSON.parse(jsonString, (key, value) => {
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        return undefined;
+      }
+      return value;
+    });
+    return parsed !== null && parsed !== undefined ? (parsed as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * Native Web Crypto SHA-256 Hashing Utility
+ * Provides cryptographic one-way hashing with zero plain-text leaks.
+ */
+export async function hashStringSha256(input: string): Promise<string> {
+  const enc = new TextEncoder();
+  const buf = enc.encode(input);
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+

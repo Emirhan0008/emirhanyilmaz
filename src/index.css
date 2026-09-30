@@ -382,32 +382,39 @@ textarea::-webkit-scrollbar-thumb:hover {
 }
 
 /* ==========================================================================
-   Easter Egg: Melting Slag & Pulsing Heart Animations
+   Easter Egg: Hyper-Realistic Melting Slag & Pulsing Heart Animations
    ========================================================================== */
 @keyframes melt-dripping {
   0% {
-    filter: blur(0px) hue-rotate(0deg);
-    transform: translateY(0) scaleY(1);
+    transform: translate3d(0, 0, 0) scaleY(1) skewX(0deg);
     opacity: 1;
+    filter: brightness(1);
   }
   25% {
-    filter: blur(5px) hue-rotate(30deg) drop-shadow(0 20px 30px rgba(239, 68, 68, 0.6));
-    transform: translateY(20px) scaleY(1.08) skewX(1deg);
+    transform: translate3d(0, 16px, 0) scaleY(1.06) skewX(0.5deg);
+    filter: brightness(1.2) drop-shadow(0 15px 25px rgba(255, 60, 0, 0.6));
   }
-  60% {
-    filter: blur(14px) contrast(200%) hue-rotate(90deg) drop-shadow(0 60px 70px rgba(185, 28, 28, 0.9));
-    transform: translateY(90px) scaleY(1.35) skewX(-2.5deg);
-    opacity: 0.5;
+  55% {
+    transform: translate3d(0, 65px, 0) scaleY(1.25) skewX(-1.2deg);
+    filter: brightness(1.35) drop-shadow(0 35px 40px rgba(230, 30, 0, 0.7));
+    opacity: 0.8;
+  }
+  85% {
+    transform: translate3d(0, 150px, 0) scaleY(1.55) skewX(1.8deg);
+    filter: brightness(1.5) drop-shadow(0 60px 60px rgba(180, 15, 0, 0.8));
+    opacity: 0.35;
   }
   100% {
-    filter: blur(28px) contrast(320%) drop-shadow(0 140px 120px rgba(153, 27, 27, 1));
-    transform: translateY(260px) scaleY(2) scaleX(0.85);
+    transform: translate3d(0, 240px, 0) scaleY(1.9) scaleX(0.85);
+    filter: brightness(1.8) drop-shadow(0 90px 80px rgba(120, 5, 0, 0.9));
     opacity: 0;
   }
 }
 
 .melting-slag-site {
-  animation: melt-dripping 3.2s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards !important;
+  animation: melt-dripping 3.0s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+  transform-origin: top center !important;
+  will-change: transform, opacity !important;
   pointer-events: none !important;
   user-select: none !important;
 }

@@ -59,6 +59,7 @@ import {
 import { InteractiveCatCompanion } from './components/InteractiveCatCompanion';
 import { ProjectEstimator } from './components/ProjectEstimator';
 import { TechRadar } from './components/TechRadar';
+import { MeltingCanvasEffect } from './components/MeltingCanvasEffect';
 import { soundEngine, PEACEFUL_TRACKS, MusicTrack } from './utils/audioSynth';
 import { ThemeToggle, AppTheme } from './components/ThemeToggle';
 import { PowerShellTerminalWorkspace } from './components/PowerShellTerminalWorkspace';
@@ -68,7 +69,8 @@ import {
   sanitizeEmail, 
   isValidEmail, 
   sanitizeUrl, 
-  sanitizeImageSource 
+  sanitizeImageSource,
+  safeJsonParse 
 } from './utils/sanitize';
 import { validateContactForm, passcodeSchema } from './utils/validationSchemas';
 
@@ -124,11 +126,11 @@ export default function App() {
    const [copiedEmail, setCopiedEmail] = useState(false);
    const [inboxMessages, setInboxMessages] = useState<ContactMessage[]>([]);
  
-   // Dynamic editable states with localStorage persistence
+   // Dynamic editable states with prototype-pollution safe JSON parsing
    const [profile, setProfile] = useState<ProfileData>(() => {
      try {
        const saved = localStorage.getItem('emirhan_custom_profile');
-       return saved ? { ...profileData, ...JSON.parse(saved) } : (profileData as ProfileData);
+       return saved ? { ...profileData, ...safeJsonParse(saved, {}) } : (profileData as ProfileData);
      } catch {
        return profileData as ProfileData;
      }
@@ -138,7 +140,7 @@ export default function App() {
      try {
        const saved = localStorage.getItem('emirhan_custom_projects');
        if (saved) {
-         const parsed = JSON.parse(saved);
+         const parsed = safeJsonParse(saved, null);
          if (Array.isArray(parsed) && parsed.some(p => p.id === 'kpss-calisma-takibi')) {
            return parsed;
          }
@@ -152,7 +154,7 @@ export default function App() {
    const [articleList, setArticleList] = useState<Article[]>(() => {
      try {
        const saved = localStorage.getItem('emirhan_custom_articles');
-       return saved ? JSON.parse(saved) : articles;
+       return saved ? safeJsonParse(saved, articles) : articles;
      } catch {
        return articles;
      }
@@ -188,9 +190,24 @@ export default function App() {
   const [isMeltingSite, setIsMeltingSite] = useState(false);
   const [showMeltingSlagHeart, setShowMeltingSlagHeart] = useState(false);
    
-   // Security rate limits and persistent tab-session lockout
-   const [failedAttempts, setFailedAttempts] = useState(0);
-   const [lockoutUntil, setLockoutUntil] = useState(0);
+   // Security rate limits and persistent cross-tab / cross-session lockout (Anti-Brute Force)
+   const [failedAttempts, setFailedAttempts] = useState(() => {
+     try {
+       const stored = localStorage.getItem('adm_failed_attempts');
+       return stored ? parseInt(stored, 10) || 0 : 0;
+     } catch {
+       return 0;
+     }
+   });
+   const [lockoutUntil, setLockoutUntil] = useState(() => {
+     try {
+       const stored = localStorage.getItem('adm_sec_lock_until');
+       const parsed = stored ? parseInt(stored, 10) : 0;
+       return parsed && parsed > Date.now() ? parsed : 0;
+     } catch {
+       return 0;
+     }
+   });
    const [lockoutDurationLeft, setLockoutDurationLeft] = useState(0);
    
    // Non-blocking in-app replacement for browser prompt() and confirm() (Strict sandbox safety)
@@ -308,20 +325,13 @@ export default function App() {
      setAdminPasscode('');
      setFailedAttempts(0);
      setLockoutUntil(0);
+     localStorage.removeItem('adm_sec_lock_until');
+     localStorage.removeItem('adm_failed_attempts');
      sessionStorage.removeItem('adm_lck_ut');
      
      setAdminToastMessage("🛡️ Yönetici Modu Aktif! Tüm düzenleme yetkileri açıldı.");
      setShowAdminToast(true);
      setTimeout(() => setShowAdminToast(false), 4000);
-   };
-
-   const handleResetLockout = () => {
-     setLockoutUntil(0);
-     setFailedAttempts(0);
-     sessionStorage.removeItem('adm_lck_ut');
-     setAdminToastMessage("Güvenlik kilidi sıfırlandı. Giriş yapabilirsiniz.");
-     setShowAdminToast(true);
-     setTimeout(() => setShowAdminToast(false), 3000);
    };
 
    const handleAdminLogout = () => {
@@ -424,13 +434,13 @@ export default function App() {
       if (isValidUser && isValidPass) {
         setShowEasterEggLogin(false);
         soundEngine.playSuccessChime();
-        // Start melting the entire site
+        // Start melting the entire site with realistic magma slag drippings
         setIsMeltingSite(true);
 
-        // After melting slag drippings accumulate, emerge the glowing giant red heart
+        // Allow user to witness the fast, fluid 60fps melting transition before heart reveals
         setTimeout(() => {
           setShowMeltingSlagHeart(true);
-        }, 2200);
+        }, 2500);
       } else {
         setEasterError('Kullanıcı adı veya şifre geçersiz.');
         soundEngine.playGlassClick();
@@ -490,6 +500,9 @@ export default function App() {
      if (e) e.preventDefault();
 
      try {
+       // Anti-timing-attack constant delay
+       await new Promise(r => setTimeout(r, 200));
+
        // Validate against SQL injection & format violations
        const validation = passcodeSchema.safeParse(adminPasscode);
        if (!validation.success) {
@@ -500,24 +513,28 @@ export default function App() {
        }
 
        const cleanPasscode = (adminPasscode || '').trim();
-       const customPass = (localStorage.getItem('emirhan_admin_pass') || '').trim();
+       const customPassHash = (localStorage.getItem('emirhan_admin_pass_hash') || '').trim();
+       const legacyPass = (localStorage.getItem('emirhan_admin_pass') || '').trim();
 
-       // Primary: Match Master ASCII Codes
+       // Primary: Match Master ASCII Codes (Zero plaintext in bundle)
        let isMatch = matchMasterCodes(cleanPasscode);
 
-       // Secondary: Match custom user-configured password
-       if (!isMatch && customPass && cleanPasscode) {
-         if (cleanPasscode === customPass || cleanPasscode.toLowerCase() === customPass.toLowerCase()) {
-           isMatch = true;
-         }
-       }
-
-       // Tertiary: SHA-256 Hashes
+       // Secondary: Match custom user-configured SHA-256 password hash
        if (!isMatch && cleanPasscode) {
          try {
            const inputHash = await sha256(cleanPasscode);
            const inputLowerHash = await sha256(cleanPasscode.toLowerCase());
 
+           if (customPassHash && (inputHash === customPassHash || inputLowerHash === customPassHash)) {
+             isMatch = true;
+           } else if (legacyPass && (cleanPasscode === legacyPass || cleanPasscode.toLowerCase() === legacyPass.toLowerCase())) {
+             // Automatically migrate legacy plaintext password to secure SHA-256 hash
+             isMatch = true;
+             localStorage.setItem('emirhan_admin_pass_hash', inputHash);
+             localStorage.removeItem('emirhan_admin_pass');
+           }
+
+           // Tertiary: System Master SHA-256 Hashes
            const SYSTEM_HASHES = [
              'a7f6ff82c7e0fb369d7e81ef26fd7dd0bb2edb2c5510503a062c429bc679d51d', // Emirhan.1969
              '4605172b349cd31501a1b495b207d950209c18dcee9dfe8e75863fda782aefc3', // emirhan.1969
@@ -545,22 +562,26 @@ export default function App() {
        const now = Date.now();
        const nextFailed = failedAttempts + 1;
        setFailedAttempts(nextFailed);
+       localStorage.setItem('adm_failed_attempts', String(nextFailed));
        setAdminPasscode('');
        
        let lockTime = 0;
-       if (nextFailed >= 5) {
-         lockTime = now + 10 * 60 * 1000; // 10 mins lockout
-         setAdminToastMessage("Güvenlik Kilidi! 10 dakika boyunca erişim durduruldu ('Kilidi Sıfırla' ile açabilirsiniz).");
+       if (nextFailed >= 8) {
+         lockTime = now + 30 * 60 * 1000; // 30 mins lockout for persistent attackers
+         setAdminToastMessage("Kritik Güvenlik Kilidi! 30 dakika boyunca erişim engellendi.");
+       } else if (nextFailed >= 5) {
+         lockTime = now + 5 * 60 * 1000; // 5 mins lockout
+         setAdminToastMessage("Güvenlik Kilidi! 5 dakika boyunca erişim durduruldu.");
        } else if (nextFailed >= 3) {
-         lockTime = now + 45 * 1000; // 45 seconds lockout
-         setAdminToastMessage("Hatalı erişim anahtarı! Sistem 45 saniye kilitlendi.");
+         lockTime = now + 30 * 1000; // 30 seconds lockout
+         setAdminToastMessage("Hatalı erişim anahtarı! Sistem 30 saniye kilitlendi.");
        } else {
          setAdminToastMessage(`Hatalı erişim anahtarı! (Kalan deneme hakkı: ${5 - nextFailed})`);
        }
 
        if (lockTime > 0) {
          setLockoutUntil(lockTime);
-         sessionStorage.setItem('adm_lck_ut', lockTime.toString());
+         localStorage.setItem('adm_sec_lock_until', String(lockTime));
        }
        setShowAdminToast(true);
        setTimeout(() => setShowAdminToast(false), 3500);
@@ -569,24 +590,11 @@ export default function App() {
      }
    };
 
-   // Check URL hash or query param on load (#admin, ?unlock=emirhan, ?admin=true)
+   // Safe URL hash check on load (#admin or #login opens authentic prompt, NO backdoors)
    useEffect(() => {
      if (typeof window !== 'undefined') {
        const hash = window.location.hash.toLowerCase();
-       const search = window.location.search.toLowerCase();
-
-       // Direct Secret Unlock URL (Fail-proof master activation for Emirhan)
-       if (
-         search.includes('unlock=emirhan') || 
-         hash.includes('unlock=emirhan') || 
-         search.includes('admin=emirhan') ||
-         hash.includes('admin=emirhan')
-       ) {
-         handleSuccessfulAdminLogin();
-         return;
-       }
-
-       if (hash === '#admin' || hash === '#emirhan' || search.includes('admin=true') || search.includes('login=admin')) {
+       if (hash === '#admin' || hash === '#login') {
          if (!isAdmin) {
            setShowAdminModal(true);
          }
@@ -640,9 +648,9 @@ export default function App() {
      setTimeout(() => setShowAdminToast(false), 3500);
    };
 
-   // Sync lockout state from session storage
+   // Sync lockout state from persistent storage
    useEffect(() => {
-     const storedLockout = sessionStorage.getItem('adm_lck_ut');
+     const storedLockout = localStorage.getItem('adm_sec_lock_until');
      if (storedLockout) {
        const parsed = parseInt(storedLockout, 10);
        if (parsed && parsed > Date.now()) {
@@ -650,11 +658,11 @@ export default function App() {
        }
      }
 
-     // Load admin messages with DOMPurify sanitization
+     // Load admin messages with DOMPurify sanitization & safe parsing
      const storedMsgs = localStorage.getItem('adm_msg_store');
      if (storedMsgs) {
        try {
-         const parsed = JSON.parse(storedMsgs);
+         const parsed = safeJsonParse(storedMsgs, []);
          if (Array.isArray(parsed)) {
            const sanitizedList = parsed.map((m: any) => ({
              id: sanitizeText(m.id || String(Math.random())),
@@ -1122,13 +1130,10 @@ export default function App() {
                   <p className="text-[13px] text-red-400 font-mono font-bold">
                     Kalan Bekleme Süresi: {Math.floor(lockoutDurationLeft / 60)}dk {lockoutDurationLeft % 60}sn
                   </p>
-                  <button
-                    type="button"
-                    onClick={handleResetLockout}
-                    className="w-full py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white/80 hover:text-white font-bold text-xs cursor-pointer transition-all border border-white/10"
-                  >
-                    Kilidi Sıfırla
-                  </button>
+                  <div className="py-2.5 px-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center gap-2 text-[11px] text-white/70">
+                    <Shield size={13} className="text-red-400 shrink-0" />
+                    <span>Güvenlik gereği süre dolana kadar giriş yapılamaz.</span>
+                  </div>
                 </div>
               ) : (
                 /* Passcode Form View */
@@ -1269,6 +1274,12 @@ export default function App() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* REALISTIC MAGMA & SLAG MELTING CANVAS EFFECT */}
+      <MeltingCanvasEffect 
+        active={isMeltingSite} 
+        onMeltingComplete={() => setShowMeltingSlagHeart(true)} 
+      />
 
       {/* EASTER EGG FULL-SCREEN SLAG & GIANT RED HEART OVERLAY */}
       <AnimatePresence>
