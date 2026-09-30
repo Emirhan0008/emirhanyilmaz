@@ -17,17 +17,26 @@ interface PowerShellTerminalWorkspaceProps {
   onOpenProjectModal?: (project: Project) => void;
   onOpenArticleModal?: (article: Article) => void;
   onOpenEstimator?: () => void;
+  lang?: 'tr' | 'en';
+  projects?: Project[];
+  articles?: Article[];
+  profile?: any;
 }
 
 export const PulsingNormalOpenButton: React.FC<{
   onClick: () => void;
   label?: string;
   tooltip?: string;
+  lang?: 'tr' | 'en';
 }> = ({
   onClick,
-  label = "Normal Pencerede Aç",
-  tooltip = "Bu içeriği görsel cam arayüzde zengin kart görünümünde inceleyin"
+  label,
+  tooltip,
+  lang = 'tr'
 }) => {
+  const displayLabel = label || (lang === 'en' ? "Open in Normal Window" : "Normal Pencerede Aç");
+  const displayTooltip = tooltip || (lang === 'en' ? "Inspect this content in the liquid glass card interface" : "Bu içeriği görsel cam arayüzde zengin kart görünümünde inceleyin");
+
   return (
     <button
       onClick={(e) => {
@@ -36,11 +45,11 @@ export const PulsingNormalOpenButton: React.FC<{
         onClick();
       }}
       className="relative inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 text-black font-extrabold text-[10px] tracking-wide shadow-[0_0_18px_rgba(52,211,153,0.7)] animate-pulse hover:scale-105 active:scale-95 transition-all cursor-pointer hover:brightness-110 shrink-0 border border-emerald-200 select-none group"
-      title={tooltip}
+      title={displayTooltip}
     >
       <span className="w-2 h-2 rounded-full bg-emerald-950 animate-ping absolute -top-1 -right-1" />
       <Sparkles size={11} className="text-black animate-spin" style={{ animationDuration: '3.5s' }} />
-      <span>{label}</span>
+      <span>{displayLabel}</span>
       <ExternalLink size={10} className="text-black ml-0.5" />
     </button>
   );
@@ -51,7 +60,16 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
   onOpenProjectModal,
   onOpenArticleModal,
   onOpenEstimator,
+  lang = 'tr',
+  projects: customProjects,
+  articles: customArticles,
+  profile: customProfile
 }) => {
+  const isEn = lang === 'en';
+  const effectiveProjects = customProjects || projects;
+  const effectiveArticles = customArticles || articles;
+  const effectiveProfile = customProfile || profileData;
+
   const [currentPath, setCurrentPath] = useState<string>('C:\\Users\\Emirhan\\portfolio');
   const [commandInput, setCommandInput] = useState<string>('');
   const [history, setHistory] = useState<string[]>([]);
@@ -63,7 +81,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Initial PowerShell Welcome Lines
-  const [lines, setLines] = useState<TerminalLine[]>([
+  const [lines, setLines] = useState<TerminalLine[]>(() => [
     {
       id: 'banner-1',
       type: 'system',
@@ -72,22 +90,28 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
     {
       id: 'banner-2',
       type: 'system',
-      text: 'Copyright (C) Microsoft Corporation. Tüm hakları saklıdır.'
+      text: isEn ? 'Copyright (C) Microsoft Corporation. All rights reserved.' : 'Copyright (C) Microsoft Corporation. Tüm hakları saklıdır.'
     },
     {
       id: 'banner-3',
       type: 'output',
-      text: 'PowerShell 7.4.5 [Host: Emirhan-Workstation-x64] [Terminal Modu Aktif]'
+      text: isEn 
+        ? 'PowerShell 7.4.5 [Host: Emirhan-Workstation-x64] [Terminal Mode Active]'
+        : 'PowerShell 7.4.5 [Host: Emirhan-Workstation-x64] [Terminal Modu Aktif]'
     },
     {
       id: 'banner-4',
       type: 'output',
-      text: 'Yazılımcı Ziyaretçi Konsolu: Tüm sayfalar ve içerikler bu satırlarda görüntülenir.'
+      text: isEn
+        ? 'Developer Console: Full portfolio data, projects, and articles can be inspected here.'
+        : 'Yazılımcı Ziyaretçi Konsolu: Tüm sayfalar ve içerikler bu satırlarda görüntülenir.'
     },
     {
       id: 'banner-hint',
       type: 'success',
-      text: "Komutları listelemek için 'help' veya 'Get-Help', dizin için 'dir' veya 'ls' yazabilirsiniz."
+      text: isEn
+        ? "Type 'help' or 'Get-Help' for commands, 'dir' or 'ls' for directory listing."
+        : "Komutları listelemek için 'help' veya 'Get-Help', dizin için 'dir' veya 'ls' yazabilirsiniz."
     }
   ]);
 
@@ -381,12 +405,12 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                   <span className="col-span-5">Name</span>
                 </div>
                 <div className="space-y-1 text-white/90">
-                  {projects.map((p, idx) => (
+                  {effectiveProjects.map((p, idx) => (
                     <div 
                       key={p.id}
                       onClick={() => executeCommand(`Get-Project ${p.id}`)}
                       className="grid grid-cols-12 items-center hover:bg-emerald-500/10 p-1 rounded cursor-pointer transition-colors group"
-                      title="Detayları görüntülemek için tıklayın"
+                      title={isEn ? "Click to view project details" : "Detayları görüntülemek için tıklayın"}
                     >
                       <span className="col-span-2 text-white/40">d-----</span>
                       <span className="col-span-3 text-white/60">22/09/2026 15:30</span>
@@ -399,7 +423,9 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                   ))}
                 </div>
                 <div className="text-white/40 text-[10px] pt-1">
-                  * Bir projeyi incelemek için: <span className="text-emerald-300">Get-Project &lt;proje-id&gt;</span> veya <span className="text-emerald-300">cat &lt;proje-id&gt;</span> yazın ya da üzerine tıklayın.
+                  {isEn 
+                    ? <>* To inspect a project: type <span className="text-emerald-300">Get-Project &lt;project-id&gt;</span> or <span className="text-emerald-300">cat &lt;project-id&gt;</span> or click on it.</>
+                    : <>* Bir projeyi incelemek için: <span className="text-emerald-300">Get-Project &lt;proje-id&gt;</span> veya <span className="text-emerald-300">cat &lt;proje-id&gt;</span> yazın ya da üzerine tıklayın.</>}
                 </div>
               </div>
             )
@@ -428,12 +454,12 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                   <span className="col-span-5">Name</span>
                 </div>
                 <div className="space-y-1 text-white/90">
-                  {articles.map((art) => (
+                  {effectiveArticles.map((art) => (
                     <div 
                       key={art.id}
                       onClick={() => executeCommand(`Get-Article ${art.id}`)}
                       className="grid grid-cols-12 items-center hover:bg-emerald-500/10 p-1 rounded cursor-pointer transition-colors group"
-                      title="Makaleyi okumak için tıklayın"
+                      title={isEn ? "Click to read article" : "Makaleyi okumak için tıklayın"}
                     >
                       <span className="col-span-2 text-white/40">-a----</span>
                       <span className="col-span-3 text-white/60">{art.date}</span>
@@ -582,17 +608,17 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
               <div className="font-mono text-xs space-y-2 p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-lg">
                 <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2 gap-2">
                   <div className="text-amber-400 font-bold truncate">
-                    === {profileData.name.toUpperCase()} | ÖZGEÇMİŞ & BİYOGRAFİ ===
+                    === {effectiveProfile.name.toUpperCase()} | {isEn ? "RESUME & BIOGRAPHY" : "ÖZGEÇMİŞ & BİYOGRAFİ"} ===
                   </div>
-                  <PulsingNormalOpenButton onClick={() => onSwitchToNormal('profile')} label="Normal Pencerede Aç" />
+                  <PulsingNormalOpenButton onClick={() => onSwitchToNormal('profile')} label={isEn ? "Open in Normal Window" : "Normal Pencerede Aç"} lang={lang} />
                 </div>
-                <div className="text-emerald-300 font-bold">{profileData.title}</div>
-                <div className="text-white/90 leading-relaxed">{profileData.about}</div>
+                <div className="text-emerald-300 font-bold">{effectiveProfile.title}</div>
+                <div className="text-white/90 leading-relaxed">{effectiveProfile.about}</div>
                 <div className="pt-2 border-t border-white/10 space-y-1">
-                  <div className="text-white/70"><span className="text-amber-300 font-bold">Eğitim:</span> {profileData.education.school} — {profileData.education.degree}</div>
-                  <div className="text-white/60 text-[11px]">{profileData.education.details}</div>
-                  <div className="text-white/70"><span className="text-amber-300 font-bold">Yapay Zeka Sertifikasyonu:</span> {profileData.aiProfile.certification}</div>
-                  <div className="text-white/70"><span className="text-amber-300 font-bold">GitHub:</span> {profileData.github}</div>
+                  <div className="text-white/70"><span className="text-amber-300 font-bold">{isEn ? "Education:" : "Eğitim:"}</span> {effectiveProfile.education.school} — {effectiveProfile.education.degree}</div>
+                  <div className="text-white/60 text-[11px]">{effectiveProfile.education.details}</div>
+                  <div className="text-white/70"><span className="text-amber-300 font-bold">{isEn ? "AI Certification:" : "Yapay Zeka Sertifikasyonu:"}</span> {effectiveProfile.aiProfile.certification}</div>
+                  <div className="text-white/70"><span className="text-amber-300 font-bold">GitHub:</span> {effectiveProfile.github}</div>
                 </div>
               </div>
             )
@@ -612,18 +638,18 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
               <div className="font-mono text-xs p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-lg space-y-2">
                 <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2 gap-2">
                   <div className="text-amber-400 font-bold truncate">
-                    === TEKNİK YETENEKLER & TEKNOLOJİ YIĞINI (JSON) ===
+                    === {isEn ? "TECHNICAL SKILLS & TECH STACK (JSON)" : "TEKNİK YETENEKLER & TEKNOLOJİ YIĞINI (JSON)"} ===
                   </div>
-                  <PulsingNormalOpenButton onClick={() => onSwitchToNormal('profile')} label="Normal Pencerede Aç" />
+                  <PulsingNormalOpenButton onClick={() => onSwitchToNormal('profile')} label={isEn ? "Open in Normal Window" : "Normal Pencerede Aç"} lang={lang} />
                 </div>
                 <pre className="text-emerald-300 text-[11px] leading-relaxed overflow-x-auto whitespace-pre">
 {JSON.stringify({
-  developer: profileData.name,
-  experienceLevel: profileData.softwareProfile.level,
+  developer: effectiveProfile.name,
+  experienceLevel: effectiveProfile.softwareProfile.level,
   primaryLanguages: ["Python", "TypeScript", "JavaScript", "SQL", "PowerShell"],
   mobileStack: ["React Native", "Expo", "Native Modules", "Push Notifications"],
   aiAndMachineLearning: {
-    certification: profileData.aiProfile.certification,
+    certification: effectiveProfile.aiProfile.certification,
     tools: ["Google Gemini API", "Google AI Studio", "PyTorch", "Prompt Engineering", "NLP"]
   },
   automationAndTools: [
@@ -653,22 +679,26 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
               <div className="font-mono text-xs p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-lg space-y-2">
                 <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2 gap-2">
                   <div className="text-amber-400 font-bold truncate">
-                    === SAHA & KARİYER DENEYİM LOGU ===
+                    === {isEn ? "FIELD & CAREER EXPERIENCE LOG" : "SAHA & KARİYER DENEYİM LOGU"} ===
                   </div>
-                  <PulsingNormalOpenButton onClick={() => onSwitchToNormal('profile')} label="Normal Pencerede Aç" />
+                  <PulsingNormalOpenButton onClick={() => onSwitchToNormal('profile')} label={isEn ? "Open in Normal Window" : "Normal Pencerede Aç"} lang={lang} />
                 </div>
                 <div className="space-y-2">
                   <div className="border-l-2 border-emerald-400 pl-3">
-                    <div className="text-emerald-300 font-bold">1-2 Yıllık Aktif Yazılım & Yapay Zeka Geliştiriciliği</div>
+                    <div className="text-emerald-300 font-bold">
+                      {isEn ? "1-2 Years Active Software & AI Development" : "1-2 Yıllık Aktif Yazılım & Yapay Zeka Geliştiriciliği"}
+                    </div>
                     <div className="text-white/80 text-[11px]">
-                      Python otomasyon sistemleri, Gemini API destekli özel araçlar ve React Native mobil uygulamaları geliştirme.
+                      {isEn 
+                        ? "Engineering Python automations, Gemini API prompt workflows, and React Native mobile applications."
+                        : "Python otomasyon sistemleri, Gemini API destekli özel araçlar ve React Native mobil uygulamaları geliştirme."}
                     </div>
                   </div>
                   <div className="border-l-2 border-white/30 pl-3">
-                    <div className="text-white/90 font-bold">{profileData.experience.title} ({profileData.experience.period})</div>
-                    <div className="text-white/80 text-[11px] mb-1">{profileData.experience.description}</div>
+                    <div className="text-white/90 font-bold">{effectiveProfile.experience.title} ({effectiveProfile.experience.period})</div>
+                    <div className="text-white/80 text-[11px] mb-1">{effectiveProfile.experience.description}</div>
                     <ul className="list-disc list-inside text-white/70 text-[11px] space-y-0.5">
-                      {profileData.experience.details.map((d, i) => (
+                      {effectiveProfile.experience.details.map((d: string, i: number) => (
                         <li key={i}>{d}</li>
                       ))}
                     </ul>
@@ -715,7 +745,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
 
       // Check if viewing a specific project (e.g. cat Projects\meb-ags-yks or cat meb-ags-yks)
       const cleanProjId = lowerFile.replace(/^projects\\/, '').replace(/^projects\//, '').replace(/\.md$/, '');
-      const foundProject = projects.find(p => p.id.toLowerCase() === cleanProjId);
+      const foundProject = effectiveProjects.find(p => p.id.toLowerCase() === cleanProjId);
       if (foundProject) {
         setLines(prev => [
           ...prev,
@@ -726,7 +756,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
               <div className="font-mono text-xs p-3 bg-emerald-950/25 border border-emerald-500/40 rounded-lg space-y-2">
                 <div className="text-emerald-400 font-bold text-sm flex items-center justify-between border-b border-emerald-500/30 pb-2 gap-2">
                   <div className="flex items-center gap-2 truncate">
-                    <span>PROJE: {foundProject.title}</span>
+                    <span>{isEn ? "PROJECT:" : "PROJE:"} {foundProject.title}</span>
                     <span className="text-amber-300 text-xs font-normal">[{foundProject.category}]</span>
                   </div>
                   <PulsingNormalOpenButton 
@@ -737,8 +767,9 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                         onSwitchToNormal('projects');
                       }
                     }}
-                    label="Normal Pencerede Aç"
-                    tooltip="Bu projeyi normal zengin kart ve canlı demo modunda aç"
+                    label={isEn ? "Open in Normal Window" : "Normal Pencerede Aç"}
+                    tooltip={isEn ? "Open this project in rich card and live demo mode" : "Bu projeyi normal zengin kart ve canlı demo modunda aç"}
+                    lang={lang}
                   />
                 </div>
                 <div className="text-white/90 leading-relaxed">{foundProject.description}</div>
@@ -749,11 +780,11 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                 )}
                 <div className="pt-2 border-t border-white/10 space-y-1">
                   <div className="text-white/80">
-                    <span className="text-amber-300 font-bold">Teknolojiler:</span> {foundProject.tech.join(', ')}
+                    <span className="text-amber-300 font-bold">{isEn ? "Technologies:" : "Teknolojiler:"}</span> {foundProject.tech.join(', ')}
                   </div>
                   {foundProject.highlights && foundProject.highlights.length > 0 && (
                     <div className="space-y-0.5 pt-1">
-                      <div className="text-amber-300 font-bold text-[11px]">Öne Çıkan Özellikler:</div>
+                      <div className="text-amber-300 font-bold text-[11px]">{isEn ? "Key Highlights & Architecture:" : "Öne Çıkan Özellikler:"}</div>
                       {foundProject.highlights.map((h, i) => (
                         <div key={i} className="text-white/75 text-[11px] flex items-center gap-1.5">
                           <span className="text-emerald-400 font-bold">&gt;</span> {h}
@@ -763,7 +794,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                   )}
                   {foundProject.demoUrl && (
                     <div className="pt-1 text-[11px]">
-                      <span className="text-white/60">Canlı Demo:</span>{' '}
+                      <span className="text-white/60">{isEn ? "Live Demo:" : "Canlı Demo:"}</span>{' '}
                       <a href={sanitizeUrl(foundProject.demoUrl) || '#'} target="_blank" rel="noopener noreferrer" className="text-cyan-400 hover:underline">
                         {foundProject.demoUrl}
                       </a>
@@ -779,7 +810,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
 
       // Check if viewing an article
       const cleanArtId = lowerFile.replace(/^articles\\/, '').replace(/^articles\//, '').replace(/\.md$/, '');
-      const foundArticle = articles.find(a => a.id.toLowerCase() === cleanArtId);
+      const foundArticle = effectiveArticles.find(a => a.id.toLowerCase() === cleanArtId);
       if (foundArticle) {
         setLines(prev => [
           ...prev,
@@ -790,7 +821,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
               <div className="font-mono text-xs p-3 bg-emerald-950/25 border border-emerald-500/40 rounded-lg space-y-2">
                 <div className="flex items-center justify-between border-b border-cyan-500/30 pb-2 gap-2">
                   <div className="text-cyan-400 font-bold text-sm truncate">
-                    YAYIN: {foundArticle.title}
+                    {isEn ? "ARTICLE:" : "YAYIN:"} {foundArticle.title}
                   </div>
                   <PulsingNormalOpenButton 
                     onClick={() => {
@@ -800,14 +831,15 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                         onSwitchToNormal('articles');
                       }
                     }}
-                    label="Normal Pencerede Aç"
-                    tooltip="Bu makaleyi zengin okuma modunda aç"
+                    label={isEn ? "Open in Normal Window" : "Normal Pencerede Aç"}
+                    tooltip={isEn ? "Read this article in rich layout" : "Bu makaleyi zengin okuma modunda aç"}
+                    lang={lang}
                   />
                 </div>
                 <div className="flex gap-4 text-[11px] text-white/60">
-                  <span>Tarih: {foundArticle.date}</span>
-                  <span>Süre: {foundArticle.readTime}</span>
-                  <span>Kategori: {foundArticle.category}</span>
+                  <span>{isEn ? "Date:" : "Tarih:"} {foundArticle.date}</span>
+                  <span>{isEn ? "Time:" : "Süre:"} {foundArticle.readTime}</span>
+                  <span>{isEn ? "Category:" : "Kategori:"} {foundArticle.category}</span>
                 </div>
                 <div className="text-white/85 italic border-l-2 border-amber-400 pl-2 text-[11px]">
                   {foundArticle.summary}
@@ -851,12 +883,14 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
             <div className="font-mono text-xs space-y-2 py-1">
               <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2 gap-2">
                 <div className="text-emerald-400 font-bold truncate">
-                  EMIRHAN YILMAZ — YENİLİKÇİ PROJE KATALOĞU ({projects.length} Proje)
+                  {isEn 
+                    ? `EMIRHAN YILMAZ — INNOVATIVE PROJECT PORTFOLIO (${effectiveProjects.length} Projects)` 
+                    : `EMIRHAN YILMAZ — YENİLİKÇİ PROJE KATALOĞU (${effectiveProjects.length} Proje)`}
                 </div>
-                <PulsingNormalOpenButton onClick={() => onSwitchToNormal('projects')} label="Normal Pencerede Aç" />
+                <PulsingNormalOpenButton onClick={() => onSwitchToNormal('projects')} label={isEn ? "Open in Normal Window" : "Normal Pencerede Aç"} lang={lang} />
               </div>
               <div className="space-y-1.5">
-                {projects.map((p, i) => (
+                {effectiveProjects.map((p, i) => (
                   <div 
                     key={p.id}
                     onClick={() => executeCommand(`Get-Project ${p.id}`)}
@@ -873,7 +907,9 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                     <div className="text-white/75 text-[11px] line-clamp-1 mt-1">{p.description}</div>
                     <div className="text-white/50 text-[10px] mt-1 flex items-center justify-between">
                       <span>Stack: {p.tech.join(', ')}</span>
-                      <span className="text-emerald-400 font-bold group-hover:underline">Detaylar için tıkla &gt;</span>
+                      <span className="text-emerald-400 font-bold group-hover:underline">
+                        {isEn ? "Click for details >" : "Detaylar için tıkla >"}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -890,7 +926,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
       if (!projId) {
         setLines(prev => [
           ...prev,
-          { id: `err-${Date.now()}`, type: 'error', text: 'Kullanım: Get-Project <proje-id>' }
+          { id: `err-${Date.now()}`, type: 'error', text: isEn ? 'Usage: Get-Project <project-id>' : 'Kullanım: Get-Project <proje-id>' }
         ]);
         return;
       }
@@ -911,12 +947,14 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
             <div className="font-mono text-xs space-y-2 py-1">
               <div className="flex items-center justify-between border-b border-cyan-500/30 pb-2 gap-2">
                 <div className="text-cyan-400 font-bold truncate">
-                  YAYINLAR & BİLİMSEL İÇERİKLER ({articles.length} Makale)
+                  {isEn 
+                    ? `ARTICLES & SCIENTIFIC ESSAYS (${effectiveArticles.length} Articles)` 
+                    : `YAYINLAR & BİLİMSEL İÇERİKLER (${effectiveArticles.length} Makale)`}
                 </div>
-                <PulsingNormalOpenButton onClick={() => onSwitchToNormal('articles')} label="Normal Pencerede Aç" />
+                <PulsingNormalOpenButton onClick={() => onSwitchToNormal('articles')} label={isEn ? "Open in Normal Window" : "Normal Pencerede Aç"} lang={lang} />
               </div>
               <div className="space-y-1.5">
-                {articles.map((a, i) => (
+                {effectiveArticles.map((a, i) => (
                   <div 
                     key={a.id}
                     onClick={() => executeCommand(`Get-Article ${a.id}`)}
@@ -930,7 +968,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                     </div>
                     <div className="text-white/75 text-[11px] mt-1">{a.summary}</div>
                     <div className="text-cyan-400 text-[10px] mt-1 text-right font-bold group-hover:underline">
-                      Makaleyi terminalde oku &gt;
+                      {isEn ? "Read article in terminal >" : "Makaleyi terminalde oku >"}
                     </div>
                   </div>
                 ))}

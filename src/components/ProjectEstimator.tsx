@@ -17,12 +17,13 @@ export interface EstimatorResult {
   slaAndSupport?: string;
 }
 
-interface ProjectEstimatorProps {
+export interface ProjectEstimatorProps {
+  lang?: 'tr' | 'en';
   onApplyToContact: (summaryMessage: string, subject?: string) => void;
   onClose?: () => void;
 }
 
-const PROJECT_TYPES = [
+const PROJECT_TYPES_TR = [
   { id: 'ai', name: 'Yapay Zeka & LLM Agent', short: 'Yapay Zeka', desc: 'RAG, otonom agent motoru ve özel model entegrasyonu', icon: '🤖' },
   { id: 'psytech', name: 'Bilişsel & Psikoloji Yazılımı', short: 'Psiko-Teknoloji', desc: 'Duygu takibi, nöromorfik analiz ve danışmanlık araçları', icon: '🧠' },
   { id: 'mobile', name: 'Mobil Uygulama', short: 'Mobil App', desc: 'iOS & Android çapraz platform hızlı ve akıcı uygulamalar', icon: '📱' },
@@ -30,13 +31,27 @@ const PROJECT_TYPES = [
   { id: 'automation', name: 'Otomasyon & Veri İşleme', short: 'Otomasyon', desc: 'Veri madenciliği, web botları ve iş akışı optimizasyonu', icon: '⚡' }
 ];
 
-const SCALES = [
+const PROJECT_TYPES_EN = [
+  { id: 'ai', name: 'AI & Autonomous Agent', short: 'AI Agent', desc: 'RAG pipelines, autonomous agent workflows, and fine-tuning', icon: '🤖' },
+  { id: 'psytech', name: 'Cognitive & Mental Health Tech', short: 'Psycho-Tech', desc: 'Mood tracking, biometric analytics, and counseling platforms', icon: '🧠' },
+  { id: 'mobile', name: 'Mobile Application', short: 'Mobile App', desc: 'Fluid cross-platform iOS & Android mobile applications', icon: '📱' },
+  { id: 'web', name: 'Web Platform / SaaS', short: 'SaaS Platform', desc: 'Liquid glass UI, high-throughput scalable web architectures', icon: '🌐' },
+  { id: 'automation', name: 'Automation & Data Pipelines', short: 'Automation', desc: 'Data harvesting, persistent browser bots, and task automation', icon: '⚡' }
+];
+
+const SCALES_TR = [
   { id: 'MVP', label: 'MVP / Hızlı Prototip', time: '2-3 Hafta', desc: 'Çekirdek özelliklerle hızlı pazar doğrulaması' },
   { id: 'Orta Ölçek', label: 'Orta Ölçek / Büyüme', time: '4-6 Hafta', desc: 'Zengin modüllü, veritabanlı ve yüksek trafikli sistem' },
   { id: 'Kurumsal', label: 'Kurumsal / Enterprise', time: '8+ Hafta', desc: 'Mikroservis, yüksek güvenlik ve 7/24 kesintisiz mimari' }
 ];
 
-const FEATURE_OPTIONS = [
+const SCALES_EN = [
+  { id: 'MVP', label: 'MVP / Fast Prototype', time: '2-3 Weeks', desc: 'Core feature validation for rapid market entry' },
+  { id: 'Orta Ölçek', label: 'Mid-Scale / Growth', time: '4-6 Weeks', desc: 'Multi-module, scalable database, production traffic' },
+  { id: 'Kurumsal', label: 'Enterprise Architecture', time: '8+ Weeks', desc: 'Microservices, bank-grade encryption, and 24/7 uptime' }
+];
+
+const FEATURE_OPTIONS_TR = [
   "Kullanıcı Doğrulama & Auth (OAuth / JWT)",
   "Canlı AI Chat / Agent Motoru",
   "Özel Yönetim Paneli (Admin Dashboard)",
@@ -46,39 +61,27 @@ const FEATURE_OPTIONS = [
   "Duygu & Biyometrik Veri Takibi"
 ];
 
-const PRESETS = [
-  {
-    name: '🤖 Otonom AI Agent',
-    type: 'Yapay Zeka & LLM Agent',
-    scale: 'MVP',
-    features: ['Kullanıcı Doğrulama & Auth (OAuth / JWT)', 'Canlı AI Chat / Agent Motoru', 'Özel Yönetim Paneli (Admin Dashboard)']
-  },
-  {
-    name: '🧠 Nöro-Psikoloji SaaS',
-    type: 'Bilişsel & Psikoloji Yazılımı',
-    scale: 'Orta Ölçek',
-    features: ['Kullanıcı Doğrulama & Auth (OAuth / JWT)', 'Duygu & Biyometrik Veri Takibi', 'Veri Analitiği, Raporlama & Export']
-  },
-  {
-    name: '📱 Cross-Platform Mobil',
-    type: 'Mobil Uygulama',
-    scale: 'Orta Ölçek',
-    features: ['Kullanıcı Doğrulama & Auth (OAuth / JWT)', 'Gerçek Zamanlı Bildirimler & WebSockets', 'Ödeme & Abonelik Sistemi (Stripe / Iyzico)']
-  },
-  {
-    name: '⚡ Veri & Bot Otomasyonu',
-    type: 'Otomasyon & Veri İşleme',
-    scale: 'MVP',
-    features: ['Veri Analitiği, Raporlama & Export', 'Özel Yönetim Paneli (Admin Dashboard)']
-  }
+const FEATURE_OPTIONS_EN = [
+  "User Authentication & Auth (OAuth / JWT)",
+  "Real-time AI Chat & Autonomous Agent",
+  "Custom Admin Dashboard & CMS",
+  "Payments & Subscription Billing (Stripe)",
+  "Real-time WebSockets & Push Alerts",
+  "Data Analytics, Insights & PDF/CSV Export",
+  "Biometric & Mood Journal Tracking"
 ];
 
-export function ProjectEstimator({ onApplyToContact, onClose }: ProjectEstimatorProps) {
-  const [selectedType, setSelectedType] = useState(PROJECT_TYPES[0].name);
-  const [selectedScale, setSelectedScale] = useState(SCALES[0].id);
+export function ProjectEstimator({ lang = 'tr', onApplyToContact, onClose }: ProjectEstimatorProps) {
+  const isEn = lang === 'en';
+  const projectTypes = isEn ? PROJECT_TYPES_EN : PROJECT_TYPES_TR;
+  const scales = isEn ? SCALES_EN : SCALES_TR;
+  const featureOptions = isEn ? FEATURE_OPTIONS_EN : FEATURE_OPTIONS_TR;
+
+  const [selectedType, setSelectedType] = useState(projectTypes[0].name);
+  const [selectedScale, setSelectedScale] = useState(scales[0].id);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([
-    "Kullanıcı Doğrulama & Auth (OAuth / JWT)",
-    "Canlı AI Chat / Agent Motoru"
+    featureOptions[0],
+    featureOptions[1]
   ]);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -86,42 +89,50 @@ export function ProjectEstimator({ onApplyToContact, onClose }: ProjectEstimator
   const [copied, setCopied] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
 
-  // Initialize with a default live preview so the right column is never blank
+  // Initialize with a default live preview
   useEffect(() => {
-    if (!result) {
+    if (!result || isEn) {
       setResult({
-        summary: `${selectedType} için ${selectedScale} ölçeğinde modern ve ölçeklenebilir bir yazılım mimarisi planlanıyor.`,
-        estimatedWeeks: selectedScale === 'MVP' ? '2 - 3 Hafta' : selectedScale === 'Orta Ölçek' ? '4 - 6 Hafta' : '8 - 12 Hafta',
-        budgetRange: selectedScale === 'MVP' ? '₺45.000 - ₺75.000' : selectedScale === 'Orta Ölçek' ? '₺85.000 - ₺150.000' : '₺160.000+',
-        recommendedStack: ['React / Vite', 'Python FastAPI', 'Gemini 2.5 Flash', 'PostgreSQL', 'Tailwind CSS'],
-        architectureHighlights: [
+        summary: isEn
+          ? `Architectural blueprint engineered for ${selectedType} at ${selectedScale} scale with production reliability.`
+          : `${selectedType} için ${selectedScale} ölçeğinde modern ve ölçeklenebilir bir yazılım mimarisi planlanıyor.`,
+        estimatedWeeks: selectedScale === 'MVP' 
+          ? (isEn ? '2 - 3 Weeks' : '2 - 3 Hafta') 
+          : selectedScale === 'Orta Ölçek' 
+          ? (isEn ? '4 - 6 Weeks' : '4 - 6 Hafta') 
+          : (isEn ? '8 - 12 Weeks' : '8 - 12 Hafta'),
+        budgetRange: selectedScale === 'MVP' ? '$1,500 - $3,000' : selectedScale === 'Orta Ölçek' ? '$3,500 - $7,000' : '$8,000+',
+        recommendedStack: ['React 19 / Vite', 'Python FastAPI', 'Gemini 2.5 Flash', 'PostgreSQL / Supabase', 'Tailwind CSS'],
+        architectureHighlights: isEn ? [
+          'Scalable Microservices & Serverless Edge Execution',
+          'Liquid Glass UX with Zero-Latency Response',
+          'OWASP Compliant End-to-End Encryption'
+        ] : [
           'Ölçeklenebilir Mikroservis & Serverless Altyapısı',
           'Sıvı Cam (Liquid Glass UX) ve Sıfır Gecikmeli Arayüz',
           'OWASP Standartlarında Uçtan Uca Veri Güvenliği'
         ],
-        deliverables: [
+        deliverables: isEn ? [
+          'Complete GitHub Source Code & Production CI/CD Setup',
+          'Live Cloud Provisioning with Edge SSL Certificates',
+          'RESTful API Documentation & Schema Blueprints',
+          '30-Day Complimentary Technical Support & Warranty'
+        ] : [
           'Eksiksiz GitHub Kaynak Kodları & CI/CD Dağıtımı',
           'Canlı Bulut Kurulumu & SSL Güvenliği',
           'RESTful API Dokümantasyonu & Veri Şeması',
           '30 Gün Ücretsiz Teknik Destek & Garanti'
         ],
-        slaAndSupport: '30 Gün Garanti • 7/24 Sistem İzleme'
+        slaAndSupport: isEn ? '30-Day Warranty • 24/7 Production Monitoring' : '30 Gün Garanti • 7/24 Sistem İzleme'
       });
     }
-  }, []);
+  }, [lang]);
 
   const toggleFeature = (feature: string) => {
     soundEngine.playGlassClick();
     setSelectedFeatures(prev => 
       prev.includes(feature) ? prev.filter(f => f !== feature) : [...prev, feature]
     );
-  };
-
-  const applyPreset = (preset: typeof PRESETS[0]) => {
-    soundEngine.playGlassClick();
-    setSelectedType(preset.type);
-    setSelectedScale(preset.scale);
-    setSelectedFeatures(preset.features);
   };
 
   const handleGenerate = async () => {
@@ -139,48 +150,39 @@ export function ProjectEstimator({ onApplyToContact, onClose }: ProjectEstimator
         })
       });
 
-      const data = await res.json();
-      setResult(data);
-      soundEngine.playSuccessChime();
-
-      // On mobile or small screens, smoothly bring the result into view without jarring jumps
-      setTimeout(() => {
-        if (window.innerWidth < 1024) {
-          resultRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      }, 100);
+      if (res.ok) {
+        const data = await res.json();
+        setResult(data);
+      } else {
+        throw new Error('Fallback required');
+      }
     } catch {
-      const maintenanceText = selectedScale === 'Büyük Ölçek' 
-        ? '90 Gün (3 Ay) Ücretsiz Kapsamlı Teknik Destek ve Bakım' 
-        : selectedScale === 'Orta Ölçek' 
-          ? '60 Gün (2 Ay) Ücretsiz Teknik Destek ve Bakım' 
-          : '30 Gün (1 Ay) Ücretsiz Teknik Destek ve Bakım';
-
-      const budgetText = selectedScale === 'Büyük Ölçek'
-        ? '₺15.000 - ₺20.000'
-        : selectedScale === 'Orta Ölçek'
-          ? '₺10.000 - ₺15.000'
-          : '₺5.000 - ₺9.000';
-
       setResult({
-        summary: `${selectedType} projeniz için ${selectedScale} ölçeğinde ve seçilen özelliklerle optimize edilmiş modern mimari hazırlandı.`,
-        estimatedWeeks: selectedScale === 'MVP' ? '1 - 2 Hafta' : selectedScale === 'Orta Ölçek' ? '2 - 4 Hafta' : '4 - 6 Hafta',
-        budgetRange: budgetText,
-        recommendedStack: ['React / Vite', 'Python FastAPI', 'Gemini 2.5 Flash', 'PostgreSQL', 'Tailwind CSS'],
-        architectureHighlights: [
-          'Hızlı Yanıt Süreleri ve Asenkron İşlem Havuzu',
-          'Modüler ve Kolay Genişletilebilir Katmanlı Mimari',
-          'Güvenli Kimlik Denetimi ve Şifrelenmiş İletişim'
+        summary: isEn
+          ? `Engineered for ${selectedType} at ${selectedScale} scale with optimal cloud architecture and modular microservices.`
+          : `${selectedType} alanında ${selectedScale} ölçeğinde modern bulut mimarisi ve mikroservis tasarımı.`,
+        estimatedWeeks: selectedScale === 'MVP' ? (isEn ? '2 - 3 Weeks' : '2 - 3 Hafta') : (isEn ? '4 - 6 Weeks' : '4 - 6 Hafta'),
+        budgetRange: selectedScale === 'MVP' ? '$1,500 - $3,000' : '$4,000 - $8,000',
+        recommendedStack: ['Next.js 14 / Vite', 'Python FastAPI', 'Gemini API', 'PostgreSQL', 'Tailwind CSS'],
+        architectureHighlights: isEn ? [
+          'Modular Scalable Cloud Architecture',
+          'Zero-latency Edge Optimization',
+          'Production-grade Security'
+        ] : [
+          'Modüler Ölçeklenebilir Bulut Mimarisi',
+          'Sıfır Gecikmeli Edge Optimizasyonu',
+          'Kurumsal Düzeyde Veri Güvenliği'
         ],
-        deliverables: [
-          'GitHub Kaynak Kodları & CI/CD Pipeline',
-          'Canlı Bulut Dağıtımı & SSL',
-          'API Dokümantasyonu & Kullanım Kılavuzu',
-          maintenanceText
-        ],
-        slaAndSupport: maintenanceText
+        deliverables: isEn ? [
+          'Full Production Source Code on GitHub',
+          'Live Deployment & SSL Configuration',
+          'Architecture & Schema Documentation'
+        ] : [
+          'Eksiksiz GitHub Kaynak Kodları',
+          'Canlı Bulut Dağıtımı & SSL Yapılandırması',
+          'Mimari ve Şema Dokümantasyonu'
+        ]
       });
-      soundEngine.playSuccessChime();
     } finally {
       setIsLoading(false);
     }
@@ -188,12 +190,30 @@ export function ProjectEstimator({ onApplyToContact, onClose }: ProjectEstimator
 
   const buildSummaryMessage = () => {
     if (!result) return '';
-    const deliverablesList = (result.deliverables || [
-      'iOS ve Android Uyumlu Mobil / Web Uygulama Kaynak Kodları (GitHub)',
-      'Canlı Bulut Dağıtımı & SSL Yapılandırması',
-      'API ve Sistem Mimari Dokümantasyonu',
-      '30 Gün Ücretsiz Teknik Destek ve Bakım'
-    ]).map(d => `• ${d}`).join('\n');
+    const deliverablesList = (result.deliverables || []).map(d => `• ${d}`).join('\n');
+
+    if (isEn) {
+      return `Hello Emirhan,
+
+Based on the architecture assessment on your portfolio website, I would like to discuss a project proposal and collaboration plan:
+
+[PROJECT ARCHITECTURE & PROPOSAL REQUEST]
+----------------------------------------
+• Archetype: ${selectedType}
+• Scale: ${selectedScale}
+• Estimated Timeline: ${result.estimatedWeeks}
+• Estimated Budget: ${result.budgetRange || 'Subject to Scope'}
+• Selected Capabilities: ${selectedFeatures.join(', ')}
+• Recommended Tech Stack: ${result.recommendedStack.join(', ')}
+
+ARCHITECTURE VISION:
+${result.summary}
+
+EXPECTED DELIVERABLES:
+${deliverablesList}
+
+Please let me know your availability to discuss the project schedule and formal quotation.`;
+    }
 
     return `Merhaba Emirhan Bey,
 
@@ -205,7 +225,7 @@ Portfolyo siteniz üzerinden incelediğim mimari analiz doğrultusunda sizinle a
 • Kapsam & Ölçek: ${selectedScale}
 • Tahmini Teslim Süresi: ${result.estimatedWeeks}
 • Tahmini Bütçe Aralığı: ${result.budgetRange || 'Proje Kapsamına Göre'}
-• Seçilen Özellikler: ${selectedFeatures.length > 0 ? selectedFeatures.join(', ') : 'Temel Çekirdek Özellikler'}
+• Seçilen Özellikler: ${selectedFeatures.join(', ')}
 • Önerilen Teknoloji Yığını: ${result.recommendedStack.join(', ')}
 
 MİMARİ VİZYON:
@@ -214,18 +234,18 @@ ${result.summary}
 BEKLENEN TESLİMATLAR:
 ${deliverablesList}
 
-Bu mimari kapsam doğrultusunda uygunluğunuzu, detaylı proje takvimini ve resmi teklifinizi görüşmek üzere geri dönüşünüzü rica ederim.`;
+Bu mimari kapsam doğrultusunda uygunluğunuzu ve detaylı proje takvimini görüşmek üzere geri dönüşünüzü rica ederim.`;
   };
 
   const handleTransferToForm = () => {
     soundEngine.playGlassClick();
     const messageToPass = buildSummaryMessage();
-    onApplyToContact(messageToPass, 'Proje Teklifi / Danışmanlık');
+    onApplyToContact(messageToPass, isEn ? 'Project Proposal / Collaboration' : 'Proje Teklifi / Danışmanlık');
   };
 
   const handleOpenDirectEmail = () => {
     soundEngine.playGlassClick();
-    const subject = encodeURIComponent(`[Proje Teklifi] ${selectedType} - ${selectedScale}`);
+    const subject = encodeURIComponent(`[Project Proposal] ${selectedType} - ${selectedScale}`);
     const body = encodeURIComponent(buildSummaryMessage());
     window.location.href = `mailto:emirhan0008@gmail.com?subject=${subject}&body=${body}`;
   };
@@ -253,53 +273,35 @@ Bu mimari kapsam doğrultusunda uygunluğunuzu, detaylı proje takvimini ve resm
           </div>
           <div>
             <h2 className="text-sm sm:text-base font-extrabold text-white flex items-center gap-1.5">
-              Proje Mimarisi Oluştur ve Teklif Al
+              {isEn ? 'Architecture Blueprint & Proposal Generator' : 'Proje Mimarisi Oluştur ve Teklif Al'}
               <Sparkles size={14} className="text-emerald-400 animate-pulse" />
             </h2>
             <p className="text-[10px] sm:text-[11px] text-white/60">
-              Yapay zeka mimari tasarımı, efor süresi ve anlık teklif raporu
+              {isEn ? 'AI-powered technical architecture scoping and timeline estimator' : 'Yapay zeka mimari tasarımı, efor süresi ve anlık teklif raporu'}
             </p>
           </div>
         </div>
-
         {onClose && (
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 shrink-0"
-            title="Kapat"
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 shrink-0"
           >
             <X size={15} />
           </button>
         )}
       </div>
 
-      {/* Quick Presets Bar (Hızlı Şablonlar) */}
-      <div className="py-2 px-1 flex items-center gap-1.5 overflow-x-auto shrink-0 scrollbar-none border-b border-white/5">
-        <span className="text-[9px] uppercase font-bold text-white/40 tracking-wider shrink-0 mr-1 flex items-center gap-1">
-          <Zap size={10} className="text-amber-400" /> Şablon:
-        </span>
-        {PRESETS.map(preset => (
-          <button
-            key={preset.name}
-            onClick={() => applyPreset(preset)}
-            className="px-2 py-0.5 rounded-lg bg-white/5 hover:bg-emerald-500/20 border border-white/10 hover:border-emerald-500/40 text-[10px] text-white/80 hover:text-emerald-300 font-semibold transition-all shrink-0 cursor-pointer active:scale-95"
-          >
-            {preset.name}
-          </button>
-        ))}
-      </div>
-
-      {/* 2-Column Responsive Body */}
-      <div className="flex-1 overflow-y-auto pr-1 py-2.5 grid grid-cols-1 lg:grid-cols-12 gap-3.5 lg:gap-4 min-h-0">
-        {/* Left Column: Compact Modular Controls (7 cols) */}
-        <div className="lg:col-span-7 flex flex-col gap-3">
+      {/* Main Form & Live Output Grid (Fits viewport without scrolling!) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 pt-3 flex-1 min-h-0 overflow-y-auto pr-1">
+        {/* Left Column: Interactive Inputs (7 cols) */}
+        <div className="lg:col-span-7 flex flex-col gap-2.5 sm:gap-3">
           {/* Step 1: Project Type */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-white/75 flex items-center gap-1">
-              <Layers size={12} className="text-emerald-400" /> 1. Proje Kategorisi
+            <label className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+              <Layers size={12} /> {isEn ? '1. Select Project Archetype' : '1. Mimari Tipini Belirleyin'}
             </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-              {PROJECT_TYPES.map(type => {
+            <div className="grid grid-cols-2 gap-1.5">
+              {projectTypes.map(type => {
                 const isSelected = selectedType === type.name;
                 return (
                   <button
@@ -308,15 +310,15 @@ Bu mimari kapsam doğrultusunda uygunluğunuzu, detaylı proje takvimini ve resm
                       soundEngine.playGlassClick();
                       setSelectedType(type.name);
                     }}
-                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between gap-1.5 ${
+                    className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex items-center justify-between ${
                       isSelected
                         ? 'bg-emerald-500/20 border-emerald-400/80 ring-1 ring-emerald-400/30 shadow-md'
                         : 'bg-white/5 border-white/10 hover:bg-white/10'
                     }`}
                   >
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="text-sm shrink-0">{type.icon}</span>
-                      <div className="truncate">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-base shrink-0">{type.icon}</span>
+                      <div className="min-w-0">
                         <h4 className="text-[11px] font-bold text-white truncate">{type.name}</h4>
                         <p className="text-[9px] text-white/50 truncate">{type.desc}</p>
                       </div>
@@ -330,11 +332,11 @@ Bu mimari kapsam doğrultusunda uygunluğunuzu, detaylı proje takvimini ve resm
 
           {/* Step 2: Scale Selection */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-white/75 flex items-center gap-1">
-              <Clock size={12} className="text-emerald-400" /> 2. Kapsam ve Ölçek
+            <label className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+              <Clock size={12} /> {isEn ? '2. Scale & Complexity' : '2. Kapsam ve Ölçek'}
             </label>
             <div className="grid grid-cols-3 gap-1.5">
-              {SCALES.map(scale => {
+              {scales.map(scale => {
                 const isSelected = selectedScale === scale.id;
                 return (
                   <button
@@ -361,13 +363,13 @@ Bu mimari kapsam doğrultusunda uygunluğunuzu, detaylı proje takvimini ve resm
             </div>
           </div>
 
-          {/* Step 3: Feature Checkboxes (Compact Pills) */}
+          {/* Step 3: Feature Checkboxes */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold uppercase tracking-wider text-white/75 flex items-center gap-1">
-              <Cpu size={12} className="text-emerald-400" /> 3. İstenen Ana Özellikler & Modüller
+            <label className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+              <Cpu size={12} /> {isEn ? '3. Core Modules & Capabilities' : '3. İstenen Ana Özellikler & Modüller'}
             </label>
             <div className="flex flex-wrap gap-1 max-h-[135px] overflow-y-auto pr-1">
-              {FEATURE_OPTIONS.map(feat => {
+              {featureOptions.map(feat => {
                 const isChecked = selectedFeatures.includes(feat);
                 return (
                   <button
@@ -398,29 +400,29 @@ Bu mimari kapsam doğrultusunda uygunluğunuzu, detaylı proje takvimini ve resm
             {isLoading ? (
               <>
                 <RefreshCw size={14} className="animate-spin" />
-                <span>Yapay Zeka Mimarisi Hesaplanıyor...</span>
+                <span>{isEn ? 'Calculating Architecture...' : 'Yapay Zeka Mimarisi Hesaplanıyor...'}</span>
               </>
             ) : (
               <>
                 <Wand2 size={14} />
-                <span>Yapay Zeka Mimari ve Süre Analizini Başlat</span>
+                <span>{isEn ? 'Run Architecture & Timeline Analysis' : 'Yapay Zeka Mimari ve Süre Analizini Başlat'}</span>
               </>
             )}
           </button>
         </div>
 
-        {/* Right Column: Live Proposal & Architecture Panel (5 cols) - Eye level, NO scrolling needed! */}
+        {/* Right Column: Live Proposal & Architecture Panel */}
         <div ref={resultRef} className="lg:col-span-5 flex flex-col">
           <div className="flex-1 p-3.5 sm:p-4 rounded-2xl bg-black/50 border border-emerald-500/30 flex flex-col justify-between gap-3 shadow-inner">
             <div className="space-y-2.5">
               {/* Header Info */}
               <div className="flex items-center justify-between border-b border-white/10 pb-2">
                 <span className="text-[11px] font-extrabold text-emerald-400 flex items-center gap-1.5 uppercase font-mono">
-                  <Sparkles size={12} /> Teknik Mimari Raporu
+                  <Sparkles size={12} /> {isEn ? 'Technical Architecture Report' : 'Teknik Mimari Raporu'}
                 </span>
                 {isLoading && (
                   <span className="text-[9px] text-amber-300 font-mono animate-pulse flex items-center gap-1">
-                    <RefreshCw size={10} className="animate-spin" /> Güncelleniyor...
+                    <RefreshCw size={10} className="animate-spin" /> {isEn ? 'Updating...' : 'Güncelleniyor...'}
                   </span>
                 )}
               </div>
@@ -430,15 +432,15 @@ Bu mimari kapsam doğrultusunda uygunluğunuzu, detaylı proje takvimini ve resm
                 <div className="p-2 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2">
                   <Clock size={14} className="text-emerald-400 shrink-0" />
                   <div className="min-w-0">
-                    <div className="text-[8px] uppercase font-bold text-white/50">Tahmini Süre</div>
-                    <div className="text-[11px] font-bold text-white truncate font-mono">{result?.estimatedWeeks || '1 - 2 Hafta'}</div>
+                    <div className="text-[8px] uppercase font-bold text-white/50">{isEn ? 'Estimated Time' : 'Tahmini Süre'}</div>
+                    <div className="text-[11px] font-bold text-white truncate font-mono">{result?.estimatedWeeks}</div>
                   </div>
                 </div>
                 <div className="p-2 rounded-xl bg-white/5 border border-white/10 flex items-center gap-2">
                   <DollarSign size={14} className="text-emerald-400 shrink-0" />
                   <div className="min-w-0">
-                    <div className="text-[8px] uppercase font-bold text-white/50">Bütçe Aralığı</div>
-                    <div className="text-[11px] font-bold text-emerald-300 truncate font-mono">{result?.budgetRange || '₺5.000 - ₺9.000'}</div>
+                    <div className="text-[8px] uppercase font-bold text-white/50">{isEn ? 'Budget Range' : 'Bütçe Aralığı'}</div>
+                    <div className="text-[11px] font-bold text-emerald-300 truncate font-mono">{result?.budgetRange}</div>
                   </div>
                 </div>
               </div>
@@ -448,79 +450,52 @@ Bu mimari kapsam doğrultusunda uygunluğunuzu, detaylı proje takvimini ve resm
                 {result?.summary}
               </p>
 
-              {/* Recommended Stack */}
+              {/* Recommended Tech Stack */}
               <div className="space-y-1">
-                <span className="text-[9px] uppercase font-bold text-white/50 tracking-wider">ÖNERİLEN TEKNOLOJİ YIĞINI</span>
+                <span className="text-[9px] uppercase font-bold text-white/50 block">
+                  {isEn ? 'Recommended Tech Stack' : 'Önerilen Teknoloji Yığını'}
+                </span>
                 <div className="flex flex-wrap gap-1">
-                  {result?.recommendedStack.slice(0, 5).map((tech, idx) => (
-                    <span key={idx} className="px-1.5 py-0.5 rounded-md bg-white/10 border border-white/10 text-white font-mono text-[9px] font-bold">
+                  {result?.recommendedStack.map((tech, idx) => (
+                    <span key={idx} className="px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-mono text-emerald-300 font-medium">
                       {tech}
                     </span>
                   ))}
                 </div>
               </div>
-
-              {/* Highlights & Deliverables Tabs / List */}
-              <div className="space-y-1">
-                <span className="text-[9px] uppercase font-bold text-white/50 tracking-wider flex items-center gap-1">
-                  <PackageCheck size={11} className="text-emerald-400" /> KAPSAM & GARANTİ
-                </span>
-                <div className="space-y-1">
-                  {(result?.deliverables || [
-                    'Eksiksiz GitHub Kaynak Kodları & Bulut Kurulumu',
-                    '30 Gün Ücretsiz Hata & Bakım Garantisi'
-                  ]).slice(0, 3).map((item, idx) => (
-                    <div key={idx} className="flex items-center gap-1 text-[10px] text-white/75">
-                      <CheckCircle2 size={10} className="text-emerald-400 shrink-0" />
-                      <span className="truncate">{item}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
 
-            {/* Bottom Actions: Transfer to Contact, Direct Email, Copy */}
-            <div className="space-y-1.5 pt-2 border-t border-white/10">
-              {/* Primary Action: Transfer to Contact Form */}
+            {/* Action Buttons */}
+            <div className="space-y-2 pt-2 border-t border-white/10">
               <button
                 onClick={handleTransferToForm}
-                className="w-full py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black text-[11px] font-extrabold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md hover:scale-[1.01]"
+                className="w-full py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md cursor-pointer hover:scale-[1.01]"
               >
-                <Send size={12} />
-                <span>Bu Mimaride Proje Teklifi Al (İletişim Formuna Aktar)</span>
-                <ArrowRight size={12} />
+                <span>{isEn ? 'Transfer to Contact Form' : 'Teklifi İletişime Aktar'}</span>
+                <ArrowRight size={13} />
               </button>
 
-              {/* Secondary Options */}
               <div className="grid grid-cols-3 gap-1.5">
                 <button
-                  type="button"
+                  onClick={handleOpenDirectEmail}
+                  className="py-1.5 px-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
+                >
+                  <Mail size={11} className="text-emerald-400" />
+                  <span>{isEn ? 'Email' : 'E-Posta'}</span>
+                </button>
+                <button
                   onClick={handleOpenWhatsApp}
-                  className="py-1.5 px-2 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
-                  title="WhatsApp'ı açarak teklifi yapıştırır"
+                  className="py-1.5 px-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-emerald-300 text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
                 >
                   <Phone size={11} className="text-emerald-400" />
                   <span>WhatsApp</span>
                 </button>
-
                 <button
-                  type="button"
-                  onClick={handleOpenDirectEmail}
-                  className="py-1.5 px-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
-                  title="Varsayılan e-posta uygulamasını açar"
-                >
-                  <Mail size={11} />
-                  <span>E-Posta</span>
-                </button>
-
-                <button
-                  type="button"
                   onClick={handleCopyReport}
-                  className="py-1.5 px-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 hover:text-white text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
-                  title="Tüm raporu kopyala"
+                  className="py-1.5 px-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white text-[10px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors"
                 >
                   <Copy size={11} />
-                  <span>{copied ? 'Kopyalandı!' : 'Kopyala'}</span>
+                  <span>{copied ? (isEn ? 'Copied!' : 'Kopyalandı!') : (isEn ? 'Copy' : 'Kopyala')}</span>
                 </button>
               </div>
             </div>

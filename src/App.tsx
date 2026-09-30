@@ -1,4 +1,4 @@
-import { useState, useEffect, FormEvent, UIEvent } from 'react';
+import { useState, useEffect, useMemo, FormEvent, UIEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, 
@@ -48,11 +48,15 @@ import {
   Key,
   FolderKanban,
   Settings,
-  Heart
+  Heart,
+  SlidersHorizontal,
+  ArrowUpDown,
+  Check
  } from 'lucide-react';
  
  import { profileData, projects, articles } from './data';
- import { ProfileData, Project, Article } from './types';
+ import { profileDataEn, projectsEn, articlesEn } from './data.en';
+ import { ProfileData, Project, Article, Education, Experience } from './types';
  import { AdminEditorModal } from './components/AdminEditorModal';
  import { SeamlessVideo } from './components/SeamlessVideo';
 
@@ -62,6 +66,9 @@ import { TechRadar } from './components/TechRadar';
 import { MeltingCanvasEffect } from './components/MeltingCanvasEffect';
 import { soundEngine, PEACEFUL_TRACKS, MusicTrack } from './utils/audioSynth';
 import { ThemeToggle, AppTheme } from './components/ThemeToggle';
+import { LanguageToggle } from './components/LanguageToggle';
+import { HighlightText } from './components/HighlightText';
+import { translations, Language } from './utils/i18n';
 import { PowerShellTerminalWorkspace } from './components/PowerShellTerminalWorkspace';
 import { 
   sanitizeText, 
@@ -119,12 +126,44 @@ export default function App() {
    const [activeGalleryIndex, setActiveGalleryIndex] = useState<number>(0);
    const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
    const [projectFilter, setProjectFilter] = useState<string>('Tümü');
+   const [selectedTech, setSelectedTech] = useState<string | null>(null);
+   const [sortBy, setSortBy] = useState<'featured' | 'newest' | 'alpha'>('featured');
+   const [showTechFilterDrawer, setShowTechFilterDrawer] = useState<boolean>(false);
    const [searchQuery, setSearchQuery] = useState<string>('');
    const [contactSubject, setContactSubject] = useState<string>('Proje Teklifi / Danışmanlık');
    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
    const [formData, setFormData] = useState({ name: '', message: '' });
    const [copiedEmail, setCopiedEmail] = useState(false);
    const [inboxMessages, setInboxMessages] = useState<ContactMessage[]>([]);
+
+   // Multi-language (i18n) Support
+   const [lang, setLang] = useState<Language>(() => {
+     try {
+       const saved = localStorage.getItem('emirhan_portfolio_lang');
+       return saved === 'en' ? 'en' : 'tr';
+     } catch {
+       return 'tr';
+     }
+   });
+
+   const handleLangToggle = (newLang: Language) => {
+     setLang(newLang);
+     soundEngine.playGlassClick();
+     try {
+       localStorage.setItem('emirhan_portfolio_lang', newLang);
+     } catch {}
+   };
+
+   useEffect(() => {
+     document.documentElement.lang = lang;
+     if (lang === 'en') {
+       document.title = "Emirhan YILMAZ — Psychological Counselor & AI Developer";
+     } else {
+       document.title = "Emirhan YILMAZ — Psikolojik Danışman & Yazılımcı";
+     }
+   }, [lang]);
+
+   const t = translations[lang];
  
    // Dynamic editable states with prototype-pollution safe JSON parsing
    const [profile, setProfile] = useState<ProfileData>(() => {
@@ -917,55 +956,130 @@ export default function App() {
     }
   };
 
-  // Map custom uploaded photos & custom demo URLs onto existing project structures
-  const mappedProjects = projectList.map(project => {
-    const customImg = projectImages[project.id];
-    const customDemo = projectDemoUrls[project.id];
-    const resolvedDemo = (customDemo !== undefined ? sanitizeUrl(customDemo) : (sanitizeUrl(project.demoUrl) || sanitizeUrl(project.deploy))) || undefined;
-    return {
-      ...project,
-      image: (customImg && sanitizeImageSource(customImg)) || (project.image && sanitizeImageSource(project.image)) || project.image || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80',
-      demoUrl: resolvedDemo,
-      isLive: Boolean(resolvedDemo)
-    };
-  });
-
-  // Filter projects based on selected filter pill and search query
-  const filteredProjects = mappedProjects.filter(project => {
-    let matchesCategory = true;
-    if (projectFilter === 'Web & Bulut') {
-      matchesCategory = project.category.includes('Web') || project.category.includes('Bulut');
-    } else if (projectFilter === 'Mobil') {
-      matchesCategory = project.category.includes('Mobil') || project.tech.some(t => ['React Native', 'Expo', 'Android', 'Kotlin'].includes(t));
-    } else if (projectFilter === 'Yapay Zeka') {
-      matchesCategory = project.category.includes('Yapay Zeka') || project.title.includes('Yapay Zeka') || project.tech.some(t => t.includes('Gemini') || t.includes('AI') || t.includes('LLM'));
-    } else if (projectFilter === 'Python & Otomasyon') {
-      matchesCategory = project.category.includes('Python') || project.category.includes('Otomasyon') || project.tech.includes('Python');
-    } else if (projectFilter === 'Masaüstü') {
-      matchesCategory = project.category.includes('Masaüstü');
-    } else if (projectFilter === 'Özel Eğitim') {
-      matchesCategory = project.category.includes('Özel Eğitim');
-    } else if (projectFilter === 'Veri & Finans') {
-      matchesCategory = project.category.includes('Veri') || project.category.includes('Kazıma') || project.category.includes('Finans');
+  // Dynamic bilingual profile object
+  const currentProfile = useMemo(() => {
+    if (lang === 'en') {
+      return {
+        ...profile,
+        title: profileDataEn.title || profile.title,
+        about: profileDataEn.about || profile.about,
+        education: (profileDataEn.education || profile.education) as Education,
+        experience: (profileDataEn.experience || profile.experience) as Experience,
+        softwareProfile: profileDataEn.softwareProfile || profile.softwareProfile,
+        aiProfile: profileDataEn.aiProfile || profile.aiProfile,
+      };
     }
+    return profile;
+  }, [profile, lang]);
 
-    if (!matchesCategory) return false;
-    const sanitizedSearch = sanitizeText(searchQuery);
-    if (!sanitizedSearch) return true;
+  // Map custom uploaded photos, custom demo URLs & English overrides onto existing project structures
+  const mappedProjects = useMemo(() => {
+    return projectList.map(project => {
+      const customImg = projectImages[project.id];
+      const customDemo = projectDemoUrls[project.id];
+      const resolvedDemo = (customDemo !== undefined ? sanitizeUrl(customDemo) : (sanitizeUrl(project.demoUrl) || sanitizeUrl(project.deploy))) || undefined;
+      const enOverride = lang === 'en' ? projectsEn[project.id] : undefined;
+      return {
+        ...project,
+        title: enOverride?.title || project.title,
+        category: enOverride?.category || project.category,
+        description: enOverride?.description || project.description,
+        longDescription: enOverride?.longDescription || project.longDescription,
+        highlights: enOverride?.highlights || project.highlights,
+        image: (customImg && sanitizeImageSource(customImg)) || (project.image && sanitizeImageSource(project.image)) || project.image || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80',
+        demoUrl: resolvedDemo,
+        isLive: Boolean(resolvedDemo)
+      };
+    });
+  }, [projectList, projectImages, projectDemoUrls, lang]);
 
-    const q = sanitizedSearch.toLowerCase();
-    return (
-      project.title.toLowerCase().includes(q) ||
-      project.description.toLowerCase().includes(q) ||
-      project.longDescription.toLowerCase().includes(q) ||
-      project.category.toLowerCase().includes(q) ||
-      project.tech.some(t => t.toLowerCase().includes(q))
-    );
-  });
+  // Map articles with English overrides when lang === 'en'
+  const mappedArticles = useMemo(() => {
+    return articleList.map(article => {
+      const enOverride = lang === 'en' ? articlesEn[article.id] : undefined;
+      return {
+        ...article,
+        title: enOverride?.title || article.title,
+        category: enOverride?.category || article.category,
+        date: enOverride?.date || article.date,
+        readTime: enOverride?.readTime || article.readTime,
+        summary: enOverride?.summary || article.summary,
+        content: enOverride?.content || article.content,
+        tags: enOverride?.tags || article.tags
+      };
+    });
+  }, [articleList, lang]);
+
+  // Extract all distinct technologies with occurrence counts for deep filtering
+  const availableTechs = useMemo(() => {
+    const counts: Record<string, number> = {};
+    mappedProjects.forEach(p => {
+      p.tech.forEach(tItem => {
+        counts[tItem] = (counts[tItem] || 0) + 1;
+      });
+    });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .map(([tech, count]) => ({ tech, count }));
+  }, [mappedProjects]);
+
+  // Deep Filter projects based on category, technology tag, and keyword search
+  const filteredProjects = useMemo(() => {
+    const list = mappedProjects.filter(project => {
+      let matchesCategory = true;
+      if (projectFilter === 'Web & Bulut' || projectFilter === 'Web & Cloud') {
+        matchesCategory = project.category.includes('Web') || project.category.includes('Bulut') || project.category.includes('Cloud');
+      } else if (projectFilter === 'Mobil' || projectFilter === 'Mobile') {
+        matchesCategory = project.category.includes('Mobil') || project.category.includes('Mobile') || project.tech.some(tItem => ['React Native', 'Expo', 'Android', 'Kotlin'].includes(tItem));
+      } else if (projectFilter === 'Yapay Zeka' || projectFilter === 'Data & AI' || projectFilter === 'AI & LLM' || projectFilter === 'AI & Psychology' || projectFilter === 'Veri Analizi & AI') {
+        matchesCategory = project.category.includes('Yapay Zeka') || project.category.includes('AI') || project.title.includes('Yapay Zeka') || project.title.includes('AI') || project.tech.some(tItem => tItem.includes('Gemini') || tItem.includes('AI') || tItem.includes('LLM') || tItem.includes('NLP') || tItem.includes('PyTorch'));
+      } else if (projectFilter === 'Python & Otomasyon' || projectFilter === 'Automation & Scripting' || projectFilter === 'Otomasyon & Script') {
+        matchesCategory = project.category.includes('Python') || project.category.includes('Otomasyon') || project.category.includes('Automation') || project.tech.includes('Python') || project.tech.includes('Selenium');
+      } else if (projectFilter === 'Masaüstü' || projectFilter === 'Desktop & Tools' || projectFilter === 'Masaüstü & Araçlar') {
+        matchesCategory = project.category.includes('Masaüstü') || project.category.includes('Desktop');
+      } else if (projectFilter === 'Özel Eğitim' || projectFilter === 'Special Education' || projectFilter === 'Özel Eğitim & Danışmanlık') {
+        matchesCategory = project.category.includes('Özel Eğitim') || project.category.includes('Special Ed') || project.category.includes('Special Education');
+      } else if (projectFilter === 'Veri & Finans' || projectFilter === 'Data & Finance') {
+        matchesCategory = project.category.includes('Veri') || project.category.includes('Kazıma') || project.category.includes('Finans') || project.category.includes('Data') || project.category.includes('Finance');
+      }
+
+      if (!matchesCategory) return false;
+
+      // Filter by selected individual technology tag
+      if (selectedTech && !project.tech.includes(selectedTech)) {
+        return false;
+      }
+
+      const sanitizedSearch = sanitizeText(searchQuery);
+      if (!sanitizedSearch) return true;
+
+      const q = sanitizedSearch.toLowerCase();
+      return (
+        project.title.toLowerCase().includes(q) ||
+        project.description.toLowerCase().includes(q) ||
+        project.longDescription.toLowerCase().includes(q) ||
+        project.category.toLowerCase().includes(q) ||
+        project.tech.some(tItem => tItem.toLowerCase().includes(q))
+      );
+    });
+
+    // Deep Sorting Options
+    if (sortBy === 'alpha') {
+      return [...list].sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortBy === 'newest') {
+      return [...list].reverse();
+    }
+    return list;
+  }, [mappedProjects, projectFilter, selectedTech, searchQuery, sortBy]);
 
   // Track currently selected project with up-to-date image reference
   const currentSelectedProject = selectedProject 
     ? mappedProjects.find(p => p.id === selectedProject.id) || selectedProject
+    : null;
+
+  // Track currently selected article with up-to-date English translations
+  const currentSelectedArticle = selectedArticle 
+    ? mappedArticles.find(a => a.id === selectedArticle.id) || selectedArticle
     : null;
 
   const getPreparedMessage = () => {
@@ -995,10 +1109,10 @@ export default function App() {
   };
 
   const navItems = [
-    { id: 'profile', label: 'Profil' },
-    { id: 'projects', label: 'Projeler' },
-    { id: 'articles', label: 'Yayınlar' },
-    { id: 'contact', label: 'İletişim' }
+    { id: 'profile', label: t.nav.about },
+    { id: 'projects', label: t.nav.projects },
+    { id: 'articles', label: t.nav.articles },
+    { id: 'contact', label: t.nav.contact }
   ] as const;
 
   return (
@@ -1006,7 +1120,7 @@ export default function App() {
       
       {/* Accessibility Keyboard Skip Link (WCAG 2.1 AA) */}
       <a href="#main-nav" className="skip-to-content">
-        Navigasyona Atla (Klavye Gezintisi)
+        {lang === 'tr' ? 'Navigasyona Atla (Klavye Gezintisi)' : 'Skip to Navigation (Keyboard Accessibility)'}
       </a>
       
       {/* IMMERSIVE THEME BACKGROUNDS & CRT SCANLINE EFFECTS */}
@@ -1583,10 +1697,10 @@ export default function App() {
                         setSelectedProject(null);
                       }}
                       className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs transition-all border border-emerald-400/40 cursor-pointer hover:scale-105 active:scale-95 shadow-md group"
-                      title="Profile Geri Dön"
+                      title={lang === 'tr' ? "Profile Geri Dön" : "Back to Profile"}
                     >
                       <ArrowLeft size={14} className="text-emerald-400 group-hover:-translate-x-0.5 transition-transform" />
-                      <span>Geri (Profile Dön)</span>
+                      <span>{lang === 'tr' ? 'Geri (Profile Dön)' : 'Back to Profile'}</span>
                     </button>
 
                     <div className="flex items-center gap-2">
@@ -1594,7 +1708,7 @@ export default function App() {
                         <button
                           onClick={handlePrevProject}
                           className="w-7 h-7 rounded-full hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all cursor-pointer"
-                          title="Önceki Proje (Sol Ok)"
+                          title={lang === 'tr' ? "Önceki Proje (Sol Ok)" : "Previous Project (Left Arrow)"}
                         >
                           <ChevronLeft size={16} />
                         </button>
@@ -1604,7 +1718,7 @@ export default function App() {
                         <button
                           onClick={handleNextProject}
                           className="w-7 h-7 rounded-full hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all cursor-pointer"
-                          title="Sonraki Proje (Sağ Ok)"
+                          title={lang === 'tr' ? "Sonraki Proje (Sağ Ok)" : "Next Project (Right Arrow)"}
                         >
                           <ChevronRight size={16} />
                         </button>
@@ -1613,7 +1727,7 @@ export default function App() {
                       <button
                         onClick={() => setSelectedProject(null)}
                         className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all border border-white/10 cursor-pointer"
-                        title="Kapat"
+                        title={lang === 'tr' ? "Kapat" : "Close"}
                       >
                         <X size={14} />
                       </button>
@@ -1769,7 +1883,7 @@ export default function App() {
 
                   {/* Tech Stack */}
                   <div className="space-y-2">
-                    <span className="text-[10px] text-white/75 tracking-wider uppercase font-bold">GELİŞTİRME TEKNOLOJİLERİ</span>
+                    <span className="text-[10px] text-emerald-400 tracking-wider uppercase font-bold">{t.projectCard.techStack.toUpperCase()}</span>
                     <div className="flex flex-wrap gap-1.5">
                       {currentSelectedProject.tech.map(tech => (
                         <span key={tech} className="px-2.5 py-1 liquid-glass rounded-md text-[10px] text-white font-semibold font-mono">
@@ -1791,7 +1905,9 @@ export default function App() {
 
                   {/* Highlights */}
                   <div className="space-y-2 pt-2 border-t border-white/10">
-                    <span className="text-[10px] uppercase tracking-wider text-white/75 font-bold">ÖNE ÇIKAN KAZANIMLAR & ÖZELLİKLER</span>
+                    <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold">
+                      {lang === 'tr' ? 'ÖNE ÇIKAN KAZANIMLAR & ÖZELLİKLER' : 'KEY HIGHLIGHTS & ARCHITECTURE'}
+                    </span>
                     <ul className="space-y-2">
                       {currentSelectedProject.highlights.map((highlight, index) => (
                         <li key={index} className="flex items-start gap-2 text-xs text-white/95 font-medium leading-relaxed">
@@ -1813,7 +1929,7 @@ export default function App() {
                           className="w-full py-3 px-5 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-400 text-white font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2.5 shadow-xl hover:shadow-emerald-500/25 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer border border-emerald-300/40 group/demobtn"
                         >
                           <ExternalLink size={16} className="group-hover/demobtn:translate-x-0.5 group-hover/demobtn:-translate-y-0.5 transition-transform" />
-                          <span>Canlı Uygulamayı İncele</span>
+                          <span>{t.projectCard.inspectApp}</span>
                         </a>
                         {isAdmin && (
                           <div className="flex justify-end">
@@ -1840,7 +1956,9 @@ export default function App() {
                       </div>
                     ) : (
                       <div className="p-3.5 rounded-2xl bg-white/5 border border-white/5 text-center flex flex-col sm:flex-row items-center justify-between gap-2">
-                        <span className="text-xs text-white/60 font-medium">Bu proje yerel masaüstü / otomasyon çalışmasıdır.</span>
+                        <span className="text-xs text-white/60 font-medium">
+                          {lang === 'tr' ? 'Bu proje yerel masaüstü / otomasyon çalışmasıdır.' : 'This project runs locally as a desktop / automation script.'}
+                        </span>
                         {isAdmin && (
                           <button
                             onClick={() => {
@@ -1876,7 +1994,7 @@ export default function App() {
                           className="flex-1 py-2 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                         >
                           <Edit3 size={13} />
-                          <span>Projeyi Düzenle</span>
+                          <span>{lang === 'tr' ? 'Projeyi Düzenle' : 'Edit Project'}</span>
                         </button>
                         <button
                           type="button"
@@ -1905,10 +2023,10 @@ export default function App() {
                     )}
                   </div>
                 </motion.div>
-              ) : selectedArticle ? (
+              ) : currentSelectedArticle ? (
                 /* DETAIL VIEW 2: ACTIVE ARTICLE READER IN LEFT PANEL */
                 <motion.div
-                  key={`left-article-${selectedArticle.id}`}
+                  key={`left-article-${currentSelectedArticle.id}`}
                   initial={{ opacity: 0, scale: 0.98, x: -15 }}
                   animate={{ opacity: 1, scale: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 0.98, x: -15 }}
@@ -1922,10 +2040,10 @@ export default function App() {
                         setSelectedArticle(null);
                       }}
                       className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs transition-all border border-emerald-400/40 cursor-pointer hover:scale-105 active:scale-95 shadow-md group"
-                      title="Profile Geri Dön"
+                      title={lang === 'tr' ? "Profile Geri Dön" : "Back to Profile"}
                     >
                       <ArrowLeft size={14} className="text-emerald-400 group-hover:-translate-x-0.5 transition-transform" />
-                      <span>Geri (Profile Dön)</span>
+                      <span>{lang === 'tr' ? 'Geri (Profile Dön)' : 'Back to Profile'}</span>
                     </button>
                     <button
                       onClick={() => setSelectedArticle(null)}
@@ -1938,26 +2056,32 @@ export default function App() {
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
                       <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase tracking-wider font-mono">
-                        {selectedArticle.category}
+                        {currentSelectedArticle.category}
                       </span>
-                      <span className="text-xs text-white/60 font-mono">{selectedArticle.date}</span>
-                      <span className="text-xs text-white/60 font-mono">• {selectedArticle.readTime}</span>
+                      <span className="text-xs text-white/60 font-mono">{currentSelectedArticle.date}</span>
+                      <span className="text-xs text-white/60 font-mono">• {currentSelectedArticle.readTime}</span>
                     </div>
 
                     <h1 className="text-2xl lg:text-3xl font-extrabold text-white leading-tight">
-                      {selectedArticle.title}
+                      {currentSelectedArticle.title}
                     </h1>
 
                     <p className="text-sm font-semibold text-white/90 leading-relaxed p-4 rounded-2xl bg-white/5 border border-white/10 italic">
-                      "{selectedArticle.excerpt}"
+                      "{currentSelectedArticle.summary}"
                     </p>
 
                     <div className="text-sm text-white/90 leading-relaxed space-y-4 pt-2">
-                      <p>{selectedArticle.content}</p>
+                      {Array.isArray(currentSelectedArticle.content) ? (
+                        currentSelectedArticle.content.map((paragraph, pIdx) => (
+                          <p key={pIdx}>{paragraph}</p>
+                        ))
+                      ) : (
+                        <p>{currentSelectedArticle.content}</p>
+                      )}
                     </div>
 
                     <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/10">
-                      {selectedArticle.tags.map(tag => (
+                      {currentSelectedArticle.tags.map(tag => (
                         <span key={tag} className="text-[10px] px-2.5 py-1 rounded-md bg-white/5 text-white/70">
                           #{tag}
                         </span>
@@ -1977,7 +2101,7 @@ export default function App() {
                           className="flex-1 py-2 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                         >
                           <Edit3 size={13} />
-                          <span>Makaleyi Düzenle</span>
+                          <span>{lang === 'tr' ? 'Makaleyi Düzenle' : 'Edit Article'}</span>
                         </button>
                         <button
                           type="button"
@@ -2041,7 +2165,7 @@ export default function App() {
                           className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
                         >
                           <Edit3 size={13} />
-                          <span>Profili Düzenle</span>
+                          <span>{lang === 'tr' ? 'Profili Düzenle' : 'Edit Profile'}</span>
                         </button>
                       )}
                     </div>
@@ -2049,34 +2173,43 @@ export default function App() {
                     <div className="space-y-3">
                       <div className="flex flex-wrap gap-2">
                         <div className="inline-flex items-center gap-2 px-3 py-1 liquid-glass rounded-full text-[10px] tracking-widest uppercase text-white font-bold">
-                          <Sparkles size={10} /> {profile.title}
+                          <Sparkles size={10} /> {lang === 'tr' ? profile.title : 'Psychological Counselor & AI Developer'}
                         </div>
                         <div className="inline-flex items-center gap-1.5 px-3 py-1 liquid-glass rounded-full text-[10px] text-emerald-400 font-extrabold tracking-widest uppercase select-none">
                           <span className="relative flex h-1.5 w-1.5">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                           </span>
-                          <span>PROJELERE AÇIK</span>
+                          <span>{lang === 'tr' ? 'PROJELERE AÇIK' : 'OPEN TO WORK & COLLABORATION'}</span>
                         </div>
                       </div>
                       <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.05em] leading-[1.05] text-white">
-                        Ruh Sağlığı & <br />
-                        <span className="font-serif italic text-white">Yapay Zeka</span>
+                        {lang === 'tr' ? (
+                          <>
+                            Ruh Sağlığı & <br />
+                            <span className="font-serif italic text-white">Yapay Zeka</span>
+                          </>
+                        ) : (
+                          <>
+                            Mental Health & <br />
+                            <span className="font-serif italic text-white">Artificial Intelligence</span>
+                          </>
+                        )}
                       </h1>
                       <p className="text-sm sm:text-base text-white font-semibold leading-relaxed">
-                        {profile.about}
+                        {currentProfile.about}
                       </p>
                     </div>
 
                     <div className="flex flex-wrap gap-2.5">
                       <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-bold text-white">
-                        Psikolojik Danışmanlık
+                        {lang === 'tr' ? 'Psikolojik Danışmanlık' : 'Counseling & Psychology'}
                       </span>
                       <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-bold text-white">
-                        Yapay Zeka (AI)
+                        {lang === 'tr' ? 'Yapay Zeka (AI)' : 'Artificial Intelligence (AI)'}
                       </span>
                       <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-bold text-white">
-                        Python Geliştirme
+                        {lang === 'tr' ? 'Python Geliştirme' : 'Python Automation'}
                       </span>
                     </div>
 
@@ -2089,7 +2222,7 @@ export default function App() {
                         className="inline-flex items-center gap-3.5 pl-6 pr-2 py-2 liquid-glass-strong hover:bg-white/5 rounded-full text-sm font-bold transition-all group hover:scale-105 active:scale-95 cursor-pointer"
                         id="cta-explore-projects"
                       >
-                        <span>Projelerimi Keşfet</span>
+                        <span>{lang === 'tr' ? 'Projelerimi Keşfet' : 'Explore My Projects'}</span>
                         <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-white transition-transform duration-300 group-hover:translate-x-1">
                           <ArrowRight size={14} />
                         </div>
@@ -2112,10 +2245,10 @@ export default function App() {
                   {/* Left Panel Bottom Quote - shown in profile mode */}
                   <footer className="mt-auto pt-6 border-t border-white/5 z-10 flex flex-col gap-3.5 shrink-0">
                     <span className="text-[10px] tracking-[0.25em] uppercase text-white/60 font-semibold">
-                      VİZYONER YAKLAŞIM
+                      {t.hero.visionLabel}
                     </span>
                     <blockquote className="text-sm md:text-base font-normal italic leading-relaxed text-white">
-                      "Zihnin derinliklerini, algoritmanın <span className="font-serif text-white font-medium">gücüyle anlamak</span>."
+                      "{t.hero.visionQuote}"
                     </blockquote>
                     <div className="flex items-center justify-between gap-3 w-full pt-1">
                       <div className="flex items-center gap-2">
@@ -2158,6 +2291,10 @@ export default function App() {
             <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-full overflow-x-auto transition-all duration-300">
               {/* Dual-Theme Skeuomorphic Switch (Normal vs Terminal Mode) */}
               <ThemeToggle theme={theme} onToggle={toggleTheme} className="shrink-0" />
+
+              {/* Language Switcher (TR / EN) */}
+              <LanguageToggle currentLang={lang} onToggle={handleLangToggle} className="shrink-0" />
+
               <div className="w-[1px] h-5 bg-white/15 mx-0.5 shrink-0" />
 
               {/* GitHub - Expandable on Hover */}
@@ -2183,18 +2320,18 @@ export default function App() {
                 rel="noopener noreferrer" 
                 onClick={() => soundEngine.playGlassClick()}
                 className="h-8 px-2.5 hover:px-3.5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 hover:border-pink-500/50 text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer"
-                title="Instagram (Henüz aktif profil yok)"
+                title={lang === 'tr' ? "Instagram (Henüz aktif profil yok)" : "Instagram (Profile coming soon)"}
               >
                 <Instagram size={14} className="shrink-0 text-white/80 group-hover:text-pink-400 transition-colors" />
                 <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
-                  <span className="text-[11px]">Instagram (Yakında)</span>
+                  <span className="text-[11px]">{lang === 'tr' ? "Instagram (Yakında)" : "Instagram (Soon)"}</span>
                   <ExternalLink size={10} className="shrink-0 opacity-60 group-hover:opacity-100" />
                 </div>
               </a>
 
               {/* WhatsApp - Expandable on Hover */}
               <a 
-                href="https://wa.me/?text=Merhaba%20Emirhan%20Bey,%20sitenizden%20ulaşıyorum." 
+                href={`https://wa.me/?text=${encodeURIComponent(lang === 'tr' ? "Merhaba Emirhan Bey, sitenizden ulaşıyorum." : "Hello Emirhan, reaching out via your portfolio.")}`}
                 target="_blank" 
                 rel="noopener noreferrer" 
                 onClick={() => soundEngine.playGlassClick()}
@@ -2251,7 +2388,7 @@ export default function App() {
                 className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
                   isMuted ? 'text-red-400 hover:bg-red-500/10' : 'text-emerald-400 hover:bg-emerald-500/10'
                 }`}
-                title={isMuted ? "Ses Efektlerini Aç" : "Ses Efektlerini Kapat"}
+                title={isMuted ? (lang === 'tr' ? "Ses Efektlerini Aç" : "Unmute Sound Effects") : (lang === 'tr' ? "Ses Efektlerini Kapat" : "Mute Sound Effects")}
               >
                 {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
               </button>
@@ -2264,7 +2401,9 @@ export default function App() {
                 className={`relative w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 ${
                   isAmbientPlaying ? 'text-emerald-400 bg-emerald-500/20 shadow-[0_0_12px_rgba(52,211,153,0.4)]' : 'text-white/70 hover:bg-white/10'
                 }`}
-                title={isAmbientPlaying ? `Siber & Teknoloji Fon Müziğini Durdur (${currentMusicTrack.title})` : "Fütüristik Siber Fon Müziğini Başlat (Cyber Synthwave / Cyberspace Drift)"}
+                title={isAmbientPlaying 
+                  ? (lang === 'tr' ? `Siber & Teknoloji Fon Müziğini Durdur (${currentMusicTrack.title})` : `Stop Cyber Focus Music (${currentMusicTrack.title})`) 
+                  : (lang === 'tr' ? "Fütüristik Siber Fon Müziğini Başlat (Cyber Synthwave / Cyberspace Drift)" : "Play Futuristic Cyber Synthwave Music")}
               >
                 <Music size={14} className={isAmbientPlaying ? 'animate-pulse' : ''} />
                 {isAmbientPlaying && (
@@ -2288,7 +2427,7 @@ export default function App() {
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 liquid-glass hover:bg-white/10 rounded-full text-xs font-bold text-white/90 hover:text-white transition-all cursor-pointer border border-white/10 hover:border-emerald-400/40"
               >
                 <Cpu size={13} className="text-emerald-400" />
-                <span className="hidden sm:inline">Teknoloji Radarı</span>
+                <span className="hidden sm:inline">{t.nav.techRadar}</span>
               </button>
 
               <button
@@ -2301,7 +2440,7 @@ export default function App() {
                 className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-full text-xs font-extrabold text-white transition-all cursor-pointer shadow-lg hover:scale-105 border border-emerald-300/30"
               >
                 <Wand2 size={13} />
-                <span>Proje Mimarisi Oluştur ve Teklif Al</span>
+                <span>{lang === 'tr' ? 'Proje Mimarisi & Teklif' : 'Architecture & Estimate'}</span>
               </button>
             </div>
           </div>
@@ -2310,6 +2449,10 @@ export default function App() {
           <div className="flex-1 flex flex-col min-h-0">
             {theme === 'terminal' ? (
               <PowerShellTerminalWorkspace
+                lang={lang}
+                projects={mappedProjects}
+                articles={mappedArticles}
+                profile={currentProfile}
                 onSwitchToNormal={(targetTab) => {
                   setTheme('normal');
                   setActiveTab(targetTab || 'projects');
@@ -2344,7 +2487,9 @@ export default function App() {
                   {/* Education & Certification Card */}
                   <div className="p-4 sm:p-5 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3">
                     <div className="flex items-center justify-between pb-1 border-b border-white/5">
-                      <span className="text-[9px] tracking-wider text-white/95 uppercase font-bold">EĞİTİM & UZMANLIK</span>
+                      <span className="text-[9px] tracking-wider text-emerald-400 uppercase font-bold">
+                        {lang === 'tr' ? 'EĞİTİM & UZMANLIK' : 'EDUCATION & CREDENTIALS'}
+                      </span>
                       {isAdmin && (
                         <button
                           type="button"
@@ -2355,7 +2500,7 @@ export default function App() {
                           className="px-2 py-0.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-[9px] font-bold flex items-center gap-1 transition-all cursor-pointer"
                         >
                           <Edit3 size={10} />
-                          <span>Düzenle</span>
+                          <span>{lang === 'tr' ? 'Düzenle' : 'Edit'}</span>
                         </button>
                       )}
                     </div>
@@ -2364,13 +2509,15 @@ export default function App() {
                         <GraduationCap size={16} />
                       </div>
                       <div className="space-y-0.5">
-                        <span className="text-[9px] tracking-wider text-white/95 uppercase font-bold">EĞİTİM & AKADEMİK</span>
-                        <h3 className="text-base font-extrabold text-white">{profile.education.school}</h3>
+                        <span className="text-[9px] tracking-wider text-white/95 uppercase font-bold">
+                          {lang === 'tr' ? 'EĞİTİM & AKADEMİK' : 'ACADEMIC EDUCATION'}
+                        </span>
+                        <h3 className="text-base font-extrabold text-white">{currentProfile.education.school}</h3>
                         <p className="text-xs text-white font-bold leading-relaxed">
-                          {profile.education.degree}
+                          {currentProfile.education.degree}
                         </p>
                         <p className="text-xs text-white/95 font-medium leading-relaxed">
-                          {profile.education.details}
+                          {currentProfile.education.details}
                         </p>
                       </div>
                     </div>
@@ -2382,11 +2529,13 @@ export default function App() {
                         <Brain size={16} />
                       </div>
                       <div className="space-y-0.5">
-                        <span className="text-[9px] tracking-wider text-white/95 uppercase font-bold">UZMANLIK SERTİFİKASI</span>
-                        <h4 className="text-sm font-extrabold text-white">{profile.aiProfile.title}</h4>
-                        <p className="text-xs text-white font-bold">{profile.aiProfile.certification}</p>
+                        <span className="text-[9px] tracking-wider text-white/95 uppercase font-bold">
+                          {lang === 'tr' ? 'UZMANLIK SERTİFİKASI' : 'CREDENTIALS & CERTIFICATION'}
+                        </span>
+                        <h4 className="text-sm font-extrabold text-white">{currentProfile.aiProfile.title}</h4>
+                        <p className="text-xs text-white font-bold">{currentProfile.aiProfile.certification}</p>
                         <p className="text-xs text-white/95 font-medium leading-relaxed">
-                          {profile.aiProfile.details}
+                          {currentProfile.aiProfile.details}
                         </p>
                       </div>
                     </div>
@@ -2397,7 +2546,9 @@ export default function App() {
                     
                     {/* Header with Switcher */}
                     <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                      <span className="text-[9px] tracking-widest text-white/95 uppercase font-bold">PROFESYONEL ODAK</span>
+                      <span className="text-[9px] tracking-widest text-emerald-400 uppercase font-bold">
+                        {lang === 'tr' ? 'PROFESYONEL ODAK' : 'PROFESSIONAL FOCUS'}
+                      </span>
                       <div className="flex gap-1 p-0.5 rounded-full bg-white/5 border border-white/10">
                         <button
                           onClick={() => setProfileViewMode('summary')}
@@ -2407,7 +2558,7 @@ export default function App() {
                               : 'text-white/60 hover:text-white/90'
                           }`}
                         >
-                          Özet
+                          {lang === 'tr' ? 'Özet' : 'Summary'}
                         </button>
                         <button
                           onClick={() => setProfileViewMode('timeline')}
@@ -2417,7 +2568,7 @@ export default function App() {
                               : 'text-white/60 hover:text-white/90'
                           }`}
                         >
-                          Serüven
+                          {lang === 'tr' ? 'Serüven' : 'Journey'}
                         </button>
                       </div>
                     </div>
@@ -2439,10 +2590,12 @@ export default function App() {
                               <Wand2 size={14} />
                             </div>
                             <div>
-                              <h4 className="text-[10px] text-white/95 uppercase tracking-widest font-bold">SAHA DENEYİMİ</h4>
-                              <span className="text-xs sm:text-sm font-extrabold text-white block mt-0.5">{profile.experience.title}</span>
+                              <h4 className="text-[10px] text-white/95 uppercase tracking-widest font-bold">
+                                {lang === 'tr' ? 'SAHA DENEYİMİ' : 'FIELD EXPERIENCE'}
+                              </h4>
+                              <span className="text-xs sm:text-sm font-extrabold text-white block mt-0.5">{currentProfile.experience.title}</span>
                               <p className="text-[10px] sm:text-[11px] text-white font-medium mt-1 leading-relaxed line-clamp-3">
-                                {profile.experience.description}
+                                {currentProfile.experience.description}
                               </p>
                             </div>
                           </div>
@@ -2453,10 +2606,12 @@ export default function App() {
                               <BookOpen size={14} />
                             </div>
                             <div>
-                              <h4 className="text-[10px] text-white/95 uppercase tracking-widest font-bold">YAZILIM & YAPAY ZEKA</h4>
-                              <span className="text-xs sm:text-sm font-extrabold text-white block mt-0.5">{profile.softwareProfile.level}</span>
+                              <h4 className="text-[10px] text-white/95 uppercase tracking-widest font-bold">
+                                {lang === 'tr' ? 'YAZILIM & YAPAY ZEKA' : 'SOFTWARE & AI'}
+                              </h4>
+                              <span className="text-xs sm:text-sm font-extrabold text-white block mt-0.5">{currentProfile.softwareProfile.level}</span>
                               <p className="text-[10px] sm:text-[11px] text-white font-medium mt-1 leading-relaxed line-clamp-3">
-                                {profile.softwareProfile.skills.slice(0, 3).join(', ')} ve sistem otomasyonları.
+                                {currentProfile.softwareProfile.skills.slice(0, 3).join(', ')} {lang === 'tr' ? 've sistem otomasyonları.' : 'and system automations.'}
                               </p>
                             </div>
                           </div>
@@ -2475,9 +2630,17 @@ export default function App() {
                           <div className="flex gap-3 relative pl-4 border-l border-white/10">
                             <div className="absolute -left-[4.5px] top-1.5 w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
                             <div className="space-y-0.5">
-                              <span className="text-[9px] font-extrabold text-emerald-400 font-mono">GÜNCEL (1-2 YILDIR GELİŞİM)</span>
-                              <h4 className="text-xs font-bold text-white">Yazılım & Yapay Zeka Geliştiricisi (1-2 Yıl)</h4>
-                              <p className="text-[10px] text-white/75 leading-relaxed">1-2 yıldır Python otomasyonları, Gemini API istem mühendisliği ve React Native mobil projeleri üzerine yoğunlaşıyorum.</p>
+                              <span className="text-[9px] font-extrabold text-emerald-400 font-mono">
+                                {lang === 'tr' ? 'GÜNCEL (1-2 YILDIR GELİŞİM)' : 'CURRENT (1-2 YRS ACTIVE)'}
+                              </span>
+                              <h4 className="text-xs font-bold text-white">
+                                {lang === 'tr' ? 'Yazılım & Yapay Zeka Geliştiricisi (1-2 Yıl)' : 'Software & AI Developer (1-2 Yrs)'}
+                              </h4>
+                              <p className="text-[10px] text-white/75 leading-relaxed">
+                                {lang === 'tr' 
+                                  ? '1-2 yıldır Python otomasyonları, Gemini API istem mühendisliği ve React Native mobil projeleri üzerine yoğunlaşıyorum.' 
+                                  : 'Engineering Python automations, Gemini API prompt workflows, and React Native mobile applications.'}
+                              </p>
                             </div>
                           </div>
                           {/* Node 2 */}
@@ -2485,8 +2648,14 @@ export default function App() {
                             <div className="absolute -left-[4.5px] top-1.5 w-2 h-2 rounded-full bg-white/40" />
                             <div className="space-y-0.5">
                               <span className="text-[9px] font-extrabold text-white/50 font-mono">2023 - 2026</span>
-                              <h4 className="text-xs font-bold text-white">Özel Eğitim Öğretmenliği (3 Yıl)</h4>
-                              <p className="text-[10px] text-white/75 leading-relaxed">Bireyselleştirilmiş eğitim planları (BEP) ve teknoloji entegrasyonu.</p>
+                              <h4 className="text-xs font-bold text-white">
+                                {lang === 'tr' ? 'Özel Eğitim Öğretmenliği (3 Yıl)' : 'Special Education Teacher (3 Yrs)'}
+                              </h4>
+                              <p className="text-[10px] text-white/75 leading-relaxed">
+                                {lang === 'tr' 
+                                  ? 'Bireyselleştirilmiş eğitim planları (BEP) ve teknoloji entegrasyonu.' 
+                                  : 'Individualized Education Programs (IEP) and assistive tech integration.'}
+                              </p>
                             </div>
                           </div>
                           {/* Node 3 */}
@@ -2494,8 +2663,14 @@ export default function App() {
                             <div className="absolute -left-[4.5px] top-1.5 w-2 h-2 rounded-full bg-white/40" />
                             <div className="space-y-0.5">
                               <span className="text-[9px] font-extrabold text-white/50 font-mono">2022</span>
-                              <h4 className="text-xs font-bold text-white">Yapay Zeka Sertifikasyonu</h4>
-                              <p className="text-[10px] text-white/75 leading-relaxed">Marmara Üni. Yapay Zeka & Makine Öğrenmesi Başarı Eğitimi.</p>
+                              <h4 className="text-xs font-bold text-white">
+                                {lang === 'tr' ? 'Yapay Zeka Sertifikasyonu' : 'AI & Machine Learning Certification'}
+                              </h4>
+                              <p className="text-[10px] text-white/75 leading-relaxed">
+                                {lang === 'tr' 
+                                  ? 'Marmara Üni. Yapay Zeka & Makine Öğrenmesi Başarı Eğitimi.' 
+                                  : 'Marmara University AI & Machine Learning Graduate Certification.'}
+                              </p>
                             </div>
                           </div>
                           {/* Node 4 */}
@@ -2503,8 +2678,14 @@ export default function App() {
                             <div className="absolute -left-[4.5px] top-1.5 w-2 h-2 rounded-full bg-white/40" />
                             <div className="space-y-0.5">
                               <span className="text-[9px] font-extrabold text-white/50 font-mono">2021</span>
-                              <h4 className="text-xs font-bold text-white">PDR Lisans Mezuniyeti</h4>
-                              <p className="text-[10px] text-white/75 leading-relaxed">Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık mezuniyeti.</p>
+                              <h4 className="text-xs font-bold text-white">
+                                {lang === 'tr' ? 'PDR Lisans Mezuniyeti' : 'B.S. in Counseling & Guidance'}
+                              </h4>
+                              <p className="text-[10px] text-white/75 leading-relaxed">
+                                {lang === 'tr' 
+                                  ? 'Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık mezuniyeti.' 
+                                  : 'Graduated from Aksaray University Guidance & Psychological Counseling.'}
+                              </p>
                             </div>
                           </div>
                         </motion.div>
@@ -2530,7 +2711,9 @@ export default function App() {
                           />
                         </div>
                         <div>
-                          <span className="text-[9px] uppercase tracking-wider text-white/95 font-bold">Öne Çıkan Proje</span>
+                          <span className="text-[9px] uppercase tracking-wider text-emerald-400 font-bold">
+                            {lang === 'tr' ? 'Öne Çıkan Proje' : 'Featured Project'}
+                          </span>
                           <h4 className="text-sm font-extrabold text-white group-hover:text-white">{mappedProjects[0].title}</h4>
                           <p className="text-xs text-white line-clamp-1">{mappedProjects[0].description}</p>
                         </div>
@@ -2558,12 +2741,50 @@ export default function App() {
                   <div className="p-6 liquid-glass spinning-glow-border rounded-3xl flex flex-col gap-4 min-h-0 flex-1 relative">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="space-y-0.5">
-                        <span className="text-[10px] uppercase tracking-wider text-white font-extrabold">GALERİ & DETAYLAR</span>
-                        <h2 className="text-xl font-extrabold text-white">Yenilikçi Projelerim</h2>
+                        <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-extrabold">
+                          {t.hero.name.toUpperCase()} · {t.nav.projects.toUpperCase()}
+                        </span>
+                        <h2 className="text-xl font-extrabold text-white">{t.nav.projects}</h2>
                       </div>
-                      <span className="text-xs text-white font-bold bg-white/10 px-3 py-1 rounded-full border border-white/10 w-fit">
-                        {filteredProjects.length} Proje Listelendi
-                      </span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* Results Count Badge */}
+                        <span className="text-xs text-white/90 font-bold bg-white/10 px-3 py-1 rounded-full border border-white/10 w-fit shrink-0">
+                          {filteredProjects.length} / {mappedProjects.length} {t.filter.projectsFound}
+                        </span>
+
+                        {/* Sort Dropdown */}
+                        <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 rounded-full px-2.5 py-1 text-xs text-white/80">
+                          <ArrowUpDown size={11} className="text-emerald-400 shrink-0" />
+                          <select
+                            value={sortBy}
+                            onChange={(e) => setSortBy(e.target.value as any)}
+                            className="bg-transparent text-[11px] text-white font-bold focus:outline-hidden cursor-pointer"
+                            aria-label={t.filter.sortBy}
+                          >
+                            <option value="featured" className="bg-zinc-900 text-white">{t.filter.sortFeatured}</option>
+                            <option value="newest" className="bg-zinc-900 text-white">{t.filter.sortNewest}</option>
+                            <option value="alpha" className="bg-zinc-900 text-white">{t.filter.sortAlpha}</option>
+                          </select>
+                        </div>
+
+                        {/* Toggle Tech Filters drawer button */}
+                        <button
+                          type="button"
+                          onClick={() => setShowTechFilterDrawer(!showTechFilterDrawer)}
+                          className={`px-3 py-1 rounded-full border text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                            showTechFilterDrawer || selectedTech
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/50 shadow-[0_0_10px_rgba(52,211,153,0.2)]'
+                              : 'bg-white/5 text-white/70 hover:text-white border-white/10'
+                          }`}
+                          title={t.filter.filterByTech}
+                        >
+                          <SlidersHorizontal size={11} />
+                          <span className="text-[11px]">{t.filter.filterByTech}</span>
+                          {selectedTech && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                          )}
+                        </button>
+                      </div>
                     </div>
 
                     {/* Search Bar & Category Filter Pills */}
@@ -2573,10 +2794,10 @@ export default function App() {
                         <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/50" />
                         <input
                           type="text"
-                          placeholder="Proje, teknoloji veya içerik ara (örn: Python, Gemini)..."
+                          placeholder={t.filter.searchPlaceholder}
                           value={searchQuery}
                           onChange={e => setSearchQuery(e.target.value)}
-                          className="w-full py-2 pl-9 pr-8 rounded-xl bg-white/5 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-white/30 text-xs text-white placeholder-white/40 font-medium transition-all"
+                          className="w-full py-2 pl-9 pr-8 rounded-xl bg-white/5 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400 text-xs text-white placeholder-white/40 font-medium transition-all"
                         />
                         {searchQuery && (
                           <button
@@ -2588,23 +2809,116 @@ export default function App() {
                         )}
                       </div>
 
-                      {/* Filter Pills */}
+                      {/* Category Filter Pills */}
                       <div className="flex flex-wrap gap-1.5 p-1 liquid-glass spinning-glow-border rounded-xl text-[10px]">
-                        {['Tümü', 'Web & Bulut', 'Mobil', 'Yapay Zeka', 'Python & Otomasyon', 'Masaüstü', 'Özel Eğitim', 'Veri & Finans'].map(filter => (
+                        {[
+                          { id: 'Tümü', label: t.filter.categories.all },
+                          { id: 'Web & Bulut', label: t.filter.categories.webCloud },
+                          { id: 'Yapay Zeka', label: t.filter.categories.dataAi },
+                          { id: 'Python & Otomasyon', label: t.filter.categories.automationScript },
+                          { id: 'Masaüstü', label: t.filter.categories.desktopTools },
+                          { id: 'Özel Eğitim', label: t.filter.categories.specialEdu }
+                        ].map(cat => (
                           <button
-                            key={filter}
-                            onClick={() => setProjectFilter(filter)}
+                            key={cat.id}
+                            onClick={() => {
+                              soundEngine.playTabSwitch();
+                              setProjectFilter(cat.id);
+                            }}
                             className={`px-2.5 py-1 rounded-md transition-all font-bold cursor-pointer ${
-                              projectFilter === filter 
+                              projectFilter === cat.id 
                                 ? 'bg-white/20 text-white font-extrabold shadow-xs' 
                                 : 'text-white/75 hover:text-white hover:bg-white/10'
                             }`}
                           >
-                            {filter}
+                            {cat.label}
                           </button>
                         ))}
                       </div>
                     </div>
+
+                    {/* Tech Stack Multi-Filter Drawer */}
+                    {showTechFilterDrawer && (
+                      <div className="p-2.5 rounded-2xl bg-black/40 border border-emerald-500/20 flex flex-col gap-2 shrink-0">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-emerald-300 font-bold flex items-center gap-1.5">
+                            <SlidersHorizontal size={12} /> {t.filter.filterByTech}
+                          </span>
+                          {selectedTech && (
+                            <button
+                              onClick={() => setSelectedTech(null)}
+                              className="text-red-400 hover:text-red-300 text-[10px] font-bold cursor-pointer transition-colors"
+                            >
+                              {t.filter.allTechs}
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 pr-1">
+                          {availableTechs.map(({ tech, count }) => {
+                            const isSelected = selectedTech === tech;
+                            return (
+                              <button
+                                key={tech}
+                                onClick={() => {
+                                  soundEngine.playGlassClick();
+                                  setSelectedTech(isSelected ? null : tech);
+                                }}
+                                className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+                                  isSelected
+                                    ? 'bg-emerald-500 text-black shadow-md shadow-emerald-500/20'
+                                    : 'bg-white/5 text-white/75 hover:bg-white/15 hover:text-white border border-white/5'
+                                }`}
+                              >
+                                <span>{tech}</span>
+                                <span className={`text-[9px] px-1 py-0.2 rounded-full ${isSelected ? 'bg-black/20 text-black' : 'bg-white/10 text-white/60'}`}>
+                                  {count}
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Active Filters Reset Bar */}
+                    {(projectFilter !== 'Tümü' || selectedTech || searchQuery.trim()) && (
+                      <div className="flex items-center justify-between gap-2 px-3 py-1.5 bg-emerald-950/30 border border-emerald-500/20 rounded-xl text-xs text-white/80 shrink-0">
+                        <div className="flex items-center gap-2 overflow-hidden flex-wrap">
+                          <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+                            {lang === 'tr' ? 'Aktif Filtreler:' : 'Active Filters:'}
+                          </span>
+                          {projectFilter !== 'Tümü' && (
+                            <span className="px-2 py-0.5 rounded bg-white/10 text-[10px] font-bold text-white flex items-center gap-1">
+                              {projectFilter}
+                              <button onClick={() => setProjectFilter('Tümü')} className="hover:text-red-400">×</button>
+                            </span>
+                          )}
+                          {selectedTech && (
+                            <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/30 text-[10px] font-mono font-bold text-emerald-300 flex items-center gap-1">
+                              {selectedTech}
+                              <button onClick={() => setSelectedTech(null)} className="hover:text-red-400">×</button>
+                            </span>
+                          )}
+                          {searchQuery.trim() && (
+                            <span className="px-2 py-0.5 rounded bg-white/10 text-[10px] text-white flex items-center gap-1">
+                              "{searchQuery}"
+                              <button onClick={() => setSearchQuery('')} className="hover:text-red-400">×</button>
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => {
+                            soundEngine.playGlassClick();
+                            setProjectFilter('Tümü');
+                            setSelectedTech(null);
+                            setSearchQuery('');
+                          }}
+                          className="text-[10px] font-extrabold text-emerald-400 hover:text-emerald-300 underline cursor-pointer shrink-0"
+                        >
+                          {t.filter.clearFilters}
+                        </button>
+                      </div>
+                    )}
 
                     {/* Projects Grid Scroll Area */}
                     {/* Admin Project Bar */}
@@ -2631,18 +2945,20 @@ export default function App() {
                     {filteredProjects.length === 0 ? (
                       <div className="flex-1 flex flex-col items-center justify-center p-8 text-center gap-3 liquid-glass rounded-2xl border border-white/5 my-auto">
                         <Search size={32} className="text-white/30 animate-bounce" />
-                        <h3 className="text-sm font-bold text-white">Aradığınız kriterlere uygun proje bulunamadı</h3>
+                        <h3 className="text-sm font-bold text-white">{t.filter.noProjectsFound}</h3>
                         <p className="text-xs text-white/60 max-w-xs">
-                          Farklı bir arama kelimesi yazabilir veya kategori filtrelerini sıfırlayabilirsiniz.
+                          {t.filter.noProjectsSub}
                         </p>
                         <button
                           onClick={() => {
+                            soundEngine.playGlassClick();
                             setSearchQuery('');
+                            setSelectedTech(null);
                             setProjectFilter('Tümü');
                           }}
-                          className="px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-xs text-white font-bold transition-all cursor-pointer mt-1"
+                          className="px-4 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-xs text-emerald-300 font-bold transition-all cursor-pointer mt-1"
                         >
-                          Filtreleri Temizle
+                          {t.filter.clearFilters}
                         </button>
                       </div>
                     ) : (
@@ -2716,18 +3032,18 @@ export default function App() {
                               )}
                               {currentSelectedProject?.id === project.id && (
                                 <div className="absolute top-2 left-2 bg-emerald-500 text-black text-[9px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-lg z-10">
-                                  <span>👈 Solda Açık</span>
+                                  <span>{lang === 'tr' ? '👈 Solda Açık' : '👈 Open on Left'}</span>
                                 </div>
                               )}
                               {!isAdmin && project.demoUrl && (
                                 <div className="absolute top-2 right-2 bg-emerald-950/90 backdrop-blur-md text-emerald-300 border border-emerald-500/40 text-[9px] font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md z-10">
                                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                  <span>CANLI YAYINDA</span>
+                                  <span>{lang === 'tr' ? 'CANLI YAYINDA' : 'LIVE DEMO'}</span>
                                 </div>
                               )}
                               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3">
                                 <span className="text-[10px] text-white font-bold inline-flex items-center gap-1">
-                                  Detaylar <ChevronRight size={10} />
+                                  {t.projectCard.details} <ChevronRight size={10} />
                                 </span>
                                 {project.demoUrl && (
                                   <a
@@ -2737,7 +3053,7 @@ export default function App() {
                                     onClick={(e) => e.stopPropagation()}
                                     className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-[10px] flex items-center gap-1 shadow-md transition-transform hover:scale-105"
                                   >
-                                    <ExternalLink size={10} /> Denemeye Git
+                                    <ExternalLink size={10} /> {t.projectCard.liveDemo}
                                   </a>
                                 )}
                               </div>
@@ -2748,12 +3064,47 @@ export default function App() {
                                 <span className="text-[10px] uppercase tracking-wider text-white/90 font-extrabold">{project.category}</span>
                                 {project.demoUrl && (
                                   <span className="text-[9px] text-emerald-400 font-bold flex items-center gap-0.5">
-                                    <ExternalLink size={8} /> Yayında
+                                    <ExternalLink size={8} /> {t.projectCard.statusActive}
                                   </span>
                                 )}
                               </div>
-                              <h3 className="text-sm font-extrabold text-white group-hover:text-emerald-300 transition-colors truncate leading-snug">{project.title}</h3>
-                              <p className="text-xs text-white/95 line-clamp-2 leading-relaxed font-semibold">{project.description}</p>
+                              <h3 className="text-sm font-extrabold text-white group-hover:text-emerald-300 transition-colors truncate leading-snug">
+                                <HighlightText text={project.title} query={searchQuery} />
+                              </h3>
+                              <p className="text-xs text-white/95 line-clamp-2 leading-relaxed font-semibold">
+                                <HighlightText text={project.description} query={searchQuery} />
+                              </p>
+                              {/* Clickable Tech Stack Tags for Quick Filter */}
+                              <div className="flex flex-wrap gap-1 mt-1 overflow-hidden max-h-[22px]">
+                                {project.tech.slice(0, 3).map((tItem, tIdx) => {
+                                  const isSelected = selectedTech === tItem;
+                                  const isSearchMatch = searchQuery && tItem.toLowerCase().includes(searchQuery.toLowerCase());
+                                  return (
+                                    <span 
+                                      key={tIdx} 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        soundEngine.playGlassClick();
+                                        setSelectedTech(isSelected ? null : tItem);
+                                      }}
+                                      className={`text-[9px] font-mono px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                                        isSelected 
+                                          ? 'bg-emerald-500 text-black font-extrabold shadow-xs' 
+                                          : isSearchMatch 
+                                            ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-400/50' 
+                                            : 'bg-white/10 text-white/70 hover:text-white hover:bg-white/20'
+                                      }`}
+                                    >
+                                      {tItem}
+                                    </span>
+                                  );
+                                })}
+                                {project.tech.length > 3 && (
+                                  <span className="text-[9px] font-mono text-white/40 self-center">
+                                    +{project.tech.length - 3}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </motion.div>
                         ))}
@@ -2769,7 +3120,7 @@ export default function App() {
                           exit={{ opacity: 0, y: 10, x: "-50%" }}
                           className="absolute bottom-6 left-1/2 px-4 py-2 bg-black/90 backdrop-blur-md rounded-full border border-white/10 shadow-xl flex items-center gap-2 text-[10px] text-white font-extrabold tracking-wider uppercase animate-bounce pointer-events-none z-20"
                         >
-                          <span>DAHA FAZLA PROJE İÇİN AŞAĞI KAYDIRIN</span>
+                          <span>{lang === 'tr' ? 'DAHA FAZLA PROJE İÇİN AŞAĞI KAYDIRIN' : 'SCROLL DOWN FOR MORE PROJECTS'}</span>
                           <span className="text-sm">↕</span>
                         </motion.div>
                       )}
@@ -2791,10 +3142,10 @@ export default function App() {
                 >
                   <div className="p-4 sm:p-5 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3 min-h-0 flex-1 relative overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20">
                     <div className="space-y-0.5">
-                      <span className="text-[9px] uppercase tracking-wider text-white/90 font-extrabold">YAYINLAR & DÜŞÜNCELER</span>
-                      <h2 className="text-lg sm:text-xl font-extrabold text-white">Makaleler ve Teknik İncelemeler</h2>
+                      <span className="text-[9px] uppercase tracking-wider text-emerald-400 font-extrabold">{t.hero.name.toUpperCase()} · {t.nav.articles.toUpperCase()}</span>
+                      <h2 className="text-lg sm:text-xl font-extrabold text-white">{t.articles.heading}</h2>
                       <p className="text-xs text-white/70 leading-relaxed max-w-xl">
-                        Psikolojik danışmanlık kuramları, özel eğitim teknolojileri, büyük dil modelleri (LLM) ve Python otomasyonları üzerine kaleme aldığım makaleler.
+                        {t.articles.subheading}
                       </p>
                     </div>
 
@@ -2820,7 +3171,7 @@ export default function App() {
                     )}
 
                     <div className="grid grid-cols-1 gap-3 pt-1">
-                      {articleList.map((article, idx) => (
+                      {mappedArticles.map((article, idx) => (
                         <motion.div
                           key={article.id}
                           initial={{ opacity: 0, y: 15 }}
@@ -2841,7 +3192,7 @@ export default function App() {
                               </span>
                               {selectedArticle?.id === article.id && (
                                 <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-black text-[9px] font-extrabold shadow-sm">
-                                  👈 Solda Açık
+                                  {lang === 'tr' ? '👈 Solda Açık' : '👈 Open on Left'}
                                 </span>
                               )}
                             </div>
@@ -2907,7 +3258,7 @@ export default function App() {
                               ))}
                             </div>
                             <span className="text-xs font-bold text-white/90 group-hover:translate-x-1 transition-transform flex items-center gap-1">
-                              Oku <ArrowRight size={12} />
+                              {lang === 'tr' ? 'Oku' : 'Read'} <ArrowRight size={12} />
                             </span>
                           </div>
                         </motion.div>
@@ -2929,10 +3280,10 @@ export default function App() {
                 >
                   <div className="p-4 sm:p-5 lg:p-6 liquid-glass spinning-glow-border rounded-[2rem] flex flex-col gap-3.5 justify-start">
                     <div className="space-y-1">
-                      <span className="text-[9px] uppercase tracking-wider text-white/95 font-bold">İLETİŞİM ALTYAPISI</span>
-                      <h2 className="text-xl sm:text-2xl font-extrabold text-white">Birlikte Çalışalım</h2>
+                      <span className="text-[9px] uppercase tracking-wider text-emerald-400 font-bold">{t.hero.name.toUpperCase()} · {t.nav.contact.toUpperCase()}</span>
+                      <h2 className="text-xl sm:text-2xl font-extrabold text-white">{t.contact.heading}</h2>
                       <p className="text-xs text-white/80 font-medium leading-relaxed">
-                        Akademik projeler, psikolojik danışmanlık süreçlerinde teknoloji entegrasyonu, Python otomasyonları veya vaka analizi üzerine iş birlikleri için yazabilirsiniz.
+                        {t.contact.subheading}
                       </p>
                     </div>
 
@@ -2960,24 +3311,24 @@ export default function App() {
                         className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer"
                       >
                         <Copy size={13} className="text-white/70 shrink-0" />
-                        <span className="truncate">{copiedEmail ? 'Kopyalandı!' : (profile.email || 'emirhan0008@gmail.com')}</span>
+                        <span className="truncate">{copiedEmail ? (lang === 'tr' ? 'Kopyalandı!' : 'Copied!') : (profile.email || 'emirhan0008@gmail.com')}</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={handleDirectEmailOpen}
                         className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer"
-                        title="Hazırlanan mesajla e-posta uygulamasını açar"
+                        title={lang === 'tr' ? "Hazırlanan mesajla e-posta uygulamasını açar" : "Opens default email application with drafted message"}
                       >
                         <Mail size={13} className="text-white/70 shrink-0" />
-                        <span className="truncate">E-Posta Aç</span>
+                        <span className="truncate">{lang === 'tr' ? 'E-Posta Aç' : 'Open Email'}</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={handleWhatsAppOpen}
                         className="p-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-500/20 flex items-center gap-2 text-xs text-emerald-300 font-bold transition-all hover:scale-102 cursor-pointer"
-                        title="Hazırlanan mesajla WhatsApp uygulamasını açar"
+                        title={lang === 'tr' ? "Hazırlanan mesajla WhatsApp uygulamasını açar" : "Opens WhatsApp with drafted message"}
                       >
                         <Phone size={13} className="text-emerald-400 shrink-0" />
                         <span className="truncate">WhatsApp</span>
@@ -2992,8 +3343,12 @@ export default function App() {
                             <Mail size={14} />
                           </div>
                           <div>
-                            <h3 className="text-xs sm:text-sm font-bold text-white">Doğrudan İletişim Formu</h3>
-                            <p className="text-[10px] text-white/60">Mesajınız gerçek istemciniz (E-Posta / WhatsApp) üzerinden iletilir</p>
+                            <h3 className="text-xs sm:text-sm font-bold text-white">
+                              {lang === 'tr' ? 'Doğrudan İletişim Formu' : 'Direct Inquiry Form'}
+                            </h3>
+                            <p className="text-[10px] text-white/60">
+                              {lang === 'tr' ? 'Mesajınız gerçek istemciniz (E-Posta / WhatsApp) üzerinden iletilir' : 'Your inquiry is dispatched via your local client (Email / WhatsApp)'}
+                            </p>
                           </div>
                         </div>
                         <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/30 truncate max-w-[150px]">
@@ -3004,11 +3359,11 @@ export default function App() {
                       <form onSubmit={handleDirectEmailOpen} className="flex flex-col gap-3">
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                           <div className="space-y-1">
-                            <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">Adınız / Kurumunuz</label>
+                            <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">{t.contact.nameLabel}</label>
                             <input 
                               type="text" 
                               maxLength={100}
-                              placeholder="Adınız Soyadınız veya Kurum Adı"
+                              placeholder={t.contact.namePlaceholder}
                               value={formData.name}
                               onChange={e => setFormData({ ...formData, name: e.target.value })}
                               className="w-full py-2 px-3 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 font-medium"
@@ -3016,30 +3371,30 @@ export default function App() {
                           </div>
 
                           <div className="space-y-1">
-                            <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">Konu Başlığı</label>
+                            <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">{t.contact.subjectLabel}</label>
                             <select
                               value={contactSubject}
                               onChange={e => setContactSubject(e.target.value)}
                               className="w-full py-2 px-3 rounded-xl bg-black/60 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white font-medium"
                             >
-                              <option value="Proje Teklifi / Danışmanlık" className="bg-zinc-900">Proje Teklifi / Danışmanlık</option>
-                              <option value="Akademik & PDR Çalışması" className="bg-zinc-900">Akademik & PDR Çalışması</option>
-                              <option value="Yazılım & Yapay Zeka Entegrasyonu" className="bg-zinc-900">Yazılım & Yapay Zeka Entegrasyonu</option>
-                              <option value="Genel İletişim / Soru" className="bg-zinc-900">Genel İletişim / Soru</option>
+                              <option value="Proje Teklifi / Danışmanlık" className="bg-zinc-900">{t.contact.subjects.projectProposal}</option>
+                              <option value="Yazılım & Yapay Zeka Entegrasyonu" className="bg-zinc-900">{t.contact.subjects.aiConsulting}</option>
+                              <option value="Akademik & PDR Çalışması" className="bg-zinc-900">{t.contact.subjects.specialEdu}</option>
+                              <option value="Genel İletişim / Soru" className="bg-zinc-900">{t.contact.subjects.general}</option>
                             </select>
                           </div>
                         </div>
 
                         <div className="space-y-1">
                           <div className="flex items-center justify-between px-1">
-                            <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold">Mesaj Metni & Proje Detayı</label>
+                            <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold">{t.contact.messageLabel}</label>
                             {formData.message && (
                               <button
                                 type="button"
                                 onClick={() => setFormData({ ...formData, message: '' })}
                                 className="text-[10px] text-white/50 hover:text-red-400 transition-colors cursor-pointer"
                               >
-                                Temizle
+                                {lang === 'tr' ? 'Temizle' : 'Clear'}
                               </button>
                             )}
                           </div>
@@ -3047,7 +3402,7 @@ export default function App() {
                             <textarea 
                               rows={4}
                               maxLength={3500}
-                              placeholder="İş birliği, teklif veya projeniz hakkında aktarmak istediklerinizi yazabilirsiniz..."
+                              placeholder={t.contact.messagePlaceholder}
                               value={formData.message}
                               onChange={e => setFormData({ ...formData, message: e.target.value })}
                               className="w-full h-28 max-h-48 min-h-[70px] bg-transparent text-xs text-white placeholder-white/40 resize-y font-sans overflow-y-scroll leading-relaxed focus:outline-hidden"
@@ -3062,7 +3417,7 @@ export default function App() {
                             className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md shadow-emerald-500/20"
                           >
                             <Mail size={14} />
-                            <span>E-Postayla Gönder</span>
+                            <span>{lang === 'tr' ? 'E-Postayla Gönder' : 'Send via Email'}</span>
                           </button>
 
                           <button 
@@ -3071,7 +3426,7 @@ export default function App() {
                             className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md shadow-emerald-950/40"
                           >
                             <Phone size={14} className="text-emerald-400" />
-                            <span>WhatsApp ile Gönder</span>
+                            <span>{lang === 'tr' ? 'WhatsApp ile Gönder' : 'Send via WhatsApp'}</span>
                           </button>
 
                           <button
@@ -3084,7 +3439,7 @@ export default function App() {
                             className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
                           >
                             <Copy size={12} className="text-white/70" />
-                            <span>{copiedEmail ? 'Kopyalandı!' : 'Kopyala'}</span>
+                            <span>{copiedEmail ? t.hero.copied : t.hero.copyEmail}</span>
                           </button>
                         </div>
                       </form>
@@ -3280,6 +3635,7 @@ export default function App() {
               className="w-full max-w-5xl my-4 sm:my-8"
             >
               <ProjectEstimator
+                lang={lang}
                 onClose={() => setShowEstimatorModal(false)}
                 onApplyToContact={(msg, subject) => {
                   setFormData(prev => ({ ...prev, message: msg }));
@@ -3317,8 +3673,9 @@ export default function App() {
                 <X size={16} />
               </button>
               <TechRadar
+                lang={lang}
                 onSelectProject={(id) => {
-                  const proj = projects.find(p => p.id === id);
+                  const proj = mappedProjects.find(p => p.id === id) || projects.find(p => p.id === id);
                   if (proj) {
                     setSelectedProject(proj);
                     setShowTechRadarModal(false);
@@ -3388,6 +3745,7 @@ export default function App() {
       {/* Interactive Autonomous Cyber Cat Companion (Walks along bottom, turns to visitor, purrs, meows & interacts) */}
       <InteractiveCatCompanion
         theme={theme}
+        lang={lang}
         onNavigateToTab={(tab) => {
           setTheme('normal');
           setActiveTab(tab as any);

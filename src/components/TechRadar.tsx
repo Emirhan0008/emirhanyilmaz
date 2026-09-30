@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Cpu, Brain, Terminal, Database, Sparkles, ExternalLink, X, Code2 } from 'lucide-react';
 import { soundEngine } from '../utils/audioSynth';
 import { projects } from '../data';
+import { projectsEn } from '../data.en';
 
 interface SkillNode {
   id: string;
@@ -10,46 +11,160 @@ interface SkillNode {
   category: 'ai' | 'web' | 'data' | 'psy';
   level: number; // 0 - 100
   experience: string;
+  experienceEn: string;
   description: string;
+  descriptionEn: string;
   relatedProjectIds: string[];
 }
 
 const SKILL_NODES: SkillNode[] = [
   // AI & ML
-  { id: 'pytorch', name: 'PyTorch / Deep Learning', category: 'ai', level: 75, experience: '1-2 Yıl', description: 'Derin sinir ağları, evrişimli ağlar (CNN) ve model temelleri üzerinde 1-2 yıldır aktif çalışma', relatedProjectIds: ['hece-cizme-forkids', 'ruh-sagligi-portali'] },
-  { id: 'llm', name: 'LLM & Gemini API', category: 'ai', level: 82, experience: '1-2 Yıl', description: 'Büyük Dil Modelleri, Gemini API istem mühendisliği, AI Studio ve akıllı otomasyon ajanları', relatedProjectIds: ['evrak-duzenleyici', 'hece-cizme-forkids', 'ruh-sagligi-portali'] },
-  { id: 'nlp', name: 'NLP & Metin Analitiği', category: 'ai', level: 74, experience: '1-2 Yıl', description: 'Metin işleme, semantik analiz ve rehberlik dökümanları sınıflandırma algoritmaları', relatedProjectIds: ['evrak-duzenleyici', 'meb-ags-yks'] },
-  { id: 'cv', name: 'Görüntü İşleme & OCR', category: 'ai', level: 70, experience: '1 Yıl', description: 'Görüntü optimizasyonu, çizim analizi ve eğitim materyali işleme pratikleri', relatedProjectIds: ['hece-cizme-forkids', 'meb-ags-yks'] },
+  { 
+    id: 'pytorch', 
+    name: 'PyTorch / Deep Learning', 
+    category: 'ai', 
+    level: 75, 
+    experience: '1-2 Yıl', 
+    experienceEn: '1-2 Years',
+    description: 'Derin sinir ağları, evrişimli ağlar (CNN) ve model temelleri üzerinde 1-2 yıldır aktif çalışma', 
+    descriptionEn: 'Deep neural networks, convolutional vision architectures (CNN), and model fine-tuning fundamentals.',
+    relatedProjectIds: ['hece-cizme-gemini', 'anti-ai-quiz'] 
+  },
+  { 
+    id: 'llm', 
+    name: 'LLM & Gemini API', 
+    category: 'ai', 
+    level: 82, 
+    experience: '1-2 Yıl', 
+    experienceEn: '1-2 Years',
+    description: 'Büyük Dil Modelleri, Gemini API istem mühendisliği, AI Studio ve akıllı otomasyon ajanları', 
+    descriptionEn: 'Large Language Models, Gemini API prompt engineering, Google AI Studio pipelines, and autonomous workflow agents.',
+    relatedProjectIds: ['hece-cizme-gemini', 'anti-ai-quiz', 'forkids'] 
+  },
+  { 
+    id: 'nlp', 
+    name: 'NLP & Metin Analitiği', 
+    category: 'ai', 
+    level: 74, 
+    experience: '1-2 Yıl', 
+    experienceEn: '1-2 Years',
+    description: 'Metin işleme, semantik analiz ve rehberlik dökümanları sınıflandırma algoritmaları', 
+    descriptionEn: 'Natural language processing, semantic embeddings, and automated counseling documentation classification.',
+    relatedProjectIds: ['katibim-k-tiplik-sinav-hazirlik', 'simco-chat-reader'] 
+  },
+  { 
+    id: 'cv', 
+    name: 'Görüntü İşleme & OCR', 
+    category: 'ai', 
+    level: 70, 
+    experience: '1 Yıl', 
+    experienceEn: '1 Year',
+    description: 'Görüntü optimizasyonu, çizim analizi ve eğitim materyali işleme pratikleri', 
+    descriptionEn: 'Image optimization, stroke analysis, and adaptive educational worksheet processing.',
+    relatedProjectIds: ['hece-cizme-gemini', 'anti-ai-quiz'] 
+  },
 
   // Web & Mobile
-  { id: 'python', name: 'Python (Otomasyon & Script)', category: 'web', level: 80, experience: '1-2 Yıl', description: '1-2 yıldır aktif Python: Masaüstü GUI otomasyonları, dosya tasnifi ve veri kazıma araçları', relatedProjectIds: ['evrak-duzenleyici', 'ide-yonetici', 'otonom-yedekleme', 'simcompanies-market'] },
-  { id: 'react', name: 'React Native & React', category: 'web', level: 78, experience: '1-2 Yıl', description: 'React Native / Expo ile mobil asistanlar ve React ile web tabanlı yönetim portalları', relatedProjectIds: ['meb-ags-yks', 'hece-cizme-forkids', 'medprep', 'dersgezgin'] },
-  { id: 'tailwind', name: 'Tailwind CSS & Tasarım', category: 'web', level: 82, experience: '1-2 Yıl', description: 'Sıvı cam (Liquid Glass) modern arayüzler, mikrobileşenler ve responsive tasarım', relatedProjectIds: ['cv-master', 'dersgezgin', 'zit-kelime-harf'] },
+  { 
+    id: 'python', 
+    name: 'Python (Otomasyon & Script)', 
+    category: 'web', 
+    level: 80, 
+    experience: '1-2 Yıl', 
+    experienceEn: '1-2 Years',
+    description: '1-2 yıldır aktif Python: Masaüstü GUI otomasyonları, dosya tasnifi ve veri kazıma araçları', 
+    descriptionEn: '1-2 years of active Python: Desktop GUI automations, file organization, and web scraping utilities.',
+    relatedProjectIds: ['botlar-otomasyon', 'big-file-finder', 'katibim-k-tiplik-sinav-hazirlik', 'proicon-studio'] 
+  },
+  { 
+    id: 'react', 
+    name: 'React Native & React', 
+    category: 'web', 
+    level: 78, 
+    experience: '1-2 Yıl', 
+    experienceEn: '1-2 Years',
+    description: 'React Native / Expo ile mobil asistanlar ve React ile web tabanlı yönetim portalları', 
+    descriptionEn: 'Cross-platform mobile apps with React Native / Expo and performant web portals with React / Vite.',
+    relatedProjectIds: ['kpss-calisma-takibi', 'meb-ags-calisma-asistani', 'forkids', 'ilac-kontrol'] 
+  },
+  { 
+    id: 'tailwind', 
+    name: 'Tailwind CSS & Tasarım', 
+    category: 'web', 
+    level: 82, 
+    experience: '1-2 Yıl', 
+    experienceEn: '1-2 Years',
+    description: 'Sıvı cam (Liquid Glass) modern arayüzler, mikrobileşenler ve responsive tasarım', 
+    descriptionEn: 'Modern Liquid Glass UI architectures, responsive micro-interactions, and accessible typography.',
+    relatedProjectIds: ['ui-tasarim-arsivi', 'kisisel-web-sitesi', 'cv-master'] 
+  },
 
   // Data & Cloud
-  { id: 'docker', name: 'Bulut Dağıtım & Hosting', category: 'data', level: 72, experience: '1-2 Yıl', description: 'EAS Cloud APK derleme, Firebase Hosting ve Vercel bulut dağıtım süreçleri', relatedProjectIds: ['dersgezgin', 'zit-kelime-harf', 'hece-cizme-forkids'] },
-  { id: 'postgres', name: 'Firebase & Realtime DB', category: 'data', level: 76, experience: '1-2 Yıl', description: 'Firebase Realtime Database ve mobil veri senkronizasyonu mimarisi', relatedProjectIds: ['dersgezgin', 'medprep'] },
+  { 
+    id: 'docker', 
+    name: 'Bulut Dağıtım & Hosting', 
+    category: 'data', 
+    level: 72, 
+    experience: '1-2 Yıl', 
+    experienceEn: '1-2 Years',
+    description: 'EAS Cloud APK derleme, Firebase Hosting ve Vercel bulut dağıtım süreçleri', 
+    descriptionEn: 'EAS Cloud mobile build pipelines, Firebase Hosting, and Vercel edge deployment lifecycles.',
+    relatedProjectIds: ['westworld-stormy-hour', 'ide-proje-takip-sistemi', '3dcografya'] 
+  },
+  { 
+    id: 'postgres', 
+    name: 'Firebase & Cloud NoSQL', 
+    category: 'data', 
+    level: 76, 
+    experience: '1-2 Yıl', 
+    experienceEn: '1-2 Years',
+    description: 'Firebase Realtime Database ve mobil veri senkronizasyonu mimarisi', 
+    descriptionEn: 'Firebase Realtime Database synchronization, state persistence, and offline data caches.',
+    relatedProjectIds: ['evrak-kanban', 'ide-proje-takip-sistemi', 'kronometre'] 
+  },
 
   // Psy & UX
-  { id: 'cogpsy', name: 'Bilişsel Psikoloji (PDR)', category: 'psy', level: 96, experience: 'Lisans Derecesi', description: 'Bilişsel davranışçı yaklaşım, duygu düzenleme ve insan odaklı pedagojik tasarım', relatedProjectIds: ['hece-cizme-forkids', 'ruh-sagligi-portali'] },
-  { id: 'neuromorphic', name: 'Özel Eğitim Metodolojisi', category: 'psy', level: 92, experience: '3 Yıl Saha Deneyimi', description: '1. ve 2. kademe özel eğitim sınıflarında teknoloji destekli BEP uygulamaları', relatedProjectIds: ['hece-cizme-forkids', 'zit-kelime-harf'] }
+  { 
+    id: 'cogpsy', 
+    name: 'Bilişsel Psikoloji (PDR)', 
+    category: 'psy', 
+    level: 96, 
+    experience: 'Lisans Derecesi', 
+    experienceEn: "Bachelor's Degree",
+    description: 'Bilişsel davranışçı yaklaşım, duygu düzenleme ve insan odaklı pedagojik tasarım', 
+    descriptionEn: 'Cognitive behavioral framework, emotional regulation, and human-centric therapeutic design.',
+    relatedProjectIds: ['hece-cizme-gemini', 'forkids', 'rehberlik-portali-ders-programi'] 
+  },
+  { 
+    id: 'neuromorphic', 
+    name: 'Özel Eğitim Metodolojisi', 
+    category: 'psy', 
+    level: 92, 
+    experience: '3 Yıl Saha Deneyimi', 
+    experienceEn: '3 Yrs Field Experience',
+    description: '1. ve 2. kademe özel eğitim sınıflarında teknoloji destekli BEP uygulamaları', 
+    descriptionEn: 'Technology-supported IEP implementations across primary and secondary special education classrooms.',
+    relatedProjectIds: ['forkids', 'hece-cizme-gemini', 'ableup-ise-yerlestirme-platformu'] 
+  }
 ];
 
-const CATEGORIES = [
-  { id: 'all', label: 'Tüm Yetenekler', icon: Sparkles },
-  { id: 'ai', label: 'Yapay Zeka & ML', icon: Cpu },
-  { id: 'web', label: 'Yazılım & Web', icon: Code2 },
-  { id: 'data', label: 'Cloud & Veri', icon: Database },
-  { id: 'psy', label: 'Psikoloji & UX', icon: Brain }
-];
-
-interface TechRadarProps {
+export interface TechRadarProps {
+  lang?: 'tr' | 'en';
   onSelectProject?: (projId: string) => void;
 }
 
-export function TechRadar({ onSelectProject }: TechRadarProps) {
+export function TechRadar({ lang = 'tr', onSelectProject }: TechRadarProps) {
+  const isEn = lang === 'en';
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [selectedNode, setSelectedNode] = useState<SkillNode | null>(null);
+
+  const categories = [
+    { id: 'all', label: isEn ? 'All Skills' : 'Tüm Yetenekler', icon: Sparkles },
+    { id: 'ai', label: isEn ? 'AI & ML' : 'Yapay Zeka & ML', icon: Cpu },
+    { id: 'web', label: isEn ? 'Software & Web' : 'Yazılım & Web', icon: Code2 },
+    { id: 'data', label: isEn ? 'Cloud & Data' : 'Cloud & Veri', icon: Database },
+    { id: 'psy', label: isEn ? 'Psychology & UX' : 'Psikoloji & UX', icon: Brain }
+  ];
 
   const filteredNodes = SKILL_NODES.filter(node => 
     activeCategory === 'all' || node.category === activeCategory
@@ -62,17 +177,19 @@ export function TechRadar({ onSelectProject }: TechRadarProps) {
         <div>
           <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
             <img src="/logo.png" alt="Logo" className="w-6 h-6 object-contain drop-shadow-md shrink-0" />
-            <span>İnteraktif Teknoloji Radarı & Beceri Mimarisi</span>
+            <span>{isEn ? 'Interactive Tech Radar & Competency Matrix' : 'İnteraktif Teknoloji Radarı & Beceri Mimarisi'}</span>
             <Sparkles size={16} className="text-emerald-400" />
           </h2>
           <p className="text-xs text-white/60 mt-1">
-            Teknoloji düğümlerine tıklayarak ilgili projeleri ve uzmanlık detaylarını inceleyin.
+            {isEn 
+              ? 'Click technology nodes to inspect architectural depth, proficiency, and related projects.' 
+              : 'Teknoloji düğümlerine tıklayarak ilgili projeleri ve uzmanlık detaylarını inceleyin.'}
           </p>
         </div>
 
         {/* Category Filters */}
         <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-none">
-          {CATEGORIES.map(cat => {
+          {categories.map(cat => {
             const Icon = cat.icon;
             const isActive = activeCategory === cat.id;
             return (
@@ -114,14 +231,14 @@ export function TechRadar({ onSelectProject }: TechRadarProps) {
                 {node.name}
               </span>
               <span className="px-2 py-0.5 rounded-md bg-white/10 text-[9px] font-mono text-white/70">
-                {node.experience}
+                {isEn ? node.experienceEn : node.experience}
               </span>
             </div>
 
             {/* Level Bar */}
             <div className="space-y-1">
               <div className="flex justify-between text-[9px] text-white/60 font-mono">
-                <span>Yetkinlik Düzeyi</span>
+                <span>{isEn ? 'Proficiency Level' : 'Yetkinlik Düzeyi'}</span>
                 <span className="text-emerald-400 font-bold">%{node.level}</span>
               </div>
               <div className="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
@@ -135,7 +252,7 @@ export function TechRadar({ onSelectProject }: TechRadarProps) {
             </div>
 
             <p className="text-[11px] text-white/75 line-clamp-2 leading-relaxed">
-              {node.description}
+              {isEn ? node.descriptionEn : node.description}
             </p>
           </motion.div>
         ))}
@@ -160,54 +277,60 @@ export function TechRadar({ onSelectProject }: TechRadarProps) {
 
               <div className="space-y-2">
                 <span className="text-[10px] uppercase font-bold text-emerald-400 font-mono tracking-wider">
-                  TEKNOLOJİ DÜĞÜM DETAYI
+                  {isEn ? 'TECHNOLOGY NODE DETAILS' : 'TEKNOLOJİ DÜĞÜM DETAYI'}
                 </span>
                 <h3 className="text-xl font-extrabold text-white flex items-center justify-between">
                   <span>{selectedNode.name}</span>
                   <span className="text-sm font-mono text-emerald-400 bg-emerald-500/20 px-3 py-1 rounded-full border border-emerald-500/30">
-                    %{selectedNode.level} Yetkinlik
+                    %{selectedNode.level} {isEn ? 'Mastery' : 'Yetkinlik'}
                   </span>
                 </h3>
                 <p className="text-xs text-white/80 leading-relaxed">
-                  {selectedNode.description}
+                  {isEn ? selectedNode.descriptionEn : selectedNode.description}
                 </p>
               </div>
 
               {/* Related Portfolio Projects */}
               <div className="space-y-3 pt-2 border-t border-white/10">
                 <span className="text-xs font-bold text-white/80 uppercase tracking-wider block">
-                  İLGİLİ PORTFOLYO PROJELERİ
+                  {isEn ? 'RELATED PORTFOLIO PROJECTS' : 'İLGİLİ PORTFOLYO PROJELERİ'}
                 </span>
                 <div className="space-y-2">
                   {projects
                     .filter(p => selectedNode.relatedProjectIds.includes(p.id))
-                    .map(p => (
-                      <div
-                        key={p.id}
-                        className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between group hover:border-emerald-400/40 transition-all"
-                      >
-                        <div className="flex items-center gap-3">
-                          <img src={p.image} alt={p.title} className="w-10 h-10 rounded-lg object-cover" />
-                          <div>
-                            <h5 className="text-xs font-bold text-white">{p.title}</h5>
-                            <span className="text-[10px] text-white/60">{p.category}</span>
-                          </div>
-                        </div>
+                    .map(p => {
+                      const enOverride = isEn ? projectsEn[p.id] : undefined;
+                      const title = enOverride?.title || p.title;
+                      const category = enOverride?.category || p.category;
 
-                        {onSelectProject && (
-                          <button
-                            onClick={() => {
-                              setSelectedNode(null);
-                              onSelectProject(p.id);
-                            }}
-                            className="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-all"
-                          >
-                            <span>İncele</span>
-                            <ExternalLink size={12} />
-                          </button>
-                        )}
-                      </div>
-                    ))}
+                      return (
+                        <div
+                          key={p.id}
+                          className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between group hover:border-emerald-400/40 transition-all"
+                        >
+                          <div className="flex items-center gap-3">
+                            <img src={p.image} alt={title} className="w-10 h-10 rounded-lg object-cover" />
+                            <div>
+                              <h5 className="text-xs font-bold text-white">{title}</h5>
+                              <span className="text-[10px] text-white/60">{category}</span>
+                            </div>
+                          </div>
+
+                          {onSelectProject && (
+                            <button
+                              onClick={() => {
+                                setSelectedNode(null);
+                                onSelectProject(p.id);
+                              }}
+                              className="px-3 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold flex items-center gap-1 cursor-pointer transition-all"
+                            >
+                              <span>{isEn ? 'Inspect' : 'İncele'}</span>
+                              <ExternalLink size={12} />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             </motion.div>

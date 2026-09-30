@@ -8,6 +8,7 @@ export type CatBehavior = 'walking-left' | 'walking-right' | 'curious-front' | '
 
 export interface InteractiveCatCompanionProps {
   theme?: 'normal' | 'terminal';
+  lang?: 'tr' | 'en';
   onNavigateToTab?: (tab: string) => void;
   onOpenTerminal?: () => void;
 }
@@ -18,7 +19,7 @@ export interface CloudBubbleItem {
   text: string;
 }
 
-const CAT_QUOTES = [
+const CAT_QUOTES_TR = [
   "Miyav! Hoş geldin. Projeler sekmesine veya İletişim bölümüne göz atabilir, bana dilediğini sorabilirsin. 🐾",
   "Emirhan'ın mobil asistan ve yapay zeka çalışmalarını görmek için Projeler sekmesine bakabilirsin.",
   "Hacker görünümü için Terminal moduna geçebilir ya da PowerShell komutlarını deneyebilirsin!",
@@ -26,18 +27,37 @@ const CAT_QUOTES = [
   "Mırrr... Dinleniyorum. Kafana takılan bir şey varsa hemen sorabilirsin. 🐾"
 ];
 
-const PRESET_QUERIES = [
+const CAT_QUOTES_EN = [
+  "Meow! Welcome. Feel free to explore the Projects or Contact section, or ask me anything! 🐾",
+  "Check out the Projects tab to inspect Emirhan's AI and mobile applications.",
+  "You can switch to Terminal mode for a hacker vibe or try PowerShell commands!",
+  "To send a direct message, visit the Contact page or send an email. ✉️",
+  "Purrr... Resting now. If you have any questions, I'm right here! 🐾"
+];
+
+const PRESET_QUERIES_TR = [
   "Projeleri Özetle",
   "Emirhan Kimdir?",
   "Mod Değiştir",
   "İletişim Bilgileri"
 ];
 
+const PRESET_QUERIES_EN = [
+  "Summarize Projects",
+  "Who is Emirhan?",
+  "Toggle Mode",
+  "Contact Info"
+];
+
 export function InteractiveCatCompanion({
   theme = 'normal',
+  lang = 'tr',
   onNavigateToTab,
   onOpenTerminal
 }: InteractiveCatCompanionProps) {
+  const isEn = lang === 'en';
+  const CAT_QUOTES = isEn ? CAT_QUOTES_EN : CAT_QUOTES_TR;
+  const PRESET_QUERIES = isEn ? PRESET_QUERIES_EN : PRESET_QUERIES_TR;
   const [behavior, setBehavior] = useState<CatBehavior>('curious-front');
   const [positionX, setPositionX] = useState<number>(35); // Percentage across screen (15% to 75%)
   const [isHovered, setIsHovered] = useState<boolean>(false);
@@ -252,10 +272,10 @@ export function InteractiveCatCompanion({
     const lower = text.toLowerCase();
     const buttons: { id: string; label: string; icon: React.ReactNode; onClick: () => void }[] = [];
 
-    if (lower.includes('proje')) {
+    if (lower.includes('proje') || lower.includes('project')) {
       buttons.push({
         id: 'projects',
-        label: 'Projelere Git',
+        label: isEn ? 'Explore Projects' : 'Projelere Git',
         icon: <FolderGit2 size={12} />,
         onClick: () => {
           soundEngine.playGlassClick();
@@ -264,10 +284,12 @@ export function InteractiveCatCompanion({
       });
     }
 
-    if (lower.includes('terminal') || lower.includes('powershell') || lower.includes('mod')) {
+    if (lower.includes('terminal') || lower.includes('powershell') || lower.includes('mod') || lower.includes('mode')) {
       buttons.push({
         id: 'terminal',
-        label: isTerminal ? 'Normal Moda Geç' : 'Mod Değiştir (Terminal)',
+        label: isTerminal 
+          ? (isEn ? 'Switch to Normal' : 'Normal Moda Geç') 
+          : (isEn ? 'Switch Mode (Terminal)' : 'Mod Değiştir (Terminal)'),
         icon: <Terminal size={12} />,
         onClick: () => {
           soundEngine.playTerminalKey();
@@ -276,10 +298,10 @@ export function InteractiveCatCompanion({
       });
     }
 
-    if (lower.includes('iletişim') || lower.includes('mail') || lower.includes('eposta') || lower.includes('e-posta')) {
+    if (lower.includes('iletişim') || lower.includes('mail') || lower.includes('eposta') || lower.includes('e-posta') || lower.includes('contact')) {
       buttons.push({
         id: 'contact',
-        label: 'İletişime Geç',
+        label: isEn ? 'Contact Emirhan' : 'İletişime Geç',
         icon: <Mail size={12} />,
         onClick: () => {
           soundEngine.playGlassClick();
@@ -288,10 +310,10 @@ export function InteractiveCatCompanion({
       });
     }
 
-    if (lower.includes('makale') || lower.includes('yazı')) {
+    if (lower.includes('makale') || lower.includes('yazı') || lower.includes('article')) {
       buttons.push({
         id: 'articles',
-        label: 'Makalelere Git',
+        label: isEn ? 'Read Articles' : 'Makalelere Git',
         icon: <BookOpen size={12} />,
         onClick: () => {
           soundEngine.playGlassClick();
@@ -492,7 +514,7 @@ export function InteractiveCatCompanion({
                   type="text"
                   value={inputQuery}
                   onChange={(e) => setInputQuery(e.target.value)}
-                  placeholder="Kediciğe bir soru sor... 🐾"
+                  placeholder={isEn ? "Ask the kitty a question... 🐾" : "Kediciğe bir soru sor... 🐾"}
                   disabled={isThinking}
                   className="flex-1 min-w-0 bg-transparent text-xs outline-hidden placeholder:text-white/50"
                 />
@@ -504,7 +526,7 @@ export function InteractiveCatCompanion({
                       ? 'bg-emerald-500 text-black hover:bg-emerald-400 cursor-pointer shadow-sm shadow-emerald-500/40 border border-white/60'
                       : 'bg-white/10 text-white/30 cursor-not-allowed border border-white/20'
                   }`}
-                  title="Gönder"
+                  title={isEn ? "Send" : "Gönder"}
                 >
                   <Send size={11} />
                 </button>
