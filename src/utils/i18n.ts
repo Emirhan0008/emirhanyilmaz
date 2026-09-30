@@ -103,7 +103,7 @@ export interface Translations {
 export const translations: Record<Language, Translations> = {
   tr: {
     nav: {
-      projects: 'Projeler',
+      projects: 'Projelerim',
       articles: 'Makaleler',
       contact: 'İletişim',
       about: 'Hakkımda',

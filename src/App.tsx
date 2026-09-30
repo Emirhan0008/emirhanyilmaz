@@ -1596,28 +1596,75 @@ export default function App() {
 
             {/* Desktop Navigation Tabs */}
             <nav id="main-nav" aria-label="Ana Gezinti Menüsü" className="hidden md:flex items-center gap-1.5 p-1 liquid-glass rounded-full text-xs shrink-0">
-              {navItems.map(item => (
-                <button
-                  key={item.id}
-                  onClick={() => {
-                    soundEngine.playTabSwitch();
-                    setActiveTab(item.id);
-                    setMobileMenuOpen(false);
-                  }}
-                  className={`px-4 py-1.5 rounded-full transition-all duration-300 font-bold ${
-                    activeTab === item.id 
-                      ? (theme === 'terminal'
-                          ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/60 shadow-[0_0_12px_rgba(52,211,153,0.35)]'
-                          : 'bg-white/15 text-white shadow-xs')
-                      : (theme === 'terminal'
-                          ? 'text-emerald-400/70 hover:text-emerald-300 hover:bg-emerald-950/30'
-                          : 'text-white/85 hover:text-white hover:bg-white/10')
-                  }`}
-                  id={`nav-btn-${item.id}`}
-                >
-                  {theme === 'terminal' ? `> ${item.label.toUpperCase()}_` : item.label}
-                </button>
-              ))}
+              {navItems.map(item => {
+                const isProjects = item.id === 'projects';
+                const isActive = activeTab === item.id;
+
+                if (isProjects) {
+                  return (
+                    <motion.button
+                      key={item.id}
+                      onClick={() => {
+                        soundEngine.playTabSwitch();
+                        setActiveTab(item.id);
+                        setMobileMenuOpen(false);
+                      }}
+                      animate={{
+                        scale: isActive ? [1, 1.05, 1] : [1, 1.07, 1],
+                        boxShadow: [
+                          "0 0 0px rgba(52, 211, 153, 0)",
+                          "0 0 18px rgba(52, 211, 153, 0.75)",
+                          "0 0 0px rgba(52, 211, 153, 0)"
+                        ]
+                      }}
+                      transition={{
+                        duration: 1.8,
+                        repeat: Infinity,
+                        ease: "easeInOut"
+                      }}
+                      className={`relative px-4 py-1.5 rounded-full font-extrabold transition-colors duration-300 flex items-center gap-1.5 cursor-pointer border ${
+                        isActive
+                          ? (theme === 'terminal'
+                              ? 'bg-emerald-500/35 text-emerald-200 border-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.4)]'
+                              : 'bg-emerald-500/30 text-white border-emerald-400')
+                          : (theme === 'terminal'
+                              ? 'bg-emerald-950/50 text-emerald-300 border-emerald-500/60 hover:bg-emerald-900/50'
+                              : 'bg-gradient-to-r from-emerald-500/25 via-teal-500/20 to-emerald-400/25 text-white border-emerald-400/70 hover:border-emerald-300')
+                      }`}
+                      id={`nav-btn-${item.id}`}
+                    >
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                      </span>
+                      <span>{theme === 'terminal' ? `> ${item.label.toUpperCase()}_` : item.label}</span>
+                    </motion.button>
+                  );
+                }
+
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      soundEngine.playTabSwitch();
+                      setActiveTab(item.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className={`px-4 py-1.5 rounded-full transition-all duration-300 font-bold ${
+                      isActive 
+                        ? (theme === 'terminal'
+                            ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/60 shadow-[0_0_12px_rgba(52,211,153,0.35)]'
+                            : 'bg-white/15 text-white shadow-xs')
+                        : (theme === 'terminal'
+                            ? 'text-emerald-400/70 hover:text-emerald-300 hover:bg-emerald-950/30'
+                            : 'text-white/85 hover:text-white hover:bg-white/10')
+                    }`}
+                    id={`nav-btn-${item.id}`}
+                  >
+                    {theme === 'terminal' ? `> ${item.label.toUpperCase()}_` : item.label}
+                  </button>
+                );
+              })}
             </nav>
 
             {/* Mobile Navigation Button */}
@@ -1644,27 +1691,70 @@ export default function App() {
                   <img src={profile.logo} alt="Logo" className="w-6 h-6 object-contain drop-shadow-md" />
                   <span className="font-extrabold text-white text-xs tracking-wider uppercase">{profile.name}</span>
                 </div>
-                {navItems.map(item => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      soundEngine.playTabSwitch();
-                      setActiveTab(item.id);
-                      setMobileMenuOpen(false);
-                    }}
-                    className={`w-full py-2.5 px-4 rounded-xl text-left text-sm transition-all ${
-                      activeTab === item.id 
-                        ? (theme === 'terminal'
-                            ? 'bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/40'
-                            : 'bg-white/10 text-white font-bold')
-                        : (theme === 'terminal'
-                            ? 'text-emerald-400/80 font-mono hover:bg-emerald-950/20'
-                            : 'text-white/85 hover:text-white hover:bg-white/10 font-semibold')
-                    }`}
-                  >
-                    {theme === 'terminal' ? `> ${item.label.toUpperCase()}` : item.label}
-                  </button>
-                ))}
+                {navItems.map(item => {
+                  const isProjects = item.id === 'projects';
+                  const isActive = activeTab === item.id;
+                  if (isProjects) {
+                    return (
+                      <motion.button
+                        key={item.id}
+                        onClick={() => {
+                          soundEngine.playTabSwitch();
+                          setActiveTab(item.id);
+                          setMobileMenuOpen(false);
+                        }}
+                        animate={{
+                          scale: [1, 1.02, 1],
+                          boxShadow: [
+                            "0 0 0px rgba(52, 211, 153, 0)",
+                            "0 0 14px rgba(52, 211, 153, 0.6)",
+                            "0 0 0px rgba(52, 211, 153, 0)"
+                          ]
+                        }}
+                        transition={{
+                          duration: 1.8,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                        className={`w-full py-2.5 px-4 rounded-xl text-left text-sm transition-all flex items-center justify-between border ${
+                          isActive 
+                            ? 'bg-emerald-500/25 text-emerald-300 font-bold border-emerald-400'
+                            : 'bg-emerald-950/40 text-white font-extrabold border-emerald-500/50'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
+                          </span>
+                          <span>{theme === 'terminal' ? `> ${item.label.toUpperCase()}` : item.label}</span>
+                        </span>
+                        <span className="text-[10px] text-emerald-400 font-extrabold">★</span>
+                      </motion.button>
+                    );
+                  }
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        soundEngine.playTabSwitch();
+                        setActiveTab(item.id);
+                        setMobileMenuOpen(false);
+                      }}
+                      className={`w-full py-2.5 px-4 rounded-xl text-left text-sm transition-all ${
+                        isActive 
+                          ? (theme === 'terminal'
+                              ? 'bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/40'
+                              : 'bg-white/10 text-white font-bold')
+                          : (theme === 'terminal'
+                              ? 'text-emerald-400/80 font-mono hover:bg-emerald-950/20'
+                              : 'text-white/85 hover:text-white hover:bg-white/10 font-semibold')
+                      }`}
+                    >
+                      {theme === 'terminal' ? `> ${item.label.toUpperCase()}` : item.label}
+                    </button>
+                  );
+                })}
 
                 <div className="pt-2 mt-1 border-t border-white/10 flex items-center justify-between px-2">
                   <span className="text-xs font-mono text-white/70">
@@ -2214,19 +2304,36 @@ export default function App() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3">
-                      <button 
+                      <motion.button 
                         onClick={() => {
                           soundEngine.playTabSwitch();
                           setActiveTab('projects');
                         }}
-                        className="inline-flex items-center gap-3.5 pl-6 pr-2 py-2 liquid-glass-strong hover:bg-white/5 rounded-full text-sm font-bold transition-all group hover:scale-105 active:scale-95 cursor-pointer"
+                        animate={{
+                          scale: [1, 1.05, 1],
+                          boxShadow: [
+                            "0 0 0px rgba(52, 211, 153, 0)",
+                            "0 0 24px rgba(52, 211, 153, 0.8)",
+                            "0 0 0px rgba(52, 211, 153, 0)"
+                          ]
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: "easeInOut"
+                        }}
+                        className="inline-flex items-center gap-3 pl-5 pr-2 py-2 bg-gradient-to-r from-emerald-600/40 via-teal-500/30 to-emerald-500/40 hover:from-emerald-500/60 hover:to-teal-400/50 border border-emerald-400/80 rounded-full text-sm font-extrabold text-white transition-all group active:scale-95 cursor-pointer relative shadow-lg"
                         id="cta-explore-projects"
                       >
-                        <span>{lang === 'tr' ? 'Projelerimi Keşfet' : 'Explore My Projects'}</span>
-                        <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center text-white transition-transform duration-300 group-hover:translate-x-1">
-                          <ArrowRight size={14} />
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-90"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
+                        </span>
+                        <span>{lang === 'tr' ? 'Projelerim' : 'My Projects'}</span>
+                        <div className="w-7 h-7 rounded-full bg-emerald-400/25 border border-emerald-300/40 flex items-center justify-center text-white transition-transform duration-300 group-hover:translate-x-1">
+                          <ArrowRight size={14} className="text-emerald-300" />
                         </div>
-                      </button>
+                      </motion.button>
 
                       <a
                         href={profile.github || "https://github.com/Emirhan0008"}
