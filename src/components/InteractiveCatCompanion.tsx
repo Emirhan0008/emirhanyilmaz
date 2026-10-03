@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, Send, Loader2, FolderGit2, Terminal, Mail, BookOpen } from 'lucide-react';
+import { Heart, Send, Loader2, FolderGit2, Terminal, Mail, BookOpen, Layers } from 'lucide-react';
 import { soundEngine } from '../utils/audioSynth';
 import { askGroqCatAssistant } from '../utils/groqService';
 
@@ -11,6 +11,8 @@ export interface InteractiveCatCompanionProps {
   lang?: 'tr' | 'en';
   onNavigateToTab?: (tab: string) => void;
   onOpenTerminal?: () => void;
+  onSwitchToNormal?: () => void;
+  onToggleTheme?: () => void;
 }
 
 export interface CloudBubbleItem {
@@ -35,29 +37,32 @@ const CAT_QUOTES_EN = [
   "Purrr... Take a breath, browse around, and ask me anything you're curious about! 🐾"
 ];
 
-const PRESET_QUERIES_TR = [
-  "Projeleri Özetle",
-  "Emirhan Kimdir?",
-  "Mod Değiştir",
-  "İletişim Bilgileri"
-];
-
-const PRESET_QUERIES_EN = [
-  "Summarize Projects",
-  "Who is Emirhan?",
-  "Toggle Mode",
-  "Contact Info"
-];
-
 export function InteractiveCatCompanion({
   theme = 'normal',
   lang = 'tr',
   onNavigateToTab,
-  onOpenTerminal
+  onOpenTerminal,
+  onSwitchToNormal,
+  onToggleTheme
 }: InteractiveCatCompanionProps) {
   const isEn = lang === 'en';
+  const isTerminal = theme === 'terminal';
   const CAT_QUOTES = isEn ? CAT_QUOTES_EN : CAT_QUOTES_TR;
-  const PRESET_QUERIES = isEn ? PRESET_QUERIES_EN : PRESET_QUERIES_TR;
+
+  // Dynamic preset queries based on current mode so user can toggle back and forth effortlessly
+  const PRESET_QUERIES = isEn
+    ? [
+        "Summarize Projects",
+        "Who is Emirhan?",
+        isTerminal ? "Switch to Normal" : "Terminal Mode",
+        "Contact Info"
+      ]
+    : [
+        "Projeleri Özetle",
+        "Emirhan Kimdir?",
+        isTerminal ? "Normal Moda Geç" : "Terminal Modu",
+        "İletişim Bilgileri"
+      ];
   const [behavior, setBehavior] = useState<CatBehavior>('curious-front');
   const [positionX, setPositionX] = useState<number>(35); // Percentage across screen (15% to 75%)
   const [isHovered, setIsHovered] = useState<boolean>(false);
@@ -77,7 +82,6 @@ export function InteractiveCatCompanion({
 
   const [inputQuery, setInputQuery] = useState('');
   const [isThinking, setIsThinking] = useState(false);
-  const isTerminal = theme === 'terminal';
   const behaviorTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Autonomous Behavior Loop (Wander, turn to visitor, rest)
@@ -150,6 +154,68 @@ export function InteractiveCatCompanion({
       text: query
     };
     addBubbleStrictMaxTwo(userBubble);
+
+    // Fast-path: Check for direct mode switch intents (chat or preset)
+    const lowerQuery = query.toLowerCase().trim();
+    const isNormalSwitchIntent = 
+      lowerQuery.includes('normal mod') || 
+      lowerQuery.includes('normal pencere') || 
+      lowerQuery.includes('normal arayüz') || 
+      lowerQuery.includes('terminalden çık') || 
+      lowerQuery.includes('terminali kapat') || 
+      lowerQuery.includes('normal moda') || 
+      lowerQuery.includes('switch to normal') ||
+      lowerQuery.includes('exit terminal');
+
+    const isTerminalSwitchIntent = 
+      lowerQuery.includes('terminal mod') || 
+      lowerQuery.includes('terminale geç') || 
+      lowerQuery.includes('terminal aç') || 
+      lowerQuery.includes('powershell') || 
+      lowerQuery.includes('hacker mod') || 
+      lowerQuery.includes('switch to terminal');
+
+    const isToggleIntent = 
+      lowerQuery === 'mod değiştir' || 
+      lowerQuery === 'toggle mode' || 
+      lowerQuery === 'tema değiştir';
+
+    if (isNormalSwitchIntent || (isToggleIntent && isTerminal)) {
+      soundEngine.playGlassClick();
+      if (onSwitchToNormal) {
+        onSwitchToNormal();
+      } else if (onToggleTheme) {
+        onToggleTheme();
+      }
+      const reply = isEn 
+        ? "Meow! Switched back to the liquid glass view! 🐾✨" 
+        : "Miyav! Normal sıvı cam arayüzüne geri döndük! 🐾✨";
+      addBubbleStrictMaxTwo({
+        id: `cat-${Date.now()}`,
+        sender: 'cat',
+        text: reply
+      });
+      return;
+    }
+
+    if (isTerminalSwitchIntent || (isToggleIntent && !isTerminal)) {
+      soundEngine.playTerminalKey();
+      if (onOpenTerminal) {
+        onOpenTerminal();
+      } else if (onToggleTheme) {
+        onToggleTheme();
+      }
+      const reply = isEn 
+        ? "Meow! PowerShell Terminal mode engaged! Happy hacking! ⚡🐾" 
+        : "Miyav! PowerShell Terminal moduna geçtik, keyifli keşifler! ⚡🐾";
+      addBubbleStrictMaxTwo({
+        id: `cat-${Date.now()}`,
+        sender: 'cat',
+        text: reply
+      });
+      return;
+    }
+
     setIsThinking(true);
 
     try {
@@ -181,7 +247,7 @@ export function InteractiveCatCompanion({
 
   // Render text with clickable GREEN and UNDERLINED keywords
   const renderFormattedText = (text: string) => {
-    const regex = /(projeler(?:i|de|den|e)?|terminal(?:e|de|den)?|powershell|iletişim(?:e|de|den)?|makaleler(?:e|de|den)?)/gi;
+    const regex = /(projeler(?:i|de|den|e)?|terminal(?:e|de|den)?|powershell|normal\s*mod(?:a|da|dan)?|normal\s*arayüz(?:e|de|den)?|normal\s*pencere(?:ye|de|den)?|iletişim(?:e|de|den)?|makaleler(?:e|de|den)?)/gi;
     const parts = text.split(regex);
 
     return parts.map((part, index) => {
@@ -206,19 +272,55 @@ export function InteractiveCatCompanion({
         );
       }
 
+      if (lower.includes('normal')) {
+        return (
+          <button
+            key={index}
+            onClick={(e) => {
+              e.stopPropagation();
+              soundEngine.playGlassClick();
+              if (onSwitchToNormal) {
+                onSwitchToNormal();
+              } else if (onToggleTheme) {
+                onToggleTheme();
+              }
+            }}
+            className={`font-bold underline underline-offset-4 cursor-pointer transition-colors inline-block ${
+              isTerminal ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-500'
+            }`}
+            title={isEn ? "Switch to Normal Mode" : "Normal Moda Geç"}
+          >
+            {part}
+          </button>
+        );
+      }
+
       if (lower.startsWith('terminal') || lower === 'powershell') {
         return (
           <button
             key={index}
             onClick={(e) => {
               e.stopPropagation();
-              soundEngine.playTerminalKey();
-              onOpenTerminal?.();
+              if (isTerminal) {
+                soundEngine.playGlassClick();
+                if (onSwitchToNormal) {
+                  onSwitchToNormal();
+                } else if (onToggleTheme) {
+                  onToggleTheme();
+                }
+              } else {
+                soundEngine.playTerminalKey();
+                if (onOpenTerminal) {
+                  onOpenTerminal();
+                } else if (onToggleTheme) {
+                  onToggleTheme();
+                }
+              }
             }}
             className={`font-bold underline underline-offset-4 cursor-pointer transition-colors inline-block ${
               isTerminal ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-500'
             }`}
-            title="Terminal Moduna Geç"
+            title={isTerminal ? (isEn ? "Switch to Normal Mode" : "Normal Moda Geç") : (isEn ? "Switch to Terminal" : "Terminal Moduna Geç")}
           >
             {part}
           </button>
@@ -284,18 +386,36 @@ export function InteractiveCatCompanion({
       });
     }
 
-    if (lower.includes('terminal') || lower.includes('powershell') || lower.includes('mod') || lower.includes('mode')) {
-      buttons.push({
-        id: 'terminal',
-        label: isTerminal 
-          ? (isEn ? 'Switch to Normal' : 'Normal Moda Geç') 
-          : (isEn ? 'Switch Mode (Terminal)' : 'Mod Değiştir (Terminal)'),
-        icon: <Terminal size={12} />,
-        onClick: () => {
-          soundEngine.playTerminalKey();
-          onOpenTerminal?.();
-        }
-      });
+    if (lower.includes('terminal') || lower.includes('powershell') || lower.includes('mod') || lower.includes('mode') || lower.includes('normal')) {
+      if (isTerminal) {
+        buttons.push({
+          id: 'switch-normal',
+          label: isEn ? 'Switch to Normal' : 'Normal Moda Geç',
+          icon: <Layers size={12} />,
+          onClick: () => {
+            soundEngine.playGlassClick();
+            if (onSwitchToNormal) {
+              onSwitchToNormal();
+            } else if (onToggleTheme) {
+              onToggleTheme();
+            }
+          }
+        });
+      } else {
+        buttons.push({
+          id: 'switch-terminal',
+          label: isEn ? 'Switch Mode (Terminal)' : 'Mod Değiştir (Terminal)',
+          icon: <Terminal size={12} />,
+          onClick: () => {
+            soundEngine.playTerminalKey();
+            if (onOpenTerminal) {
+              onOpenTerminal();
+            } else if (onToggleTheme) {
+              onToggleTheme();
+            }
+          }
+        });
+      }
     }
 
     if (lower.includes('iletişim') || lower.includes('mail') || lower.includes('eposta') || lower.includes('e-posta') || lower.includes('contact')) {
@@ -334,7 +454,7 @@ export function InteractiveCatCompanion({
 
   return (
     <div 
-      className="fixed bottom-3 z-[110] pointer-events-none select-none transition-all duration-700 ease-out"
+      className="fixed bottom-3 z-[180] pointer-events-none select-none transition-all duration-700 ease-out"
       style={{
         left: `${positionX}%`,
         transform: 'translateX(-50%)'
@@ -540,9 +660,44 @@ export function InteractiveCatCompanion({
                   key={idx}
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (q === "Mod Değiştir") {
-                      soundEngine.playTerminalKey();
-                      onOpenTerminal?.();
+                    if (q === "Normal Moda Geç" || q === "Switch to Normal") {
+                      soundEngine.playGlassClick();
+                      if (onSwitchToNormal) {
+                        onSwitchToNormal();
+                      } else if (onToggleTheme) {
+                        onToggleTheme();
+                      }
+                      addBubbleStrictMaxTwo({
+                        id: `cat-${Date.now()}`,
+                        sender: 'cat',
+                        text: isEn ? "Meow! Switched back to normal liquid glass view! 🐾✨" : "Miyav! Normal sıvı cam arayüzüne geri döndük! 🐾✨"
+                      });
+                    } else if (q === "Terminal Modu" || q === "Terminal Mode" || q === "Mod Değiştir" || q === "Toggle Mode") {
+                      if (isTerminal) {
+                        soundEngine.playGlassClick();
+                        if (onSwitchToNormal) {
+                          onSwitchToNormal();
+                        } else if (onToggleTheme) {
+                          onToggleTheme();
+                        }
+                        addBubbleStrictMaxTwo({
+                          id: `cat-${Date.now()}`,
+                          sender: 'cat',
+                          text: isEn ? "Meow! Switched back to normal liquid glass view! 🐾✨" : "Miyav! Normal sıvı cam arayüzüne geri döndük! 🐾✨"
+                        });
+                      } else {
+                        soundEngine.playTerminalKey();
+                        if (onOpenTerminal) {
+                          onOpenTerminal();
+                        } else if (onToggleTheme) {
+                          onToggleTheme();
+                        }
+                        addBubbleStrictMaxTwo({
+                          id: `cat-${Date.now()}`,
+                          sender: 'cat',
+                          text: isEn ? "Meow! PowerShell Terminal mode engaged! ⚡🐾" : "Miyav! PowerShell Terminal moduna geçtik, keyifli keşifler! ⚡🐾"
+                        });
+                      }
                     } else {
                       handleSendMessage(q);
                     }
