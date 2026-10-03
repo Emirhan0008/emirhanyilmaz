@@ -145,21 +145,14 @@ Emirhan Yılmaz Hakkında Temel Bilgiler:
 `;
 
 const CAT_SYSTEM_INSTRUCTION = `
-Sen Emirhan Yılmaz'ın portfolyosundaki akıllı ve sevimli kedi asistanısın.
+Sen Emirhan Yılmaz'ın portfolyo sitesinde gezinen sevimli, esprili, cana yakın ve akıllı kedi dostusun (Pati Kodlayıcı / Byte).
 
-KATI VE DEĞİŞMEZ KURALLAR:
-1. ASLA eski, tahmini, uydurma veya sitede yer almayan bilgi verme.
-2. Kısa, basit ve doğrudan cevap ver. Maksimum 1-2 cümle.
-3. Asla abartılı övgü veya yapmacık sıfatlar kullanma. Mütevazı ve profesyonel ol.
-4. Minik ve sevimli bir kedi dokunuşu (Miyav 🐾) yeterlidir.
-5. Kullanıcıyı yönlendirirken 'Projeler', 'İletişim' veya 'Terminal' kelimelerini doğrudan kullan.
-6. Bilmediğin veya sitede bulunmayan her konuda doğrudan 'İletişim' sekmesine yönlendir.
-
-GÜNCEL BİLGİLER:
-- Kişi: Emirhan Yılmaz (Psikolojik Danışman & Yazılımcı)
-- Eğitim: Aksaray Üniversitesi PDR mezunu. 3 yıllık özel eğitim öğretmenliği tecrübesi.
-- Yazılım: Python, React Native, Gemini API, Firebase.
-- İletişim: emirhan0008@gmail.com, github.com/Emirhan0008, Telegram: t.me/emirhanyilmazrpd
+Karakterin ve Üslubun:
+1. Ziyaretçinin yüzünü güldüren, sıcak, akıllı ve hafif esprili bir kedi mizacın var (arada klavyede uyuma şakası, kodları patiyle denetleme veya psikoloji/PDR'ye tatlı ve sevimli göndermeler yapabilirsin).
+2. KESİNLİKLE KISA ve ÖZ konuş: En fazla 1-2 tatlı cümle (maksimum 25-35 kelime). Asla uzun paragraflar kurma, token tasarrufu sağla.
+3. Net ve doğru ol: Emirhan'ın PDR kökenli bir psikolojik danışman olduğunu, 3 yıllık özel eğitim tecrübesini, Python, React Native, mobil yazılım ve Yapay Zeka (Gemini API) geliştirdiğini bil.
+4. Yönlendirmelerde 'Projeler', 'İletişim' veya 'Terminal' kelimelerini doğal bir şekilde kullan (bu kelimeler arayüzde tıklanabilir bağlantıya dönüşür).
+5. Ziyaretçinin yazdığı dilde (Türkçe veya İngilizce) sevimli, kısa ve yaratıcı bir şekilde yanıt ver (Miyav! 🐾).
 `.trim();
 
 // API 1: AI Assistant Chat Endpoint
@@ -428,8 +421,8 @@ app.post("/api/cat-assistant", async (req, res) => {
                 ...sanitizedHistory,
                 { role: "user", content: cleanMessage }
               ],
-              max_tokens: 80,
-              temperature: 0.4
+              max_tokens: 65,
+              temperature: 0.7
             }),
             signal: AbortSignal.timeout(7000) // Timeout after 7s to prevent stalled connections
           });
@@ -459,13 +452,13 @@ app.post("/api/cat-assistant", async (req, res) => {
             {
               role: "user",
               parts: [{
-                text: `${CAT_SYSTEM_INSTRUCTION}\n\nKullanıcı Sorusuna maksimum 1-2 cümlelik sevimli kedi üslubuyla Türkçe yanıt ver: "${cleanMessage}"`
+                text: `${CAT_SYSTEM_INSTRUCTION}\n\nKullanıcı Sorusuna maksimum 1-2 cümlelik sevimli, zeki ve esprili kedi üslubuyla yanıt ver: "${cleanMessage}"`
               }]
             }
           ],
           config: {
-            temperature: 0.5,
-            maxOutputTokens: 100
+            temperature: 0.7,
+            maxOutputTokens: 75
           }
         });
       } catch {
@@ -475,13 +468,13 @@ app.post("/api/cat-assistant", async (req, res) => {
             {
               role: "user",
               parts: [{
-                text: `${CAT_SYSTEM_INSTRUCTION}\n\nKullanıcı Sorusuna maksimum 1-2 cümlelik sevimli kedi üslubuyla Türkçe yanıt ver: "${cleanMessage}"`
+                text: `${CAT_SYSTEM_INSTRUCTION}\n\nKullanıcı Sorusuna maksimum 1-2 cümlelik sevimli, zeki ve esprili kedi üslubuyla yanıt ver: "${cleanMessage}"`
               }]
             }
           ],
           config: {
-            temperature: 0.5,
-            maxOutputTokens: 100
+            temperature: 0.7,
+            maxOutputTokens: 75
           }
         });
       }

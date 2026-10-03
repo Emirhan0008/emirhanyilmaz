@@ -20,19 +20,19 @@ export interface CloudBubbleItem {
 }
 
 const CAT_QUOTES_TR = [
-  "Miyav! Hoş geldin. Projeler sekmesine veya İletişim bölümüne göz atabilir, bana dilediğini sorabilirsin. 🐾",
-  "Emirhan'ın mobil asistan ve yapay zeka çalışmalarını görmek için Projeler sekmesine bakabilirsin.",
-  "Hacker görünümü için Terminal moduna geçebilir ya da PowerShell komutlarını deneyebilirsin!",
-  "Doğrudan mesaj iletmek istersen İletişim sayfasından veya e-posta ile ulaşabilirsin. ✉️",
-  "Mırrr... Dinleniyorum. Kafana takılan bir şey varsa hemen sorabilirsin. 🐾"
+  "Miyav! Hoş geldin. Emirhan kod yazarken klavyesinde uyumayı çok severim... Projeler bölümüne mutlaka göz at! 🐾",
+  "PDR ve algoritmaların kesiştiği yerdesin! Projeler sekmesindeki yapay zeka araçlarını keşfedebilirsin.",
+  "Hacker havası arıyorsan üst menüden Terminal moduna geç, PowerShell komutlarıyla ortalığı tozutalım! ⚡",
+  "Bir fikrin veya iş birliği düşüncen mi var? İletişim sekmesinden hemen Emirhan'a pati uzatabilirsin. ✉️",
+  "Mırrr... Zihnini dinlendir, projeleri incele. Aklına takılanı bana sorabilirsin! 🐾"
 ];
 
 const CAT_QUOTES_EN = [
-  "Meow! Welcome. Feel free to explore the Projects or Contact section, or ask me anything! 🐾",
-  "Check out the Projects tab to inspect Emirhan's AI and mobile applications.",
-  "You can switch to Terminal mode for a hacker vibe or try PowerShell commands!",
-  "To send a direct message, visit the Contact page or send an email. ✉️",
-  "Purrr... Resting now. If you have any questions, I'm right here! 🐾"
+  "Meow! Welcome. I love napping on Emirhan's keyboard while he codes... Be sure to check the Projects! 🐾",
+  "You're at the intersection of cognitive psychology & code! Explore AI apps in the Projects tab.",
+  "Feeling like a hacker? Switch to Terminal mode and run real PowerShell commands! ⚡",
+  "Have a project or collaboration in mind? Reach out directly via the Contact tab. ✉️",
+  "Purrr... Take a breath, browse around, and ask me anything you're curious about! 🐾"
 ];
 
 const PRESET_QUERIES_TR = [

@@ -1,187 +1,147 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { soundEngine } from '../utils/audioSynth';
+import { Sparkles, Zap, Terminal } from 'lucide-react';
 
-export type AppTheme = 'normal' | 'terminal';
+export type AppTheme = 'normal' | 'terminal' | 'split';
 
 interface ThemeToggleProps {
   theme: AppTheme;
   onToggle: () => void;
+  onSelectTheme?: (newTheme: AppTheme) => void;
   className?: string;
+  lang?: 'tr' | 'en';
 }
 
-export const ThemeToggle: React.FC<ThemeToggleProps> = ({ theme, onToggle, className = '' }) => {
-  const isTerminal = theme === 'terminal';
+export const ThemeToggle: React.FC<ThemeToggleProps> = ({ 
+  theme, 
+  onToggle, 
+  onSelectTheme,
+  className = '',
+  lang = 'tr'
+}) => {
+  const isEn = lang === 'en';
 
-  const handleClick = () => {
-    if (isTerminal) {
-      soundEngine.playGlassClick();
-    } else {
+  const handleSelect = (target: AppTheme) => {
+    if (target === theme) return;
+    if (target === 'terminal') {
       soundEngine.playTerminalKey();
+    } else if (target === 'split') {
+      soundEngine.playTabSwitch();
+    } else {
+      soundEngine.playGlassClick();
     }
-    onToggle();
+
+    if (onSelectTheme) {
+      onSelectTheme(target);
+    } else {
+      onToggle();
+    }
   };
+
+  // Knob coordinate mapping
+  const knobX = theme === 'normal' ? 2 : theme === 'split' ? 38 : 74;
 
   return (
     <div className={`relative inline-flex items-center select-none ${className}`}>
-      {/* 3D Tactile Dual-Mode Toggle Pill */}
-      <button
-        type="button"
-        onClick={handleClick}
-        role="switch"
-        aria-checked={isTerminal}
-        aria-label="Görünüm Modunu Değiştir: Normal (Modern UI) / Terminal (Hacker CLI)"
-        title={isTerminal ? "Normal Görünüme Geç (Modern Cam UI)" : "Terminal Görünümüne Geç (Hacker CLI)"}
-        className="group relative w-[80px] h-[36px] rounded-full p-[3px] transition-all duration-300 focus:outline-hidden cursor-pointer"
+      {/* 3D Tactile Tri-Mode Segmented Pill */}
+      <div
+        role="group"
+        aria-label={isEn ? "View Theme: Liquid Glass / Split Reality / Terminal" : "Görünüm Teması: Cam UI / Canlı Yarılma / Terminal"}
+        className="relative w-[114px] h-[36px] rounded-full p-[3px] transition-all duration-300 flex items-center bg-[#07130e] border border-white/20 shadow-inner"
         style={{
-          background: isTerminal
-            ? 'linear-gradient(180deg, #18241e 0%, #0d1712 100%)'
-            : 'linear-gradient(180deg, #e2e8f0 0%, #cbd5e1 100%)',
-          boxShadow: isTerminal
-            ? 'inset 0 3px 6px rgba(0, 0, 0, 0.85), inset 0 -1.5px 2px rgba(52, 211, 153, 0.2), 0 2px 8px rgba(0, 0, 0, 0.6)'
-            : 'inset 0 3px 6px rgba(0, 0, 0, 0.45), inset 0 -1.5px 3px rgba(255, 255, 255, 0.8), 0 2px 8px rgba(0, 0, 0, 0.25)',
-          border: isTerminal
-            ? '1px solid rgba(52, 211, 153, 0.35)'
-            : '1px solid rgba(255, 255, 255, 0.65)'
+          boxShadow: theme === 'split'
+            ? 'inset 0 2px 6px rgba(0, 0, 0, 0.8), 0 0 12px rgba(6, 182, 212, 0.35)'
+            : theme === 'terminal'
+            ? 'inset 0 2px 6px rgba(0, 0, 0, 0.8), 0 0 10px rgba(52, 211, 153, 0.3)'
+            : 'inset 0 2px 6px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 255, 255, 0.15)'
         }}
       >
-        {/* Soft bottom rim reflection */}
-        <span 
-          className="absolute inset-x-3 bottom-0 h-[1.5px] rounded-full pointer-events-none transition-opacity duration-300"
+        {/* SLIDING THUMB KNOB */}
+        <motion.div
+          className="absolute top-[3px] w-[32px] h-[28px] rounded-full z-0 flex items-center justify-center pointer-events-none"
+          initial={false}
+          animate={{ x: knobX }}
+          transition={{
+            type: "spring",
+            stiffness: 500,
+            damping: 30
+          }}
           style={{
-            background: isTerminal
-              ? 'linear-gradient(90deg, transparent, rgba(52, 211, 153, 0.4), transparent)'
-              : 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.95), transparent)',
+            background: theme === 'normal'
+              ? 'radial-gradient(circle at 40% 35%, #ffffff 0%, #cbd5e1 100%)'
+              : theme === 'split'
+              ? 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)'
+              : 'radial-gradient(circle at 40% 35%, #34d399 0%, #065f46 100%)',
+            boxShadow: theme === 'normal'
+              ? '0 2px 6px rgba(0, 0, 0, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.9)'
+              : theme === 'split'
+              ? '0 0 14px rgba(6, 182, 212, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.6)'
+              : '0 0 12px rgba(52, 211, 153, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.4)',
+            border: theme === 'split' 
+              ? '1px solid rgba(165, 243, 252, 0.8)' 
+              : '1px solid rgba(255, 255, 255, 0.8)'
           }}
         />
 
-        {/* LEFT ICON SLOT: NORMAL (SUN) */}
-        <div className="absolute left-[9px] top-1/2 -translate-y-1/2 w-[22px] h-[22px] flex items-center justify-center pointer-events-none z-0">
-          <motion.div
-            initial={false}
-            animate={{
-              opacity: !isTerminal ? 1 : 0.25,
-              scale: !isTerminal ? 1 : 0.85,
-              rotate: !isTerminal ? 0 : -35,
-            }}
-            transition={{ duration: 0.25 }}
-            className="flex items-center justify-center text-amber-500"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="5" fill="#F5A623" />
-              <line x1="12" y1="1.5" x2="12" y2="4.5" stroke="#F5A623" strokeWidth="2.4" strokeLinecap="round" />
-              <line x1="12" y1="19.5" x2="12" y2="22.5" stroke="#F5A623" strokeWidth="2.4" strokeLinecap="round" />
-              <line x1="1.5" y1="12" x2="4.5" y2="12" stroke="#F5A623" strokeWidth="2.4" strokeLinecap="round" />
-              <line x1="19.5" y1="12" x2="22.5" y2="12" stroke="#F5A623" strokeWidth="2.4" strokeLinecap="round" />
-              <line x1="4.58" y1="4.58" x2="6.7" y2="6.7" stroke="#F5A623" strokeWidth="2.4" strokeLinecap="round" />
-              <line x1="17.3" y1="17.3" x2="19.42" y2="19.42" stroke="#F5A623" strokeWidth="2.4" strokeLinecap="round" />
-              <line x1="4.58" y1="19.42" x2="6.7" y2="17.3" stroke="#F5A623" strokeWidth="2.4" strokeLinecap="round" />
-              <line x1="17.3" y1="6.7" x2="19.42" y2="4.58" stroke="#F5A623" strokeWidth="2.4" strokeLinecap="round" />
-              <circle cx="12" cy="12" r="2.2" fill="#FFE599" />
-            </svg>
-          </motion.div>
-        </div>
-
-        {/* RIGHT ICON SLOT: TERMINAL (CLI PROMPT) */}
-        <div className="absolute right-[9px] top-1/2 -translate-y-1/2 w-[22px] h-[22px] flex items-center justify-center pointer-events-none z-0">
-          <motion.div
-            initial={false}
-            animate={{
-              opacity: isTerminal ? 1 : 0.25,
-              scale: isTerminal ? 1 : 0.85,
-              rotate: isTerminal ? 0 : 35,
-            }}
-            transition={{ duration: 0.25 }}
-            className="flex items-center justify-center"
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="2.5" y="3.5" width="19" height="17" rx="3.5" stroke="#10B981" strokeWidth="2" fill="#061A12" fillOpacity="0.8" />
-              <path d="M6.5 8.5L10 12L6.5 15.5" stroke="#34D399" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              <line x1="12" y1="15.5" x2="17" y2="15.5" stroke="#34D399" strokeWidth="2.2" strokeLinecap="round" />
-              <circle cx="17.5" cy="6.5" r="1" fill="#34D399" />
-            </svg>
-          </motion.div>
-        </div>
-
-        {/* SLIDING THUMB KNOB */}
-        <motion.div
-          className="relative w-[28px] h-[28px] rounded-full z-10 flex items-center justify-center cursor-pointer pointer-events-none"
-          initial={false}
-          animate={{
-            x: isTerminal ? 0 : 44,
-          }}
-          transition={{
-            type: "spring",
-            stiffness: 550,
-            damping: 32
-          }}
-          style={{
-            background: isTerminal
-              ? 'radial-gradient(circle at 35% 30%, #34d399 0%, #059669 45%, #047857 100%)'
-              : 'radial-gradient(circle at 35% 30%, #ffffff 0%, #f1f5f9 45%, #cbd5e1 100%)',
-            boxShadow: isTerminal
-              ? '0 3px 8px rgba(0, 0, 0, 0.6), 0 1px 3px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.5), 0 0 10px rgba(52, 211, 153, 0.4)'
-              : '0 3px 8px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.95)',
-            border: isTerminal
-              ? '1px solid rgba(167, 243, 208, 0.6)'
-              : '1px solid rgba(255, 255, 255, 0.9)'
-          }}
+        {/* SLOT 1: NORMAL (GLASS / SUN) */}
+        <button
+          type="button"
+          onClick={() => handleSelect('normal')}
+          className="relative z-10 w-[36px] h-full flex items-center justify-center cursor-pointer transition-transform active:scale-90"
+          title={isEn ? "Switch to Liquid Glass Mode (Modern Cam UI)" : "Cam UI Modu (Modern Vitrin)"}
+          aria-pressed={theme === 'normal'}
         >
-          <motion.div
-            className="flex items-center justify-center pointer-events-none select-none"
-            animate={{
-              x: isTerminal ? [0, 1.8, 0] : [0, -1.8, 0]
-            }}
-            transition={{
-              repeat: Infinity,
-              duration: 1.2,
-              ease: "easeInOut"
-            }}
-          >
-            {isTerminal ? (
-              <svg 
-                width="13" 
-                height="13" 
-                viewBox="0 0 16 16" 
-                fill="none" 
-                className="text-emerald-950"
-              >
-                <path 
-                  d="M5.5 3.5L10 8L5.5 12.5" 
-                  stroke="currentColor" 
-                  strokeWidth="2.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                />
-              </svg>
-            ) : (
-              <svg 
-                width="13" 
-                height="13" 
-                viewBox="0 0 16 16" 
-                fill="none" 
-                className="text-slate-700"
-              >
-                <path 
-                  d="M10.5 3.5L6 8L10.5 12.5" 
-                  stroke="currentColor" 
-                  strokeWidth="2.5" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                />
-              </svg>
-            )}
-          </motion.div>
-        </motion.div>
-      </button>
+          <Sparkles 
+            size={14} 
+            className={`transition-colors duration-200 ${
+              theme === 'normal' ? 'text-slate-900 drop-shadow-sm font-bold' : 'text-white/40 hover:text-white/80'
+            }`} 
+          />
+        </button>
 
-      {/* Mode Label Tag */}
+        {/* SLOT 2: SPLIT REALITY (CANLI YARILMA) */}
+        <button
+          type="button"
+          onClick={() => handleSelect('split')}
+          className="relative z-10 w-[36px] h-full flex items-center justify-center cursor-pointer transition-transform active:scale-90"
+          title={isEn ? "Split-Screen Reality (Side-by-side Terminal & Liquid Glass)" : "Canlı Yarılma Efekti (Terminal + Cam UI Yan Yana)"}
+          aria-pressed={theme === 'split'}
+        >
+          <Zap 
+            size={14} 
+            className={`transition-colors duration-200 ${
+              theme === 'split' ? 'text-black drop-shadow-sm font-extrabold animate-pulse' : 'text-white/40 hover:text-cyan-300'
+            }`} 
+          />
+        </button>
+
+        {/* SLOT 3: TERMINAL (CLI) */}
+        <button
+          type="button"
+          onClick={() => handleSelect('terminal')}
+          className="relative z-10 w-[36px] h-full flex items-center justify-center cursor-pointer transition-transform active:scale-90"
+          title={isEn ? "Switch to Terminal Mode (PowerShell CLI)" : "Terminal Modu (PowerShell CLI)"}
+          aria-pressed={theme === 'terminal'}
+        >
+          <Terminal 
+            size={14} 
+            className={`transition-colors duration-200 ${
+              theme === 'terminal' ? 'text-emerald-950 font-bold' : 'text-white/40 hover:text-emerald-400'
+            }`} 
+          />
+        </button>
+      </div>
+
+      {/* Dynamic Status Tag */}
       <div className="hidden sm:flex flex-col ml-2.5 text-left leading-none">
-        <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-white/90">
-          {isTerminal ? 'TERMINAL' : 'NORMAL'}
+        <span className={`text-[10px] font-mono font-bold tracking-wider uppercase transition-colors ${
+          theme === 'split' ? 'text-cyan-300' : theme === 'terminal' ? 'text-emerald-300' : 'text-white/90'
+        }`}>
+          {theme === 'split' ? (isEn ? 'SPLIT REALITY' : 'YARILMA MODU') : theme === 'terminal' ? 'TERMINAL CLI' : 'CAM UI'}
         </span>
-        <span className="text-[8px] text-white/45 font-mono">
-          {isTerminal ? 'CLI MODU' : 'CAM UI'}
+        <span className="text-[8px] text-white/50 font-mono">
+          {theme === 'split' ? (isEn ? 'DUAL MATRIX' : 'CANLI PERDE') : theme === 'terminal' ? 'HACKER KONSOL' : 'MODERN VİTRİN'}
         </span>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, FormEvent, UIEvent } from 'react';
+import { useState, useEffect, useMemo, useRef, FormEvent, UIEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, 
@@ -51,7 +51,9 @@ import {
   Heart,
   SlidersHorizontal,
   ArrowUpDown,
-  Check
+  Check,
+  Zap,
+  ArrowLeftRight
  } from 'lucide-react';
  
  import { profileData, projects, articles } from './data';
@@ -286,15 +288,65 @@ export default function App() {
    const [isAmbientPlaying, setIsAmbientPlaying] = useState(false);
    const [currentMusicTrack, setCurrentMusicTrack] = useState<MusicTrack>(PEACEFUL_TRACKS[0]);
 
-   // Dual-Theme System: Normal (Modern Liquid Glass) vs Terminal (Hacker CLI)
+   // Tri-Theme System: Normal (Modern Liquid Glass) vs Split Reality (Canlı Yarılma) vs Terminal (Hacker CLI)
    const [theme, setTheme] = useState<AppTheme>(() => {
      try {
        const saved = localStorage.getItem('portfolio_theme');
-       return (saved === 'terminal' || saved === 'normal') ? saved : 'normal';
+       return (saved === 'terminal' || saved === 'normal' || saved === 'split') ? (saved as AppTheme) : 'normal';
      } catch {
        return 'normal';
      }
    });
+
+   // Split-Screen Reality Slider State (15% to 85% range)
+   const [splitPos, setSplitPos] = useState<number>(50);
+   const [isSplitDragging, setIsSplitDragging] = useState<boolean>(false);
+   const mainSplitRef = useRef<HTMLDivElement>(null);
+   const lastSplitSoundPos = useRef<number>(50);
+
+   const triggerSplitTick = (newPos: number) => {
+     if (Math.abs(newPos - lastSplitSoundPos.current) >= 4) {
+       soundEngine.playTerminalKey();
+       lastSplitSoundPos.current = newPos;
+     }
+   };
+
+   const setSplitPosWithSound = (pos: number) => {
+     const clamped = Math.min(85, Math.max(15, pos));
+     setSplitPos(clamped);
+     soundEngine.playTabSwitch();
+   };
+
+   useEffect(() => {
+     const handlePointerMove = (e: PointerEvent) => {
+       if (!isSplitDragging || !mainSplitRef.current) return;
+       const rect = mainSplitRef.current.getBoundingClientRect();
+       const clientX = e.clientX;
+       const relativeX = clientX - rect.left;
+       const newPercent = (relativeX / rect.width) * 100;
+       const clamped = Math.min(85, Math.max(15, newPercent));
+       setSplitPos(clamped);
+       triggerSplitTick(clamped);
+     };
+
+     const handlePointerUp = () => {
+       if (isSplitDragging) {
+         setIsSplitDragging(false);
+         soundEngine.playGlassClick();
+       }
+     };
+
+     if (isSplitDragging) {
+       window.addEventListener('pointermove', handlePointerMove);
+       window.addEventListener('pointerup', handlePointerUp);
+       window.addEventListener('pointercancel', handlePointerUp);
+     }
+     return () => {
+       window.removeEventListener('pointermove', handlePointerMove);
+       window.removeEventListener('pointerup', handlePointerUp);
+       window.removeEventListener('pointercancel', handlePointerUp);
+     };
+   }, [isSplitDragging]);
 
    useEffect(() => {
      try {
@@ -302,13 +354,18 @@ export default function App() {
      } catch {}
      if (theme === 'terminal') {
        document.documentElement.classList.add('theme-terminal');
+       document.documentElement.classList.remove('theme-split');
+     } else if (theme === 'split') {
+       document.documentElement.classList.add('theme-split');
+       document.documentElement.classList.remove('theme-terminal');
      } else {
        document.documentElement.classList.remove('theme-terminal');
+       document.documentElement.classList.remove('theme-split');
      }
    }, [theme]);
 
    const toggleTheme = () => {
-     setTheme(prev => (prev === 'normal' ? 'terminal' : 'normal'));
+     setTheme(prev => (prev === 'normal' ? 'split' : prev === 'split' ? 'terminal' : 'normal'));
    };
 
    useEffect(() => {
@@ -1544,15 +1601,173 @@ export default function App() {
         </div>
       )}
 
+      {/* Invisible global drag shield during active pointer drag */}
+      {isSplitDragging && (
+        <div className="fixed inset-0 z-[250] cursor-col-resize select-none pointer-events-auto bg-transparent" />
+      )}
+
+      {/* Top Split Reality HUD Bar (Active when theme === 'split') */}
+      {theme === 'split' && (
+        <div className="relative z-30 shrink-0 mx-4 lg:mx-6 mt-3 -mb-3 px-4 py-2 rounded-2xl bg-black/85 backdrop-blur-xl border border-emerald-500/30 flex items-center justify-between text-xs shadow-[0_0_25px_rgba(16,185,129,0.15)] select-none">
+          {/* Left: Terminal status */}
+          <div className="flex items-center gap-2 text-emerald-400 font-mono">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_8px_rgba(52,211,153,0.8)]"></span>
+            </span>
+            <span className="font-bold text-[11px] tracking-wider uppercase flex items-center gap-1.5 truncate">
+              <Terminal size={13} className="shrink-0 text-emerald-400" />
+              <span className="hidden sm:inline">
+                {lang === 'tr' ? 'POWERSHELL // KODUN MUTFAĞI' : 'POWERSHELL // CODE REALITY'}
+              </span>
+              <span className="sm:hidden">POWERSHELL</span>
+            </span>
+            <span className="px-1.5 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/40 text-[10px] text-emerald-300 font-mono font-bold">
+              %{Math.round(splitPos)}
+            </span>
+          </div>
+
+          {/* Center: Draggable Ratio Meter & Presets */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="hidden md:flex items-center gap-1 text-[10px] font-mono text-white/50 mr-1">
+              <ArrowLeftRight size={11} className="text-emerald-400 animate-pulse" />
+              <span>{lang === 'tr' ? 'Canlı Perde:' : 'Split Curtain:'}</span>
+            </div>
+
+            <div className="inline-flex items-center p-0.5 rounded-full bg-white/5 border border-white/10">
+              <button
+                type="button"
+                onClick={() => setSplitPosWithSound(25)}
+                className={`px-2 py-0.5 rounded-full text-[10px] font-mono transition-all cursor-pointer ${
+                  Math.round(splitPos) === 25
+                    ? 'bg-emerald-500 text-black font-extrabold shadow-[0_0_10px_rgba(52,211,153,0.7)]'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+                title={lang === 'tr' ? "%25 Terminal / %75 Cam UI" : "25% Terminal / 75% Liquid Glass"}
+              >
+                %25
+              </button>
+              <button
+                type="button"
+                onClick={() => setSplitPosWithSound(50)}
+                className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono transition-all flex items-center gap-1 cursor-pointer ${
+                  Math.round(splitPos) === 50
+                    ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-black font-extrabold shadow-[0_0_12px_rgba(6,182,212,0.7)]'
+                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                }`}
+                title={lang === 'tr' ? "50:50 Eşit Yarılma" : "50:50 Balanced Split"}
+              >
+                <span>50:50</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSplitPosWithSound(75)}
+                className={`px-2 py-0.5 rounded-full text-[10px] font-mono transition-all cursor-pointer ${
+                  Math.round(splitPos) === 75
+                    ? 'bg-cyan-500 text-black font-extrabold shadow-[0_0_10px_rgba(6,182,212,0.7)]'
+                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                }`}
+                title={lang === 'tr' ? "%75 Terminal / %25 Cam UI" : "75% Terminal / 25% Liquid Glass"}
+              >
+                %75
+              </button>
+            </div>
+
+            <div className="w-[1px] h-3.5 bg-white/15 mx-0.5" />
+
+            {/* Quick Exit Buttons */}
+            <button
+              type="button"
+              onClick={() => {
+                soundEngine.playGlassClick();
+                setTheme('normal');
+              }}
+              className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/10 hover:bg-white/20 text-white transition-all border border-white/15 hover:border-cyan-400/50 flex items-center gap-1 cursor-pointer shadow-xs"
+              title={lang === 'tr' ? "Tam Ekran Cam UI Moduna Geç" : "Switch to Full Liquid Glass"}
+            >
+              <Sparkles size={11} className="text-cyan-400" />
+              <span className="hidden sm:inline">{lang === 'tr' ? 'Tam Cam' : 'Full Glass'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                soundEngine.playTerminalKey();
+                setTheme('terminal');
+              }}
+              className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-950/60 hover:bg-emerald-900/80 text-emerald-300 border border-emerald-500/40 transition-all flex items-center gap-1 cursor-pointer shadow-xs"
+              title={lang === 'tr' ? "Tam Ekran Terminal Moduna Geç" : "Switch to Full Terminal"}
+            >
+              <Terminal size={11} className="text-emerald-400" />
+              <span className="hidden sm:inline">{lang === 'tr' ? 'Tam Terminal' : 'Full Terminal'}</span>
+            </button>
+          </div>
+
+          {/* Right: Liquid Glass status */}
+          <div className="flex items-center gap-2 text-cyan-300 font-mono select-none">
+            <span className="px-1.5 py-0.5 rounded bg-cyan-950/80 border border-cyan-500/40 text-[10px] text-cyan-300 font-mono font-bold">
+              %{Math.round(100 - splitPos)}
+            </span>
+            <span className="font-bold text-[11px] tracking-wider uppercase flex items-center gap-1.5 truncate">
+              <span className="hidden sm:inline">
+                {lang === 'tr' ? 'LIQUID GLASS // TASARIM VİTRİNİ' : 'LIQUID GLASS // SHOWCASE'}
+              </span>
+              <span className="sm:hidden">CAM UI</span>
+              <Layers size={13} className="shrink-0 text-cyan-300" />
+            </span>
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-80"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.8)]"></span>
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* MAIN CONTAINER */}
-      <div className={`relative z-10 h-auto lg:h-screen lg:max-h-screen w-full flex flex-col lg:flex-row p-4 lg:p-6 gap-6 lg:overflow-hidden transition-all duration-1000 ${isMeltingSite ? "melting-slag-site" : ""}`}>
+      <div 
+        ref={mainSplitRef}
+        className={`relative z-10 h-auto lg:h-screen lg:max-h-screen w-full flex flex-col lg:flex-row p-4 lg:p-6 gap-4 lg:gap-6 lg:overflow-hidden transition-all duration-1000 ${isMeltingSite ? "melting-slag-site" : ""}`}
+      >
         
-        {/* LEFT PANEL: Dynamic Viewport & Primary Presenter (Hosts Profile or Active Project / Article Details) */}
+        {/* LEFT PANEL: In Split mode it hosts the Terminal Workspace; in normal mode it hosts Profile or Detail */}
         <motion.div 
-          layout
-          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full lg:w-1/2 h-auto lg:h-full lg:max-h-full relative flex flex-col rounded-3xl p-5 lg:p-7 liquid-glass-clear spinning-glow-border overflow-hidden select-text transition-all duration-300 ease-out"
+          layout={!isSplitDragging}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          style={{ width: theme === 'split' ? `${splitPos}%` : undefined }}
+          className={`h-auto lg:h-full lg:max-h-full relative flex flex-col ${
+            theme === 'split' 
+              ? 'w-full rounded-3xl overflow-hidden' 
+              : 'w-full lg:w-1/2 rounded-3xl p-5 lg:p-7 liquid-glass-clear spinning-glow-border overflow-hidden select-text'
+          } transition-all duration-300 ease-out`}
         >
+          {theme === 'split' ? (
+            <PowerShellTerminalWorkspace
+              lang={lang}
+              projects={mappedProjects}
+              articles={mappedArticles}
+              profile={currentProfile}
+              isSplitView={true}
+              onSwitchToNormal={(targetTab) => {
+                setTheme('normal');
+                if (targetTab) setActiveTab(targetTab);
+              }}
+              onSwitchToSplit={() => setTheme('split')}
+              onOpenProjectModal={(p) => {
+                setSelectedProject(p);
+                setActiveTab('projects');
+              }}
+              onOpenArticleModal={(a) => {
+                setSelectedArticle(a);
+                setActiveTab('articles');
+              }}
+              onOpenEstimator={() => {
+                setSelectedProject(null);
+                setSelectedArticle(null);
+                setShowEstimatorModal(true);
+              }}
+            />
+          ) : (
+            <>
           
           {/* Left Panel Header / Navigation */}
           {theme === 'terminal' && (
@@ -1758,9 +1973,14 @@ export default function App() {
 
                 <div className="pt-2 mt-1 border-t border-white/10 flex items-center justify-between px-2">
                   <span className="text-xs font-mono text-white/70">
-                    {theme === 'terminal' ? 'CLI Terminal Modu' : 'Modern Cam UI'}
+                    {theme === 'split' ? (lang === 'tr' ? 'Canlı Yarılma' : 'Split Reality') : theme === 'terminal' ? 'CLI Terminal' : 'Cam UI'}
                   </span>
-                  <ThemeToggle theme={theme} onToggle={toggleTheme} />
+                  <ThemeToggle 
+                    theme={theme} 
+                    onToggle={toggleTheme} 
+                    onSelectTheme={(targetTheme) => setTheme(targetTheme)}
+                    lang={lang} 
+                  />
                 </div>
               </motion.div>
             )}
@@ -2383,21 +2603,116 @@ export default function App() {
               )}
             </AnimatePresence>
           </div>
-
+          </>
+          )}
         </motion.div>
+
+        {/* DRAGGABLE LASER DIVIDER (Active when theme === 'split') */}
+        {theme === 'split' && (
+          <div 
+            className="hidden lg:flex relative z-40 shrink-0 w-4 -mx-2 h-full cursor-col-resize group items-center justify-center select-none outline-hidden"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              setIsSplitDragging(true);
+              soundEngine.playGlassClick();
+            }}
+            onDoubleClick={() => setSplitPosWithSound(50)}
+            role="slider"
+            aria-label={lang === 'tr' ? "Canlı Yarılma Perdesi Ayırıcısı" : "Split Reality Divider"}
+            aria-valuenow={Math.round(splitPos)}
+            aria-valuemin={15}
+            aria-valuemax={85}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                setSplitPos(prev => {
+                  const next = Math.max(15, prev - (e.shiftKey ? 10 : 2));
+                  triggerSplitTick(next);
+                  return next;
+                });
+              } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                setSplitPos(prev => {
+                  const next = Math.min(85, prev + (e.shiftKey ? 10 : 2));
+                  triggerSplitTick(next);
+                  return next;
+                });
+              } else if (e.key === 'Home') {
+                e.preventDefault();
+                setSplitPosWithSound(25);
+              } else if (e.key === 'End') {
+                e.preventDefault();
+                setSplitPosWithSound(75);
+              } else if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                setSplitPosWithSound(50);
+              }
+            }}
+          >
+            {/* Laser vertical glowing beam */}
+            <div className={`w-[2.5px] h-full transition-all duration-150 ${
+              isSplitDragging 
+                ? 'bg-gradient-to-b from-emerald-400 via-teal-300 to-cyan-400 shadow-[0_0_20px_rgba(52,211,153,1),0_0_30px_rgba(6,182,212,0.9)] scale-x-150' 
+                : 'bg-gradient-to-b from-emerald-400/80 via-teal-300 to-cyan-400/80 shadow-[0_0_12px_rgba(52,211,153,0.7)] group-hover:shadow-[0_0_22px_rgba(52,211,153,1)] group-hover:scale-x-125'
+            }`} />
+
+            {/* Draggable Laser Handle Grip Knob */}
+            <div 
+              className={`absolute top-1/2 -translate-y-1/2 w-8 h-16 rounded-full flex flex-col items-center justify-center gap-1.5 transition-all duration-200 cursor-col-resize select-none ${
+                isSplitDragging
+                  ? 'scale-110 shadow-[0_0_30px_rgba(52,211,153,1),0_0_40px_rgba(6,182,212,0.8)] border-cyan-300 bg-black/95'
+                  : 'hover:scale-105 shadow-[0_0_20px_rgba(0,0,0,0.9),0_0_15px_rgba(52,211,153,0.6)] border-emerald-400/60 hover:border-emerald-300 bg-black/85 backdrop-blur-lg'
+              } border`}
+            >
+              {/* Left arrow / Terminal side */}
+              <span className="text-[10px] text-emerald-400 font-extrabold leading-none pointer-events-none select-none drop-shadow-[0_0_6px_rgba(52,211,153,0.8)]">
+                ◀
+              </span>
+
+              {/* Tactile Grip Ridges */}
+              <div className="flex flex-col gap-0.5 items-center pointer-events-none">
+                <span className="w-2.5 h-[1.5px] bg-emerald-400 rounded-full" />
+                <span className="w-3.5 h-[1.5px] bg-white rounded-full shadow-[0_0_4px_rgba(255,255,255,0.8)]" />
+                <span className="w-2.5 h-[1.5px] bg-cyan-400 rounded-full" />
+              </div>
+
+              {/* Right arrow / Glass side */}
+              <span className="text-[10px] text-cyan-400 font-extrabold leading-none pointer-events-none select-none drop-shadow-[0_0_6px_rgba(6,182,212,0.8)]">
+                ▶
+              </span>
+            </div>
+
+            {/* Floating Pill Tooltip above divider */}
+            <div className={`absolute top-4 pointer-events-none transition-all duration-200 whitespace-nowrap px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-black/95 border border-white/20 shadow-2xl flex items-center gap-2 ${
+              isSplitDragging ? 'opacity-100 scale-105' : 'opacity-0 group-hover:opacity-100'
+            }`}>
+              <span className="text-emerald-400">TERM %{Math.round(splitPos)}</span>
+              <span className="text-white/40">|</span>
+              <span className="text-cyan-300">CAM %{Math.round(100 - splitPos)}</span>
+            </div>
+          </div>
+        )}
 
         {/* RIGHT PANEL: Browsing Hub & Interface / Catalog Viewport */}
         <motion.div 
-          layout
+          layout={!isSplitDragging}
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          style={{ width: theme === 'split' ? `${100 - splitPos}%` : undefined }}
           className="w-full lg:w-1/2 h-full flex flex-col min-h-0 relative select-text transition-all duration-300 ease-out"
         >
 
           {/* Top Bar (Socials, Innovative Actions & Audio Controls) */}
           <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3 shrink-0">
             <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-full overflow-x-auto transition-all duration-300">
-              {/* Dual-Theme Skeuomorphic Switch (Normal vs Terminal Mode) */}
-              <ThemeToggle theme={theme} onToggle={toggleTheme} className="shrink-0" />
+              {/* Tri-Theme Skeuomorphic Switch (Normal vs Split vs Terminal Mode) */}
+              <ThemeToggle 
+                theme={theme} 
+                onToggle={toggleTheme} 
+                onSelectTheme={(targetTheme) => setTheme(targetTheme)}
+                lang={lang}
+                className="shrink-0" 
+              />
 
               {/* Language Switcher (TR / EN) */}
               <LanguageToggle currentLang={lang} onToggle={handleLangToggle} className="shrink-0" />
@@ -2538,6 +2853,23 @@ export default function App() {
               </button>
 
               <button
+                type="button"
+                onClick={() => {
+                  soundEngine.playTabSwitch();
+                  setTheme(prev => prev === 'split' ? 'normal' : 'split');
+                }}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-extrabold transition-all cursor-pointer border shadow-sm ${
+                  theme === 'split'
+                    ? 'bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 text-black border-cyan-300 shadow-[0_0_15px_rgba(6,182,212,0.6)] animate-pulse'
+                    : 'liquid-glass hover:bg-white/10 text-white/90 hover:text-white border-white/10 hover:border-cyan-400/40'
+                }`}
+                title={lang === 'tr' ? "Canlı Yarılma (Split Reality): Terminal ve Cam Arayüzü Yan Yana İnceleyin" : "Split Reality: View Terminal & Liquid Glass Side-by-Side"}
+              >
+                <Zap size={13} className={theme === 'split' ? 'text-black' : 'text-cyan-400 animate-pulse'} />
+                <span>{lang === 'tr' ? 'Canlı Yarılma' : 'Split Reality'}</span>
+              </button>
+
+              <button
                 onClick={() => {
                   soundEngine.playGlassClick();
                   setSelectedProject(null);
@@ -2564,6 +2896,7 @@ export default function App() {
                   setTheme('normal');
                   setActiveTab(targetTab || 'projects');
                 }}
+                onSwitchToSplit={() => setTheme('split')}
                 onOpenProjectModal={(p) => {
                   setTheme('normal');
                   setActiveTab('projects');
@@ -2580,6 +2913,103 @@ export default function App() {
                   setShowEstimatorModal(true);
                 }}
               />
+            ) : theme === 'split' && currentSelectedProject ? (
+              /* ACTIVE PROJECT DETAIL IN RIGHT PANEL DURING SPLIT VIEW */
+              <motion.div
+                key={`split-right-project-${currentSelectedProject.id}`}
+                initial={{ opacity: 0, scale: 0.98, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98, y: 10 }}
+                transition={{ duration: 0.3 }}
+                className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1.5 min-h-0 select-text liquid-glass rounded-2xl p-4 sm:p-5 border border-emerald-500/30"
+              >
+                {/* Header with back button */}
+                <div className="flex items-center justify-between pb-3 border-b border-white/10 shrink-0">
+                  <button
+                    onClick={() => {
+                      soundEngine.playGlassClick();
+                      setSelectedProject(null);
+                    }}
+                    className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs transition-all border border-emerald-400/40 cursor-pointer hover:scale-105 active:scale-95 shadow-md group"
+                  >
+                    <ArrowLeft size={14} className="text-emerald-400 group-hover:-translate-x-0.5 transition-transform" />
+                    <span>{lang === 'tr' ? 'Projeler Kataloğuna Dön' : 'Back to Catalog'}</span>
+                  </button>
+
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] font-mono text-emerald-400 font-bold px-2 py-0.5 rounded bg-emerald-950/60 border border-emerald-500/30">
+                      {currentSelectedProject.category}
+                    </span>
+                    <button
+                      onClick={() => setSelectedProject(null)}
+                      className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all border border-white/10 cursor-pointer"
+                      title={lang === 'tr' ? "Kapat" : "Close"}
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Project title & tags */}
+                <div className="flex flex-col gap-1.5">
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+                    {currentSelectedProject.title}
+                  </h2>
+                  <p className="text-xs sm:text-sm text-white/80 leading-relaxed font-normal">
+                    {currentSelectedProject.description}
+                  </p>
+                </div>
+
+                {/* Media preview (video or screenshot) */}
+                <div className="relative rounded-xl overflow-hidden border border-white/15 bg-black/60 shadow-lg">
+                  {currentSelectedProject.video ? (
+                    <SeamlessVideo 
+                      src={currentSelectedProject.video} 
+                    />
+                  ) : (
+                    <img 
+                      src={currentSelectedProject.image} 
+                      alt={currentSelectedProject.title} 
+                      className="w-full aspect-video object-cover" 
+                    />
+                  )}
+                </div>
+
+                {/* Tech stack badges */}
+                <div className="flex flex-wrap gap-1.5">
+                  {currentSelectedProject.technologies.map(tech => (
+                    <span key={tech} className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold bg-white/5 text-emerald-300 border border-emerald-500/20">
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Links (Live Demo, GitHub) */}
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/10">
+                  {currentSelectedProject.liveUrl && (
+                    <a
+                      href={currentSelectedProject.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 rounded-full text-xs font-extrabold text-black transition-all shadow-md"
+                    >
+                      <span>{t.projectCard.liveDemo}</span>
+                      <ExternalLink size={12} />
+                    </a>
+                  )}
+                  {currentSelectedProject.githubUrl && (
+                    <a
+                      href={currentSelectedProject.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 liquid-glass hover:bg-white/15 rounded-full text-xs font-semibold text-white transition-all border border-white/20"
+                    >
+                      <Github size={13} />
+                      <span>{t.projectCard.sourceCode}</span>
+                    </a>
+                  )}
+                </div>
+              </motion.div>
             ) : (
             <AnimatePresence mode="wait">
               {activeTab === 'profile' && (

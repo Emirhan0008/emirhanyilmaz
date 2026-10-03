@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect, KeyboardEvent } from 'react';
-import { Terminal, Send, HelpCircle, CornerDownLeft, Sparkles, Folder, FileText, ArrowRight, RefreshCw, Layers, Maximize2, Minimize2, ExternalLink } from 'lucide-react';
+import { Terminal, Send, HelpCircle, CornerDownLeft, Sparkles, Folder, FileText, ArrowRight, RefreshCw, Layers, Maximize2, Minimize2, ExternalLink, Zap } from 'lucide-react';
 import { profileData, projects, articles } from '../data';
 import { soundEngine } from '../utils/audioSynth';
 import { Project, Article } from '../types';
-import { sanitizeText, sanitizeMultilineText, sanitizeEmail, isValidEmail, sanitizeUrl } from '../utils/sanitize';
+import { sanitizeText, sanitizeMultilineText, sanitizeEmail, isValidEmail, sanitizeUrl, safeJsonParse } from '../utils/sanitize';
 
 interface TerminalLine {
   id: string;
@@ -14,6 +14,8 @@ interface TerminalLine {
 
 interface PowerShellTerminalWorkspaceProps {
   onSwitchToNormal: (tab?: 'profile' | 'projects' | 'articles' | 'contact') => void;
+  onSwitchToSplit?: () => void;
+  isSplitView?: boolean;
   onOpenProjectModal?: (project: Project) => void;
   onOpenArticleModal?: (article: Article) => void;
   onOpenEstimator?: () => void;
@@ -57,6 +59,8 @@ export const PulsingNormalOpenButton: React.FC<{
 
 export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspaceProps> = ({
   onSwitchToNormal,
+  onSwitchToSplit,
+  isSplitView = false,
   onOpenProjectModal,
   onOpenArticleModal,
   onOpenEstimator,
@@ -273,11 +277,36 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
     if (mainCmd === 'exit' || lower === 'set-theme normal' || lower === 'normal' || lower === 'gui') {
       setLines(prev => [
         ...prev,
-        { id: `out-${Date.now()}`, type: 'system', text: 'Normal Cam UI moduna dönülüyor...' }
+        { id: `out-${Date.now()}`, type: 'system', text: isEn ? 'Switching to Full Liquid Glass UI...' : 'Normal Cam UI moduna dönülüyor...' }
       ]);
       soundEngine.playGlassClick();
       setTimeout(() => {
         onSwitchToNormal();
+      }, 350);
+      return;
+    }
+
+    // ==========================================
+    // 3.01 SPLIT / SET-THEME SPLIT (CANLI YARILMA)
+    // ==========================================
+    if (mainCmd === 'split' || lower === 'set-theme split' || lower === 'split-screen' || lower === 'reality' || lower === 'yarilma') {
+      setLines(prev => [
+        ...prev,
+        { 
+          id: `out-${Date.now()}`, 
+          type: 'success', 
+          text: isEn 
+            ? '⚡ Activating Split-Screen Reality (Side-by-side Terminal & Liquid Glass)...' 
+            : '⚡ Canlı Yarılma Efekti Devreye Alınıyor (Terminal + Cam UI Yan Yana)...' 
+        }
+      ]);
+      soundEngine.playTerminalKey();
+      setTimeout(() => {
+        if (onSwitchToSplit) {
+          onSwitchToSplit();
+        } else {
+          onSwitchToNormal('projects');
+        }
       }, 350);
       return;
     }
@@ -1272,7 +1301,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
       };
 
       try {
-        const stored = JSON.parse(localStorage.getItem('adm_msg_store') || '[]');
+        const stored = safeJsonParse(localStorage.getItem('adm_msg_store'), []);
         const validStored = Array.isArray(stored) ? stored : [];
         localStorage.setItem('adm_msg_store', JSON.stringify([newMsg, ...validStored]));
       } catch (e) {
@@ -1430,7 +1459,8 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
   // Quick Action Buttons
   const quickActions = [
     { label: 'help', cmd: 'help', title: 'Komut Kılavuzu' },
-    { label: '⚡ Proje Mimarisi', cmd: 'New-Architecture', title: 'Yapay Zeka Mimari ve Teklif Oluşturucu' },
+    { label: '⚡ Canlı Yarılma', cmd: 'split', title: 'İkili Ekran (Terminal + Cam UI Yan Yana)' },
+    { label: '✨ Proje Mimarisi', cmd: 'New-Architecture', title: 'Yapay Zeka Mimari ve Teklif Oluşturucu' },
     { label: 'dir', cmd: 'dir', title: 'Dizin İçeriği' },
     { label: 'Get-Projects', cmd: 'Get-Projects', title: 'Projeler Tablosu' },
     { label: 'Get-Articles', cmd: 'Get-Articles', title: 'Makaleler' },
@@ -1493,6 +1523,28 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
             {isFullscreen ? <Minimize2 size={12} /> : <Maximize2 size={12} />}
             <span>{isFullscreen ? 'Küçült' : 'Tam Ekran'}</span>
           </button>
+
+          {onSwitchToSplit && !isSplitView && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                soundEngine.playTabSwitch();
+                onSwitchToSplit();
+              }}
+              className="text-[11px] text-cyan-300 hover:text-white bg-cyan-950/70 hover:bg-cyan-900/80 border border-cyan-500/40 px-2.5 py-0.5 rounded transition-all cursor-pointer flex items-center gap-1 font-bold shadow-xs"
+              title="Canlı Yarılma (Split Reality) — Terminal ve Cam Arayüzü Yan Yana İnceleyin"
+            >
+              <Zap size={11} className="text-cyan-400 animate-pulse" />
+              <span>Canlı Yarılma</span>
+            </button>
+          )}
+
+          {isSplitView && (
+            <span className="text-[10px] text-cyan-300 font-bold bg-cyan-950/80 px-2 py-0.5 rounded border border-cyan-500/40 flex items-center gap-1">
+              <Zap size={10} className="text-cyan-400" />
+              <span>YARILMA AKTİF</span>
+            </span>
+          )}
 
           <span className="text-[10px] text-emerald-400/80 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-500/30 font-bold hidden sm:inline">
             PS 7.4.5
