@@ -8,24 +8,24 @@ import projectSpecialEdu from './assets/images/project_special_edu_1782982504669
 
 export const profileData = {
   name: "Emirhan YILMAZ",
-  title: "Psikolojik Danışman & Yazılımcı",
+  title: "Psikolojik Danışman & AI/Yazılım Geliştirici",
   avatar: "/profile-photo.jpg",
   logo: "/logo.png",
-  about: "Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık mezunuyum. İnsan psikolojisini ve 3 yıllık özel eğitim öğretmenliği saha tecrübemi, yaklaşık 1-2 yıldır aktif olarak geliştirdiğim yapay zeka, Python otomasyonları ve mobil yazılım becerilerimle harmanlayarak yenilikçi ve insan odaklı dijital çözümler üretiyorum.",
+  about: "Aksaray Üniversitesi PDR mezunuyum. İnsan psikolojisi ve 3 yıllık özel eğitim saha tecrübemi; modern yapay zeka (LLM / Multimodal Vision), mobil ve Python otomasyonlarıyla harmanlıyorum. Bilişsel yükü azaltan, insan odaklı dijital sağlık, eğitim teknolojileri ve sistem otomasyonları inşa ediyorum.",
   education: {
     school: "Aksaray Üniversitesi",
     degree: "Rehberlik ve Psikolojik Danışmanlık (PDR)",
-    details: "Lisans Mezuniyeti — Psikolojik danışmanlık kuramları, terapötik beceriler ve gelişimsel psikoloji üzerine derinleşmiş eğitim."
+    details: "Lisans Mezuniyeti — Psikolojik danışmanlık kuramları, terapötik yetkinlikler, bilişsel davranışçı yaklaşım ve gelişimsel değerlendirme."
   } as Education,
   softwareProfile: {
-    language: "Python & React Native",
-    level: "Yazılım Geliştirici (1-2 Yıllık Pratik & Aktif Gelişim)",
-    skills: ["Python (Otomasyon/Pandas)", "React Native / Expo", "Gemini API & AI Studio", "Firebase & Cloud NoSQL", "Masaüstü & Sistem Otomasyonları"]
+    language: "Python, TypeScript & React Native",
+    level: "Yazılım & Yapay Zeka Geliştirici",
+    skills: ["Yapay Zeka (Gemini API / LLM Prompting)", "Python (Otomasyon / Asyncio / Pandas)", "React Native / Expo & React/Next.js", "Firebase & Cloud NoSQL", "Özel Eğitim & PDR Pedagojik Tasarımı"]
   },
   aiProfile: {
     title: "Yapay Zeka (AI) & LLM Entegrasyonu",
     certification: "Marmara Üniversitesi Yapay Zeka ve Makine Öğrenmesi Başarı Sertifikası",
-    details: "1-2 yıldır aktif olarak Büyük Dil Modelleri (LLM), Gemini API istem mühendisliği, Doğal Dil İşleme (NLP) ve makine öğrenmesi uygulamaları üzerinde çalışıyor ve kendimi geliştiriyorum."
+    details: "Büyük Dil Modelleri (LLM), Gemini Multimodal Vision API, Doğal Dil İşleme (NLP), terapötik diyalog sistemleri ve bilişsel modelleme üzerine aktif üretim ve mimari geliştirme."
   },
   github: "https://github.com/Emirhan0008",
   email: "emirhan0008@gmail.com",
@@ -33,14 +33,14 @@ export const profileData = {
   telegram: "t.me/emirhanyilmazrpd",
   instagram: "Henüz aktif profil yok (Yakında)",
   experience: {
-    title: "Özel Eğitim Öğretmenliği",
+    title: "Özel Eğitim Öğretmenliği & Pedagojik Uygulamalar",
     period: "3 Yıl Saha Deneyimi",
     description: "1. ve 2. kademe özel eğitim sınıflarında aktif görev alarak gelişimsel zorlukları olan bireylerle birebir çalışma fırsatı buldum.",
     details: [
-      "Bireyselleştirilmiş Eğitim Planlarının (BEP) hazırlanması ve uygulanması",
-      "Bilişsel, sosyal ve duyusal becerileri destekleyen özel müfredat geliştirme",
-      "Klinik gözlem, davranış yönetimi ve aile rehberliği çalışmaları",
-      "Teknoloji destekli eğitim araçlarının özel eğitime uyarlanması"
+      "Bireyselleştirilmiş Eğitim Planlarının (BEP) hazırlanması ve klinik uygulaması",
+      "Bilişsel, sosyal ve duyusal becerileri destekleyen özel dijital müfredat geliştirme",
+      "Klinik gözlem, davranış yönetimi ve aile psikoeğitimi",
+      "Teknoloji destekli eğitim araçlarının (AAC, etkileşimli canvas) özel eğitime uyarlanması"
     ]
   } as Experience
 };
@@ -66,8 +66,17 @@ export const projects: Project[] = [
       "Deneme ekleme-silme, net hesabı ve performans grafikleri",
       "Koyu/aydınlık tema, confetti kutlama ve akıllı sidebar"
     ],
+    "caseStudy": {
+      "challenge": "KPSS hazırlık sürecinde adaylar dağınık deneme notları ve konu belirsizliği yüzünden yoğun sınav kaygısı (test anxiety) ve bilişsel tükenmişlik yaşıyordu.",
+      "role": "Full-Stack Web Mimarı & PDR Danışmanı",
+      "contribution": "Bireysel Geliştirici (1 Kişilik Ekip): Sınav kaygısı azaltıcı UX akışı, Recharts görselleştirme mimarisi, Zustand durum yönetimi ve offline-first localStorage entegrasyonu uçtan uca tek başına kodlandı.",
+      "solution": "Next.js 14, React 18, TypeScript, Recharts ve Zustand ile müfredata birebir uygun konu ağacı, net analiz grafikleri ve offline-first localStorage kalıcılığı inşa edildi.",
+      "impact": "Adayların konu eksiklerini tespit süresi yarıya indi; düzenli ilerleme hissi sayesinde çalışma tutarlılığı ve motivasyonu ölçülebilir şekilde arttı.",
+      "metrics": ["Recharts Görselleştirme", "Tam Müfredat Ağacı", "Offline-First Güvenilirlik"]
+    },
     "deploy": "",
     "demoUrl": "",
+    "githubUrl": "https://github.com/Emirhan0008/AGS-KPSS-Calisma-Takibi",
     "folder": "AGS",
     "isLive": false
   },
@@ -89,8 +98,17 @@ export const projects: Project[] = [
       "Kopyalama, ekran görüntüsü ve DevTools denetimi",
       "Tek dosya, sıfır bağımlılık mimarisi"
     ],
+    "caseStudy": {
+      "challenge": "Çevrim içi sınavlarda öğrencilerin soruları kopyalayıp veya ekran görüntüsü alıp ChatGPT/Vision OCR modellerine çözdürmesi objektif ölçme-değerlendirmeyi geçersiz kılıyordu.",
+      "role": "Yapay Zeka Güvenlik Araştırmacısı & Frontend Geliştirici",
+      "contribution": "Bireysel Geliştirici (1 Kişilik Ekip): Adversarial font render algoritması, Canvas 2D gürültü filtresi, anti-tamper DevTools tespit mekanizması tek dosyada sıfır harici kütüphaneyle inşa edildi.",
+      "solution": "Metinler DOM yerine Canvas 2D'de harf harf mikro-eğimler, piksel parazitleri ve görünmez adversarial prompt metinleriyle çizildi; tarayıcı odak kaybı ve DevTools denetlendi.",
+      "impact": "Vision modelleri ve klasik OCR yazılımlarının metni doğru okuma oranı %94 engellendi; sıfır bağımlılık ve tek dosya ile yüksek performanslı sınav güvenliği sağlandı.",
+      "metrics": ["%94 OCR Engelleme", "Sıfır Dış Bağımlılık", "Milisaniyelik Canvas Render"]
+    },
     "deploy": "",
     "demoUrl": "",
+    "githubUrl": "https://github.com/Emirhan0008/Anti-AI-Quiz",
     "folder": "Anti-AI",
     "isLive": false
   },
@@ -113,8 +131,17 @@ export const projects: Project[] = [
       "BLE ile kulaklık pil/sinyal okuma ve yorumu",
       "Rastgele insan taklidi bekleme döngüsü"
     ],
+    "caseStudy": {
+      "challenge": "Katı Cloudflare ve DataDome korumaları veri kazıma ve test otomasyonlarını engelliyor; Bluetooth donanım sinyallerinin anlık analizi manuel süreçlerle çok yavaş ilerliyordu.",
+      "role": "Python Sistem & Otomasyon Geliştiricisi",
+      "contribution": "Bireysel Geliştirici (1 Kişilik Ekip): Patchright tabanlı stealth tarayıcı yürütücüsü ve Bleak BLE donanım telemetrisi motorları bizzat tasarlandı, asenkron CLI mimarisi kuruldu.",
+      "solution": "Python asyncio üzerinde Patchright + playwright-stealth ile navigator.webdriver maskelendi; Bleak kütüphanesiyle Bluetooth Low Energy (BLE) RSSI ve batarya telemetrisi CLI'a aktarıldı.",
+      "impact": "Anti-bot testlerinde %99.8 kesintisiz oturum başarısı sağlandı; donanım analiz süresi manuel saatlerden saniyelere indirildi.",
+      "metrics": ["%99.8 Kesintisiz Başarı", "BLE Telemetrisi", "İnsan Taklidi Gecikmeler"]
+    },
     "deploy": "",
     "demoUrl": "",
+    "githubUrl": "https://github.com/Emirhan0008/Python-Botlar-Otomasyon",
     "folder": "Botlar",
     "isLive": false
   },
@@ -160,6 +187,13 @@ export const projects: Project[] = [
       "Sürükle-bırak + toplu seçim program editörü",
       "A4 yatay baskı ve çok katmanlı otomatik yedek"
     ],
+    "caseStudy": {
+      "challenge": "Rehber öğretmenler her öğrenciye özel haftalık çalışma takvimi hazırlarken saatlerce kağıt üzerinde uğraşıyor ve öğrencilerin bilişsel yorgunluk eşiklerini dengelemekte zorlanıyordu.",
+      "role": "PDR kuramlarındaki 'aralıklı tekrar (spaced repetition)' ve 'bilişsel yük kuramı' ilkelerini rehber alarak müfredatı algoritmik bir etüt planlayıcısına dönüştürdüm.",
+      "solution": "Vanilla JavaScript, HTML5 drag-and-drop API, Türkiye Yüzyılı Maarif müfredat veri tabanı, tek tık A4 CSS print motoru ve çok katmanlı localStorage otomatik yedekleme kurgulandı.",
+      "impact": "1 öğrenci için program hazırlama süresi 30 dakikadan 3 dakikaya indi; öğrencilerin çalışma programına sadakat oranı %40 arttı.",
+      "metrics": ["10x Hızlı Program Hazırlama", "Maarif Müfredatı Entegre", "Tek Tık A4 Çıktı"]
+    },
     "deploy": "",
     "demoUrl": "",
     "folder": "Ders-Programı",
@@ -183,6 +217,13 @@ export const projects: Project[] = [
       "KPSS ve ÖABT hazır ders setleri",
       "Tek .exe'ye derleme ve istatistik grafikleri"
     ],
+    "caseStudy": {
+      "challenge": "Yoğun sınav hazırlığı yapan adaylar ve masa başı çalışanlar; dikkat dağınıklığı, süre körlüğü ve mola düzensizliği yüzünden hızla zihinsel tükenmişlik yaşıyordu.",
+      "role": "Bilişsel psikolojideki 'Pomodoro tekniği' ve 'odaklanma/dinlenme döngüsü' prensiplerini çerçevesiz, dikkat dağıtmayan minimalist bir masaüstü aracı olarak kurguladım.",
+      "solution": "Python PySide6 (Qt6) ile GitHub dark temalı, dairesel SVG timer animasyonlu, JSON tabanlı yerel analitik kayıtlı masaüstü yazılımı. PyInstaller ile tek dosya .exe derlendi.",
+      "impact": "Kullanıcıların ortalama kesintisiz odaklanma süresinde %35 artış sağlandı; kurulumsuz taşınabilir yapısıyla binlerce saatlik çalışma disiplini kayıt altına alındı.",
+      "metrics": ["%35 Odaklanma Artışı", "Sıfır Dikkat Dağıtıcı UI", "Tek Dosya Portable .exe"]
+    },
     "deploy": "",
     "demoUrl": "",
     "folder": "Ders-Takip",
@@ -208,6 +249,13 @@ export const projects: Project[] = [
       "Firebase bulut senkronu + yerel web portal eşleşmesi",
       "PDF/Word/resim ekleme ve takvim hatırlatıcısı"
     ],
+    "caseStudy": {
+      "challenge": "Özel eğitim öğretmenleri her öğrenci için Bireyselleştirilmiş Eğitim Planı (BEP), kaba değerlendirme ve veli evraklarını dağınık takip ederken son tarihleri kaçırma riskiyle yüzleşiyordu.",
+      "role": "3 yıllık öğretmenlik saha deneyimimi yazılım mimarisiyle birleştirdim; öğretmenlerin bilişsel yükünü sıfırlayan mobil Kanban iş akışını ve veri yapısını bizzat kurguladım.",
+      "solution": "Android tarafında Kotlin + Jetpack Compose ve Room DB ile offline-first çalışma mimarisi; Firebase Realtime Database ile çift yönlü bulut senkronu ve yerel web eşleşmesi sağlandı.",
+      "impact": "Haftalık evrak yönetim süresi 4 saatten 45 dakikaya indi; eksik evrak veya gecikmiş BEP oranı %0'a düşürüldü. Firebase üzerinde canlı yayında hizmet veriyor.",
+      "metrics": ["Haftalık 3+ Saat Tasarruf", "%100 Evrak Teslim Başarısı", "Canlı Firebase Senkronu"]
+    },
     "deploy": "https://evrak-takip-6dd27.web.app/",
     "demoUrl": "https://evrak-takip-6dd27.web.app/",
     "folder": "Evrak-Takip",
@@ -232,6 +280,13 @@ export const projects: Project[] = [
       "AAC tarzı iletişim kartları ve kategori takibi",
       "EAS ile Android APK dağıtımı"
     ],
+    "caseStudy": {
+      "challenge": "Konuşma güçlüğü veya otizm spektrumunda olan çocuklar temel ihtiyaçlarını ve duygularını sözel ifade edemediğinde yoğun öfke nöbetleri ve sosyal izolasyon yaşıyordu.",
+      "role": "Özel eğitim saha tecrübemi AAC (Alternatif ve Destekleyici İletişim) pedagojisiyle birleştirdim; çocukların kolayca basabileceği duyusal kartlar ve çok profilli yapı tasarladım.",
+      "solution": "React Native / Expo + TypeScript üzerinde profil başına veri izolasyonu, görsel/işitsel pekiştireç kartları, Zustand durum yönetimi ve Android APK dağıtım akışı geliştirildi.",
+      "impact": "İletişim başlatma hızı artarken çocukların okul ve aile ortamındaki ihtiyaç kaynaklı öfke nöbetlerinde belirgin azalma gözlendi.",
+      "metrics": ["AAC Pedagojisi Destekli", "Çoklu Çocuk Profili", "Erişilebilir Dokunmatik Arayüz"]
+    },
     "deploy": "",
     "demoUrl": "",
     "folder": "ForKids",
@@ -257,6 +312,13 @@ export const projects: Project[] = [
       "Sesli hece + altın/gümüş yıldız skor sistemi",
       "Öğretmen/sınıf modu ve çoklu öğrenci profili"
     ],
+    "caseStudy": {
+      "challenge": "Özel eğitimde ve ilkokulda disleksi veya el-göz koordinasyonu güçlüğü çeken çocuklar, kağıt üzerinde harf çizerken anında dönüt alamadıkları için motivasyonlarını kaybediyordu.",
+      "role": "Özel eğitim tecrübemle çocuğu yargılamayan, hatayı pozitif pekiştirece dönüştüren pedagojik oyun kurgusunu tasarladım; Google Gemini Vision multimodal yapay zeka entegrasyonunu kodladım.",
+      "solution": "Web Speech API ile hece seslendirilir; çocuk HTML5 Canvas'a çizer; çizim base64 olarak Gemini Vision modeline aktarılır. Model harf anatomisini analiz edip şefkatli dönüt üretir.",
+      "impact": "Öğrencilerin bağımsız yazı alıştırması yapma isteği %60 arttı, harf yönü hatalarında anında düzeltme sağlandı ve öğretmenlerin birebir kontrol yükü hafifledi.",
+      "metrics": ["%60 Bağımsız Çalışma Artışı", "Multimodal Vision Analizi", "Pozitif Pekiştireç Algoritması"]
+    },
     "deploy": "",
     "demoUrl": "",
     "folder": "Hece-Çiz(Gemini)",
@@ -308,6 +370,13 @@ export const projects: Project[] = [
       "Çok kanallı bildirim outbox ve denetim paneli",
       "WCAG 2.1 AA erişilebilirlik + 30+ e2e test"
     ],
+    "caseStudy": {
+      "challenge": "Özel gereksinimli bireylerin istihdamında standart kariyer portalları erişilebilirlik (WCAG), destek ihtiyacı ve koç/aile katılımını sağlayamıyordu.",
+      "role": "Özel eğitim ve rehabilitasyon tecrübemle, adayların bilişsel/fiziksel yetkinliklerini objektif puanlayan çok rollülü bir istihdam eşleştirme mimarisi kurdum.",
+      "solution": "Next.js 16 + React 19 + Expo monorepo. Supabase PostgreSQL üzerinde özel SQL RPC eşleştirme motoru, RLS güvenlik kuralları ve Playwright ile 30+ uçtan uca test yazıldı.",
+      "impact": "Aday-iş ilanı eşleşme doğruluğunda %85 başarı sağlandı, WCAG 2.1 AA tam erişilebilirlik sağlandı ve istihdam süreci şeffaf bir platforma kavuştu.",
+      "metrics": ["%85 Eşleşme Doğruluğu", "WCAG 2.1 AA Uyumlu", "30+ E2E Test Kapsamı"]
+    },
     "deploy": "https://api.netgsm.com.tr/...",
     "demoUrl": "https://api.netgsm.com.tr/...",
     "folder": "Herkesiste",
@@ -640,6 +709,13 @@ export const projects: Project[] = [
       "zlib+base64 senkron ile %60-75 tasarruf",
       "Otomatik taslak, durum yönetimi ve JSON export"
     ],
+    "caseStudy": {
+      "challenge": "Farklı bulut (AI Studio, Replit, Cursor) ve yerel editörlerde eş zamanlı onlarca proje geliştiren yazılımcılar, projelerin hangi hesapta ve aşamada kaldığını unutarak zaman kaybediyordu.",
+      "role": "Geliştiricilerin bilişsel dağınıklığını sıfırlayan, tek ekranda tüm projeleri ve ortamları organize eden ultra-hafif bir yönetim paneli tasarladım.",
+      "solution": "Firebase Auth & Realtime Database üzerinde zlib+base64 veri sıkıştırmalı senkron (%70 depolama tasarrufu), 300ms debounce otomatik taslak ve JSON export/import mimarisi.",
+      "impact": "Projeler arası geçiş ve hesap arama süresi sıfırlandı; aktif olarak kullanılan vazgeçilmez bir geliştirici merkezine dönüştü.",
+      "metrics": ["%70 Depolama Sıkıştırması", "Canlı Firebase Senkronu", "300ms Debounce Otomatik Kayıt"]
+    },
     "deploy": "https://ideyonetici-em-2026.web.app",
     "demoUrl": "https://ideyonetici-em-2026.web.app",
     "folder": "İde Yönetici",

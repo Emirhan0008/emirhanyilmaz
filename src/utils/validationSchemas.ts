@@ -38,12 +38,23 @@ export const contactFormSchema = z.object({
     .refine(val => !XSS_REGEX.test(val), { message: 'Geçersiz script içeriği.' })
     .transform(val => sanitizeText(val)),
 
+  company: z.string()
+    .max(100, 'Şirket/Kurum adı çok uzun.')
+    .optional()
+    .refine(val => !val || !SQLI_REGEX.test(val), { message: 'Geçersiz şirket adı formatı.' })
+    .transform(val => sanitizeText(val || '')),
+
   email: z.string()
     .min(5, 'E-posta adresi gereklidir.')
     .max(120, 'E-posta adresi çok uzun.')
     .refine(val => isValidEmail(val), { message: 'Lütfen geçerli bir e-posta adresi girin (örn: isim@ornek.com).' })
     .refine(val => !SQLI_REGEX.test(val), { message: 'E-posta formatı geçersiz (SQL injection tespit edildi).' })
     .transform(val => val.trim().toLowerCase()),
+
+  intent: z.string()
+    .max(100, 'Niyet türü çok uzun.')
+    .optional()
+    .transform(val => sanitizeText(val || '')),
 
   subject: z.string()
     .max(150, 'Konu çok uzun.')

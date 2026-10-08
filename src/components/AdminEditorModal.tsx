@@ -17,7 +17,16 @@ import {
   CheckCircle2, 
   ExternalLink,
   ShieldAlert,
-  Sparkles
+  Sparkles,
+  Search,
+  Globe,
+  Copy,
+  Check,
+  Compass,
+  Bot,
+  Zap,
+  HelpCircle,
+  FileCode
 } from 'lucide-react';
 import { ProfileData, Project, Article } from '../types';
 import { 
@@ -38,11 +47,12 @@ interface AdminEditorModalProps {
   onSaveProjects: (projects: Project[]) => void;
   articles: Article[];
   onSaveArticles: (articles: Article[]) => void;
-  initialTab?: 'profile' | 'projects' | 'articles' | 'security' | 'backup';
+  initialTab?: 'profile' | 'projects' | 'articles' | 'visibility' | 'security' | 'backup';
   editingProjectId?: string | null;
   editingArticleId?: string | null;
   onResetToDefaults: () => void;
   onToast: (msg: string) => void;
+  onOpenVisibilityModal?: () => void;
 }
 
 export function AdminEditorModal({
@@ -58,9 +68,17 @@ export function AdminEditorModal({
   editingProjectId = null,
   editingArticleId = null,
   onResetToDefaults,
-  onToast
+  onToast,
+  onOpenVisibilityModal
 }: AdminEditorModalProps) {
-  const [activeTab, setActiveTab] = useState<'profile' | 'projects' | 'articles' | 'security' | 'backup'>(initialTab);
+  const [activeTab, setActiveTab] = useState<'profile' | 'projects' | 'articles' | 'visibility' | 'security' | 'backup'>(initialTab);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const copyToClipboard = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
 
   // Profile Form State
   const [profileForm, setProfileForm] = useState<ProfileData>(profile);
@@ -538,6 +556,27 @@ export function AdminEditorModal({
           >
             <FileText size={14} />
             <span>Makaleler ({articleList.length})</span>
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('visibility');
+              setSelectedProjectToEdit(null);
+              setIsAddingNewProject(false);
+              setSelectedArticleToEdit(null);
+              setIsAddingNewArticle(false);
+            }}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+              activeTab === 'visibility'
+                ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20 font-black'
+                : 'text-white/70 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <Search size={14} />
+            <span>Google & Arama Teşhisi</span>
+            <span className="px-1.5 py-0.5 rounded text-[9px] bg-cyan-400/20 text-cyan-300 font-mono border border-cyan-400/30">
+              GSC/GEO
+            </span>
           </button>
 
           <button
@@ -1369,6 +1408,300 @@ export function AdminEditorModal({
                   <p className="mt-1 text-white/70">
                     Erişim anahtarınız kaynak kodlarda veya tarayıcı konsolunda asla düz metin olarak barındırılmaz; tek yönlü SHA-256 kriptografik karma ile korunur. Ziyaretçiler bu yönetici paneline dair hiçbir buton veya ipucu göremez. Panel yalnızca sizin bildiğiniz <strong>Ctrl + Shift + A</strong> kısayolu veya gizli tıklama ile açılır.
                   </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB: GOOGLE SEARCH CONSOLE & AI VISIBILITY (GEO/SEO) */}
+          {activeTab === 'visibility' && (
+            <div className="space-y-6 max-w-4xl mx-auto">
+              {/* Header Box */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-950/40 via-cyan-950/30 to-black/60 border border-cyan-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold uppercase tracking-wider text-cyan-400">Yönetici Özel Teşhis Merkezi</span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-mono font-bold">GİZLİ YÖNETİCİ MODU</span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black text-white">
+                    Google Arama & Yapay Zeka İndeksleme Yönetimi
+                  </h3>
+                  <p className="text-xs text-white/70 max-w-2xl leading-relaxed">
+                    Sitenizin Google Arama dizinine eklenmesi, Search Console sahiplik doğrulaması ve Perplexity/ChatGPT/Gemini yapay zeka özetlerinde taranma durumunu buradan kontrol edin.
+                  </p>
+                </div>
+
+                {onOpenVisibilityModal && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onOpenVisibilityModal();
+                      onClose();
+                    }}
+                    className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-extrabold text-xs flex items-center gap-2 cursor-pointer transition-all shrink-0 shadow-lg shadow-cyan-500/20"
+                  >
+                    <Compass size={14} />
+                    <span>İnteraktif Konsolu Aç</span>
+                  </button>
+                )}
+              </div>
+
+              {/* SECTION 1: SEARCH CONSOLE SAHİPLİK DOĞRULAMA */}
+              <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center justify-center">
+                      <Globe size={20} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-extrabold text-white">Google Search Console Sahiplik Doğrulaması</h4>
+                      <p className="text-xs text-white/60">Sitenin gerçek sahibi olduğunuzu Google'a kanıtlama yöntemleri</p>
+                    </div>
+                  </div>
+                  <a
+                    href="https://search.google.com/search-console"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-1.5 transition-all shadow-md"
+                  >
+                    <span>Search Console Paneline Git</span>
+                    <ExternalLink size={12} />
+                  </a>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+                  {/* Method 1: HTML Dosyası */}
+                  <div className="p-4 rounded-xl bg-black/40 border border-cyan-500/20 flex flex-col justify-between gap-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
+                          <CheckCircle2 size={13} className="text-emerald-400" />
+                          Yöntem 1: HTML Dosyası (Aktif)
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                          ÖNERİLEN
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-white/70">
+                        Google Search Console'un sunduğu özel doğrulama dosyası kök dizine eklendi.
+                      </p>
+                      <div className="p-2 rounded bg-white/5 font-mono text-[11px] text-white/90 break-all border border-white/5">
+                        /google9927a200e581db27.html
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                      <a
+                        href="/google9927a200e581db27.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 py-1.5 px-3 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 text-center font-bold text-xs flex items-center justify-center gap-1.5 border border-cyan-500/30 transition-colors"
+                      >
+                        <ExternalLink size={12} />
+                        <span>Dosyayı Test Et</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard('https://emirhanyilmaz.vercel.app/google9927a200e581db27.html', 'fileUrl')}
+                        className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 text-xs flex items-center gap-1 cursor-pointer"
+                        title="Dosya linkini kopyala"
+                      >
+                        {copiedKey === 'fileUrl' ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Method 2: HTML Meta Etiketi */}
+                  <div className="p-4 rounded-xl bg-black/40 border border-cyan-500/20 flex flex-col justify-between gap-3">
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
+                          <CheckCircle2 size={13} className="text-emerald-400" />
+                          Yöntem 2: HTML Meta Etiketi (Aktif)
+                        </span>
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                          HEAD İÇİNDE
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-white/70">
+                        Ana sayfanın &lt;head&gt; bloğuna doğrulama meta etiketi başarıyla tanımlandı.
+                      </p>
+                      <div className="p-2 rounded bg-white/5 font-mono text-[10px] text-white/90 break-all border border-white/5">
+                        &lt;meta name="google-site-verification" content="google9927a200e581db27" /&gt;
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => copyToClipboard('<meta name="google-site-verification" content="google9927a200e581db27" />', 'metaSnippet')}
+                      className="w-full py-1.5 px-3 rounded-lg bg-white/5 hover:bg-white/10 text-white/90 text-center font-bold text-xs flex items-center justify-center gap-1.5 border border-white/10 transition-colors cursor-pointer"
+                    >
+                      {copiedKey === 'metaSnippet' ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                      <span>{copiedKey === 'metaSnippet' ? 'Meta Kodu Kopyalandı' : 'Meta Kodunu Kopyala'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Step by Step verification guide */}
+                <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/20 space-y-2 text-xs">
+                  <div className="flex items-center gap-2 font-bold text-emerald-300">
+                    <CheckCircle2 size={15} />
+                    <span>Search Console'da Doğrulamayı Tamamlama Adımları:</span>
+                  </div>
+                  <ol className="list-decimal list-inside space-y-1 text-white/80 pl-1 leading-relaxed text-[11.5px]">
+                    <li><strong>Search Console'a Giriş:</strong> <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer" className="text-cyan-300 underline font-mono">search.google.com/search-console</a> adresini açın.</li>
+                    <li><strong>Mülk Ekleme:</strong> Sol üstten "Mülk Ekle" diyerek <strong>URL Ön Eki</strong> seçeneğine <code className="text-emerald-300 font-mono">https://emirhanyilmaz.vercel.app/</code> yazın.</li>
+                    <li><strong>Doğrulama Seçimi:</strong> "HTML Dosyası" (veya "HTML Etiketi") seçeneğini işaretleyip <strong>DOĞRULA</strong> butonuna basın.</li>
+                    <li><strong>Sonuç:</strong> Dosya ve meta etiket sitenizde hazır olduğu için doğrulama anında onaylanacaktır.</li>
+                  </ol>
+                </div>
+              </div>
+
+              {/* SECTION 2: KRİTİK İNDEKSLEME VE AI DOSYALARI */}
+              <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-teal-500/20 text-teal-300 border border-teal-500/30 flex items-center justify-center">
+                    <FileCode size={20} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-extrabold text-white">Dizinleme & Yapay Zeka Dosyaları (Crawlability)</h4>
+                    <p className="text-xs text-white/60">Arama botlarının ve LLM özetleyicilerinin okuduğu resmi standart dosyalar</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* sitemap.xml */}
+                  <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 flex flex-col justify-between gap-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-mono text-xs font-bold text-white">sitemap.xml</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">AKTİF</span>
+                      </div>
+                      <p className="text-[11px] text-white/60">
+                        Search Console'un "Site Haritaları" bölümüne gönderilecek dosya.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 pt-1">
+                      <a
+                        href="/sitemap.xml"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 py-1 rounded bg-white/5 hover:bg-white/10 text-cyan-300 text-center font-bold text-[11px] flex items-center justify-center gap-1 border border-white/10"
+                      >
+                        <ExternalLink size={11} />
+                        <span>Aç</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard('https://emirhanyilmaz.vercel.app/sitemap.xml', 'sitemapUrl')}
+                        className="p-1 rounded bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 cursor-pointer"
+                        title="Kopyala"
+                      >
+                        {copiedKey === 'sitemapUrl' ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* robots.txt */}
+                  <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 flex flex-col justify-between gap-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-mono text-xs font-bold text-white">robots.txt</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold">AKTİF</span>
+                      </div>
+                      <p className="text-[11px] text-white/60">
+                        Googlebot, GPTBot, ClaudeBot, PerplexityBot izinleri tam tanımlı.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 pt-1">
+                      <a
+                        href="/robots.txt"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 py-1 rounded bg-white/5 hover:bg-white/10 text-cyan-300 text-center font-bold text-[11px] flex items-center justify-center gap-1 border border-white/10"
+                      >
+                        <ExternalLink size={11} />
+                        <span>Aç</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard('https://emirhanyilmaz.vercel.app/robots.txt', 'robotsUrl')}
+                        className="p-1 rounded bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 cursor-pointer"
+                        title="Kopyala"
+                      >
+                        {copiedKey === 'robotsUrl' ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* llms.txt */}
+                  <div className="p-3.5 rounded-xl bg-black/40 border border-white/10 flex flex-col justify-between gap-3">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-mono text-xs font-bold text-white">llms.txt</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">GEO v2</span>
+                      </div>
+                      <p className="text-[11px] text-white/60">
+                        Yapay zeka modellerinin portfolyoyu doğru özetlemesi için kaynak metin.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 pt-1">
+                      <a
+                        href="/llms.txt"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 py-1 rounded bg-white/5 hover:bg-white/10 text-cyan-300 text-center font-bold text-[11px] flex items-center justify-center gap-1 border border-white/10"
+                      >
+                        <ExternalLink size={11} />
+                        <span>Aç</span>
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard('https://emirhanyilmaz.vercel.app/llms.txt', 'llmsUrl')}
+                        className="p-1 rounded bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 cursor-pointer"
+                        title="Kopyala"
+                      >
+                        {copiedKey === 'llmsUrl' ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 3: KÖK NEDENLER VE HIZLANDIRMA EYLEMLERİ */}
+              <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                <div className="flex items-center gap-2 text-cyan-400 text-xs font-extrabold">
+                  <Zap size={16} />
+                  <span>Sitenin Arama Sonuçlarında Hızla Çıkması İçin 3 Kritik Eylem</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1 text-xs">
+                  <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-1.5">
+                    <span className="text-[11px] font-bold text-white flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-[10px] font-mono">1</span>
+                      URL Denetimi Yapın
+                    </span>
+                    <p className="text-[11px] text-white/60 leading-relaxed">
+                      Search Console'da üst arama çubuğuna ana sayfa URL'sini girin ve <strong>"Dizine Eklenmesini İste"</strong> (Request Indexing) butonuna tıklayın.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-1.5">
+                    <span className="text-[11px] font-bold text-white flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-[10px] font-mono">2</span>
+                      Site Haritasını Gönderin
+                    </span>
+                    <p className="text-[11px] text-white/60 leading-relaxed">
+                      Sol menüdeki "Site Haritaları" sekmesine girip kutucuğa <code className="text-cyan-300 font-mono">sitemap.xml</code> yazarak Gönder'e basın.
+                    </p>
+                  </div>
+
+                  <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-1.5">
+                    <span className="text-[11px] font-bold text-white flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded-full bg-cyan-500/20 text-cyan-300 flex items-center justify-center text-[10px] font-mono">3</span>
+                      Sosyal & GitHub Backlink
+                    </span>
+                    <p className="text-[11px] text-white/60 leading-relaxed">
+                      GitHub ve LinkedIn profilinizdeki "Website" alanına portfolyo linkinizi ekleyin. Google'ın otorite algısı anında katlanır.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

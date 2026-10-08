@@ -51,7 +51,15 @@ import {
   Heart,
   SlidersHorizontal,
   ArrowUpDown,
-  Check
+  Check,
+  Target,
+  Lightbulb,
+  Compass,
+  Zap,
+  Users,
+  Mic,
+  Building,
+  Award
  } from 'lucide-react';
  
  import { profileData, projects, articles } from './data';
@@ -61,7 +69,10 @@ import {
  import { SeamlessVideo } from './components/SeamlessVideo';
 
 import { InteractiveCatCompanion } from './components/InteractiveCatCompanion';
+import { ZenCbtTherapyWidget } from './components/ZenCbtTherapyWidget';
 import { ProjectEstimator } from './components/ProjectEstimator';
+import { MediaKitModal } from './components/MediaKitModal';
+import { VisibilityDiagnosticModal } from './components/VisibilityDiagnosticModal';
 import { TechRadar } from './components/TechRadar';
 import { MeltingCanvasEffect } from './components/MeltingCanvasEffect';
 import { soundEngine, PEACEFUL_TRACKS, MusicTrack } from './utils/audioSynth';
@@ -82,14 +93,16 @@ import {
 import { validateContactForm, passcodeSchema } from './utils/validationSchemas';
 
 export interface ContactMessage {
-   id: string;
-   name: string;
-   email: string;
-   subject?: string;
-   message: string;
-   date: string;
-   timestamp: number;
- }
+  id: string;
+  name: string;
+  company?: string;
+  email: string;
+  intent?: string;
+  subject?: string;
+  message: string;
+  date: string;
+  timestamp: number;
+}
  
  function TelegramIcon({ size = 14, className = "" }: { size?: number; className?: string }) {
   return (
@@ -130,9 +143,15 @@ export default function App() {
    const [sortBy, setSortBy] = useState<'featured' | 'newest' | 'alpha'>('featured');
    const [showTechFilterDrawer, setShowTechFilterDrawer] = useState<boolean>(false);
    const [searchQuery, setSearchQuery] = useState<string>('');
-   const [contactSubject, setContactSubject] = useState<string>('Proje Teklifi / Danışmanlık');
+   const [contactSubject, setContactSubject] = useState<string>('Freelance Proje Talebi');
    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-   const [formData, setFormData] = useState({ name: '', message: '' });
+   const [formData, setFormData] = useState({ name: '', company: '', email: '', message: '' });
+   const [contactIntent, setContactIntent] = useState<'job' | 'freelance' | 'speaking' | 'collaboration'>('freelance');
+   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
+   const [contactSuccessMessage, setContactSuccessMessage] = useState<string | null>(null);
+   const [showMediaKitModal, setShowMediaKitModal] = useState(false);
+   const [showVisibilityModal, setShowVisibilityModal] = useState(false);
+   const [heroParallax, setHeroParallax] = useState({ x: 0, y: 0 });
    const [copiedEmail, setCopiedEmail] = useState(false);
    const [inboxMessages, setInboxMessages] = useState<ContactMessage[]>([]);
 
@@ -201,7 +220,7 @@ export default function App() {
 
    // Admin Control & Editor Modal state
    const [showAdminEditor, setShowAdminEditor] = useState(false);
-   const [adminEditorTab, setAdminEditorTab] = useState<'profile' | 'projects' | 'articles' | 'security' | 'backup'>('profile');
+   const [adminEditorTab, setAdminEditorTab] = useState<'profile' | 'projects' | 'articles' | 'security' | 'backup' | 'visibility'>('profile');
    const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
    const [editingArticleId, setEditingArticleId] = useState<string | null>(null);
 
@@ -278,6 +297,9 @@ export default function App() {
    const [showDesktopScrollIndicator, setShowDesktopScrollIndicator] = useState(true);
    const [showMobileScrollIndicator, setShowMobileScrollIndicator] = useState(true);
    const [profileViewMode, setProfileViewMode] = useState<'summary' | 'timeline'>('summary');
+   const [projectDetailTab, setProjectDetailTab] = useState<'casestudy' | 'overview'>('casestudy');
+   const [caseStudyOnlyFilter, setCaseStudyOnlyFilter] = useState(false);
+   const [contactPersona, setContactPersona] = useState<'hire' | 'freelance' | 'consulting' | 'quick'>('freelance');
 
    // Innovative Modals & Audio States
    const [showEstimatorModal, setShowEstimatorModal] = useState(false);
@@ -986,6 +1008,7 @@ export default function App() {
         description: enOverride?.description || project.description,
         longDescription: enOverride?.longDescription || project.longDescription,
         highlights: enOverride?.highlights || project.highlights,
+        caseStudy: enOverride?.caseStudy || project.caseStudy,
         image: (customImg && sanitizeImageSource(customImg)) || (project.image && sanitizeImageSource(project.image)) || project.image || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=800&q=80',
         demoUrl: resolvedDemo,
         isLive: Boolean(resolvedDemo)
@@ -1045,6 +1068,11 @@ export default function App() {
 
       if (!matchesCategory) return false;
 
+      // Filter by case study presence
+      if (caseStudyOnlyFilter && !project.caseStudy) {
+        return false;
+      }
+
       // Filter by selected individual technology tag
       if (selectedTech && !project.tech.includes(selectedTech)) {
         return false;
@@ -1070,7 +1098,7 @@ export default function App() {
       return [...list].reverse();
     }
     return list;
-  }, [mappedProjects, projectFilter, selectedTech, searchQuery, sortBy]);
+  }, [mappedProjects, projectFilter, selectedTech, searchQuery, sortBy, caseStudyOnlyFilter]);
 
   // Track currently selected project with up-to-date image reference
   const currentSelectedProject = selectedProject 
@@ -1083,21 +1111,40 @@ export default function App() {
     : null;
 
   const getPreparedMessage = () => {
-    const namePrefix = formData.name ? `Ad Soyad / Kurum: ${formData.name}\n\n` : '';
+    const parts: string[] = [];
+    if (formData.name) parts.push(`Ad Soyad: ${formData.name}`);
+    if (formData.company) parts.push(`Şirket / Kurum: ${formData.company}`);
+    if (formData.email) parts.push(`E-Posta: ${formData.email}`);
+    const intentLabel = contactIntent === 'job' 
+      ? 'İş Fırsatı' 
+      : contactIntent === 'freelance' 
+      ? 'Freelance Proje Talebi' 
+      : contactIntent === 'speaking' 
+      ? 'Konuşma Daveti' 
+      : 'Marka ve İş Birliği';
+    parts.push(`İletişim Amacı: ${intentLabel}`);
+    
+    const prefix = parts.length > 0 ? parts.join('\n') + '\n\n' : '';
     const rawMessage = formData.message.trim();
     if (!rawMessage) {
-      return `${namePrefix}Merhaba Emirhan Bey,\n\nSiteniz üzerinden ulaşıyorum.`;
+      return `${prefix}Merhaba Emirhan,\n\nSiteniz üzerinden ulaşıyorum.`;
     }
-    // If message already starts with a greeting like "Merhaba Emirhan Bey", don't duplicate
     if (rawMessage.startsWith('Merhaba')) {
-      return `${namePrefix}${rawMessage}`;
+      return `${prefix}${rawMessage}`;
     }
-    return `${namePrefix}Merhaba Emirhan Bey,\n\n${rawMessage}`;
+    return `${prefix}Merhaba Emirhan,\n\n${rawMessage}`;
   };
 
   const handleDirectEmailOpen = (e?: FormEvent) => {
     if (e) e.preventDefault();
-    const subject = encodeURIComponent(`[Portfolyo] ${contactSubject || 'İletişim & İş Birliği'}`);
+    const intentLabel = contactIntent === 'job' 
+      ? 'İş Fırsatı' 
+      : contactIntent === 'freelance' 
+      ? 'Freelance Proje Talebi' 
+      : contactIntent === 'speaking' 
+      ? 'Konuşma Daveti' 
+      : 'Marka ve İş Birliği';
+    const subject = encodeURIComponent(`[Portfolyo] ${intentLabel} — ${formData.company || formData.name || 'İletişim Talebi'}`);
     const bodyContent = encodeURIComponent(getPreparedMessage());
     const mailtoUrl = `mailto:${profile.email || 'emirhan0008@gmail.com'}?subject=${subject}&body=${bodyContent}`;
     window.location.href = mailtoUrl;
@@ -1105,7 +1152,122 @@ export default function App() {
 
   const handleWhatsAppOpen = () => {
     const text = encodeURIComponent(getPreparedMessage());
-    window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener,noreferrer');
+    const phone = profile.phone ? profile.phone.replace(/[^0-9]/g, '') : '';
+    const targetUrl = phone ? `https://wa.me/${phone}?text=${text}` : `https://wa.me/?text=${text}`;
+    const a = document.createElement('a');
+    a.href = targetUrl;
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  const handleDirectInAppSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+      setAdminToastMessage(lang === 'tr' ? "Lütfen zorunlu alanları (İsim, E-posta, Mesaj) doldurunuz." : "Please fill required fields (Name, Email, Message).");
+      setShowAdminToast(true);
+      setTimeout(() => setShowAdminToast(false), 2500);
+      return;
+    }
+    setIsSubmittingContact(true);
+    try {
+      const intentLabel = contactIntent === 'job' 
+        ? 'İş Fırsatı' 
+        : contactIntent === 'freelance' 
+        ? 'Freelance Proje Talebi' 
+        : contactIntent === 'speaking' 
+        ? 'Konuşma Daveti' 
+        : 'Marka ve İş Birliği';
+
+      const payload = {
+        name: formData.name.trim(),
+        company: formData.company.trim(),
+        email: formData.email.trim(),
+        intent: intentLabel,
+        subject: `[${intentLabel}] ${formData.company || formData.name}`,
+        message: formData.message.trim()
+      };
+
+      // 1. Post to local backend
+      fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
+      
+      // 2. Also save to browser admin storage
+      const newMsg: ContactMessage = {
+        id: "msg-" + Date.now(),
+        name: payload.name,
+        company: payload.company,
+        email: payload.email,
+        intent: payload.intent,
+        subject: payload.subject,
+        message: payload.message,
+        date: new Date().toLocaleDateString(lang === 'tr' ? 'tr-TR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+        timestamp: Date.now()
+      };
+      const existing = [newMsg, ...inboxMessages];
+      setInboxMessages(existing);
+      localStorage.setItem('adm_msg_store', JSON.stringify(existing));
+
+      setContactSuccessMessage(
+        lang === 'tr' 
+          ? "✓ Mesajınız doğrudan iletildi! Emirhan en kısa sürede size dönüş yapacaktır." 
+          : "✓ Your message was submitted successfully! Emirhan will get back to you shortly."
+      );
+      soundEngine.playSuccess();
+      setFormData({ name: '', company: '', email: '', message: '' });
+      setTimeout(() => setContactSuccessMessage(null), 8000);
+    } catch {
+      setContactSuccessMessage(
+        lang === 'tr' 
+          ? "Mesajınız kaydedildi. İsterseniz aşağıdaki butonla WhatsApp veya E-Posta ile de iletebilirsiniz." 
+          : "Message logged. You can also send a copy via WhatsApp or Email below."
+      );
+    } finally {
+      setIsSubmittingContact(false);
+    }
+  };
+
+  const applyContactPersona = (persona: 'job' | 'freelance' | 'speaking' | 'collaboration') => {
+    setContactIntent(persona);
+    soundEngine.playTabSwitch();
+    if (persona === 'job') {
+      setContactSubject('İş Fırsatı / Pozisyon Teklifi');
+      setFormData(prev => ({
+        ...prev,
+        message: lang === 'tr' 
+          ? "Merhaba Emirhan,\n\nŞirketimizde / ekibimizde bilişsel psikoloji (PDR) ve yapay zeka/yazılım kesişimindeki yetkinliklerinizi değerlendirmek, açık bir rol/pozisyon için sizinle görüşmek istiyoruz."
+          : "Hello Emirhan,\n\nWe would like to discuss an open role/position at our team leveraging your hybrid background in counseling psychology and AI engineering."
+      }));
+    } else if (persona === 'freelance') {
+      setContactSubject('Freelance Proje Talebi (MVP / AI)');
+      setFormData(prev => ({
+        ...prev,
+        message: lang === 'tr'
+          ? "Merhaba Emirhan,\n\nHayata geçirmek istediğimiz bir yapay zeka / mobil / web projemiz var. Fikir aşamasındaki konsepti çalışan bir MVP'ye dönüştürmek ve mimari danışmanlık almak istiyoruz."
+          : "Hello Emirhan,\n\nWe have an AI / web / mobile MVP concept and want to discuss architecture, timeline, and development with you."
+      }));
+    } else if (persona === 'speaking') {
+      setContactSubject('Konuşma Daveti / Workshop / Seminer');
+      setFormData(prev => ({
+        ...prev,
+        message: lang === 'tr'
+          ? "Merhaba Emirhan,\n\nKurumumuz / etkinliğimiz bünyesinde 'İnsan Psikolojisi & Yapay Zeka Mimarisi' veya 'Eğitim Teknolojilerinde Bilişsel Ergonomi' konusunda bir konuşma / atölye çalışması için sizi davet etmek istiyoruz."
+          : "Hello Emirhan,\n\nWe would like to invite you as a speaker / workshop mentor on Human Psychology & AI Architecture or Cognitive Ergonomics in EdTech."
+      }));
+    } else if (persona === 'collaboration') {
+      setContactSubject('Marka ve İş Birliği / Ortaklık');
+      setFormData(prev => ({
+        ...prev,
+        message: lang === 'tr'
+          ? "Merhaba Emirhan,\n\nÜrünümüz veya topluluğumuz için ortak bir içerik, sponsorluk veya yapay zeka araçları iş birliği geliştirmek istiyoruz. Medya kitinizi ve ortaklık detaylarını görüşebilir miyiz?"
+          : "Hello Emirhan,\n\nWe would like to discuss a brand collaboration, joint content, or partnership around your human-centric AI tools."
+      }));
+    }
   };
 
   const navItems = [
@@ -1830,6 +1992,183 @@ export default function App() {
                     <h2 className="text-2xl font-extrabold tracking-tight mt-0.5 text-white">{currentSelectedProject.title}</h2>
                   </div>
 
+                  {/* Mode Switcher: Vaka Hikayesi vs Görseller & Detaylar */}
+                  <div className="flex items-center gap-1.5 p-1 bg-white/5 border border-white/10 rounded-xl shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundEngine.playGlassClick();
+                        setProjectDetailTab('casestudy');
+                      }}
+                      className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        projectDetailTab === 'casestudy'
+                          ? 'bg-emerald-500 text-black shadow-md'
+                          : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <BookOpen size={13} />
+                      <span>{lang === 'tr' ? 'Vaka Hikayesi & Katkı' : 'Case Study & Story'}</span>
+                      {currentSelectedProject.caseStudy && (
+                        <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-extrabold ${projectDetailTab === 'casestudy' ? 'bg-black/25 text-black' : 'bg-emerald-500/25 text-emerald-300'}`}>
+                          ★ {lang === 'tr' ? 'Hikaye' : 'Story'}
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        soundEngine.playGlassClick();
+                        setProjectDetailTab('overview');
+                      }}
+                      className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                        projectDetailTab === 'overview'
+                          ? 'bg-white/20 text-white shadow-md'
+                          : 'text-white/70 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      <Layers size={13} />
+                      <span>{lang === 'tr' ? 'Görseller & Özet' : 'Screens & Specs'}</span>
+                    </button>
+                  </div>
+
+                  {projectDetailTab === 'casestudy' ? (
+                    /* CASE STUDY STORY VIEW */
+                    <div className="space-y-3.5">
+                      {/* Teaser Highlight Box */}
+                      <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-950/50 via-teal-950/30 to-black/60 border border-emerald-500/30 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-extrabold flex items-center gap-1.5">
+                            <Sparkles size={11} /> {lang === 'tr' ? 'PDR & YAZILIM HİBRİT VAKA ANALİZİ' : 'PSYCHOLOGY & AI CASE STUDY'}
+                          </span>
+                          {currentSelectedProject.demoUrl && (
+                            <span className="text-[9px] text-emerald-300 font-mono font-bold flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                              {lang === 'tr' ? 'CANLI YAYINDA' : 'LIVE'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-white/95 font-semibold leading-relaxed">
+                          {currentSelectedProject.description}
+                        </p>
+                      </div>
+
+                      {/* Story Chapter 1: The Problem */}
+                      <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1.5">
+                        <div className="flex items-center gap-2 text-rose-300 text-xs font-bold">
+                          <Target size={14} className="text-rose-400 shrink-0" />
+                          <span>{lang === 'tr' ? '1. Problem & İhtiyaç' : '1. The Problem & Business Need'}</span>
+                        </div>
+                        <p className="text-xs text-white/90 leading-relaxed font-normal">
+                          {currentSelectedProject.caseStudy?.challenge || currentSelectedProject.description}
+                        </p>
+                      </div>
+
+                      {/* Story Chapter 2: Exact Role */}
+                      <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1.5">
+                        <div className="flex items-center gap-2 text-amber-300 text-xs font-bold">
+                          <Briefcase size={14} className="text-amber-400 shrink-0" />
+                          <span>{lang === 'tr' ? "2. Projedeki Kesin Rol" : "2. Exact Role & Position"}</span>
+                        </div>
+                        <p className="text-xs text-white/95 font-semibold leading-relaxed">
+                          {currentSelectedProject.caseStudy?.role || (lang === 'tr' 
+                            ? "Full-Stack Web Mimarı & Bilişsel UX Tasarımcısı" 
+                            : "Full-Stack Web Architect & Cognitive UX Designer")}
+                        </p>
+                      </div>
+
+                      {/* Story Chapter 3: Contribution & Team Context */}
+                      <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1.5">
+                        <div className="flex items-center gap-2 text-sky-300 text-xs font-bold">
+                          <Users size={14} className="text-sky-400 shrink-0" />
+                          <span>{lang === 'tr' ? '3. Katkı & Ekip Büyüklüğü' : '3. Contribution & Team Context'}</span>
+                        </div>
+                        <p className="text-xs text-white/90 leading-relaxed font-normal">
+                          {currentSelectedProject.caseStudy?.contribution || (lang === 'tr'
+                            ? "Bireysel Geliştirici (Tek Kişilik Uçtan Uca Sorumluluk): Fikir prototiplemesi, mimari tasarım, istem mühendisliği, frontend kodlama ve test adımlarının tamamı bizzat üstlenildi."
+                            : "Solo Architect & Developer: Full end-to-end ownership across ideation, prompt engineering, frontend development, and rigorous testing.")}
+                        </p>
+                      </div>
+
+                      {/* Story Chapter 4: Verifiable Outcome & Tech Stack */}
+                      <div className="p-3.5 rounded-2xl bg-emerald-950/30 border border-emerald-500/30 space-y-2.5">
+                        <div className="flex items-center gap-2 text-emerald-300 text-xs font-bold">
+                          <Zap size={14} className="text-emerald-400 shrink-0" />
+                          <span>{lang === 'tr' ? '4. Doğrulanabilir Sonuç ve Teknolojiler' : '4. Verifiable Outcome & Tech Stack'}</span>
+                        </div>
+                        <p className="text-xs text-white/95 leading-relaxed font-medium">
+                          {currentSelectedProject.caseStudy?.impact || currentSelectedProject.highlights.join(' · ')}
+                        </p>
+                        
+                        {/* Metrics */}
+                        {currentSelectedProject.caseStudy?.metrics && currentSelectedProject.caseStudy.metrics.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 pt-0.5">
+                            {currentSelectedProject.caseStudy.metrics.map((m, mIdx) => (
+                              <span key={mIdx} className="px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold flex items-center gap-1">
+                                <CheckCircle2 size={11} className="text-emerald-400" />
+                                {m}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Tech Stack Chips */}
+                        <div className="flex flex-wrap gap-1.5 pt-1 border-t border-white/10">
+                          {currentSelectedProject.tech.map(tech => (
+                            <span key={tech} className="px-2 py-0.5 rounded-md bg-white/10 text-[10px] text-emerald-300 font-mono font-bold">
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+
+                        {/* Verifiable Action Links: Live Product & GitHub Repo */}
+                        <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-white/10">
+                          {currentSelectedProject.demoUrl ? (
+                            <a
+                              href={sanitizeUrl(currentSelectedProject.demoUrl) || '#'}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full sm:flex-1 py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all cursor-pointer hover:scale-102"
+                            >
+                              <ExternalLink size={13} />
+                              <span>{lang === 'tr' ? 'Canlı Ürünü İncele' : 'View Live Product'}</span>
+                            </a>
+                          ) : (
+                            <span className="w-full sm:flex-1 py-2 px-3 rounded-xl bg-white/5 border border-white/10 text-white/50 text-xs font-medium flex items-center justify-center gap-1.5 text-center">
+                              <span>🔒 {lang === 'tr' ? 'Özel / Masaüstü CLI Aracı' : 'Local CLI / Desktop Tool'}</span>
+                            </span>
+                          )}
+
+                          <a
+                            href={currentSelectedProject.githubUrl || profile.github || "https://github.com/Emirhan0008"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full sm:flex-1 py-2 px-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer hover:scale-102"
+                          >
+                            <Github size={13} />
+                            <span>{lang === 'tr' ? 'Açık Kaynak Kodları' : 'Source Code (GitHub)'}</span>
+                            <ExternalLink size={10} className="opacity-60" />
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* Switch to gallery trigger */}
+                      <div className="flex items-center justify-between pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            soundEngine.playGlassClick();
+                            setProjectDetailTab('overview');
+                          }}
+                          className="text-xs text-emerald-400 hover:text-emerald-300 font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                        >
+                          <Eye size={13} />
+                          <span>{lang === 'tr' ? 'Ekran Görüntülerini ve Galeriyi İncele' : 'View Screenshots & Detailed Gallery'} →</span>
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* OVERVIEW / SPECS VIEW */
+                    <>
                   {/* Image Display Frame with Carousel */}
                   {(() => {
                     const currentImages = [
@@ -2007,6 +2346,8 @@ export default function App() {
                       ))}
                     </ul>
                   </div>
+                    </>
+                  )}
 
                   {/* Live Demo CTA Button */}
                   <div className="pt-2 border-t border-white/10 space-y-2 pb-2">
@@ -2228,11 +2569,22 @@ export default function App() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.4 }}
+                  onMouseMove={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const x = (e.clientX - rect.left) / rect.width - 0.5;
+                    const y = (e.clientY - rect.top) / rect.height - 0.5;
+                    setHeroParallax({ x: x * 8, y: y * 8 });
+                  }}
+                  onMouseLeave={() => setHeroParallax({ x: 0, y: 0 })}
+                  style={{
+                    transform: `perspective(1000px) rotateY(${heroParallax.x}deg) rotateX(${-heroParallax.y}deg)`,
+                    transition: 'transform 0.15s ease-out'
+                  }}
                   className="flex-1 flex flex-col justify-between overflow-y-auto pr-1"
                 >
-                  <div className="flex flex-col items-start gap-6 lg:gap-8 max-w-xl py-2">
+                  <div className="flex flex-col items-start gap-5 lg:gap-6 max-w-xl py-2">
                     <div className="flex items-center gap-4">
-                      <div className="w-20 h-20 rounded-full p-1 liquid-glass flex items-center justify-center overflow-hidden transition-transform duration-500 hover:rotate-6">
+                      <div className="w-20 h-20 rounded-full p-1 liquid-glass flex items-center justify-center overflow-hidden transition-transform duration-500 hover:rotate-6 shadow-xl shadow-emerald-500/10">
                         <img 
                           src={profile.avatar} 
                           alt="Emirhan Yılmaz Avatar"
@@ -2260,60 +2612,101 @@ export default function App() {
                       )}
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="flex flex-wrap gap-2">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 liquid-glass rounded-full text-[10px] tracking-widest uppercase text-white font-bold">
-                          <Sparkles size={10} /> {lang === 'tr' ? profile.title : 'Psychological Counselor & AI Developer'}
+                    <div className="space-y-3.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 liquid-glass rounded-full text-[10px] tracking-wider uppercase text-emerald-300 font-bold border border-emerald-400/30">
+                          <Brain size={11} className="text-emerald-400" />
+                          <span>PDR (Psikolojik Danışmanlık) & Yapay Zeka</span>
                         </div>
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 liquid-glass rounded-full text-[10px] text-emerald-400 font-extrabold tracking-widest uppercase select-none">
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 liquid-glass rounded-full text-[10px] text-emerald-400 font-extrabold tracking-wider uppercase select-none">
                           <span className="relative flex h-1.5 w-1.5">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
                           </span>
-                          <span>{lang === 'tr' ? 'PROJELERE AÇIK' : 'OPEN TO WORK & COLLABORATION'}</span>
+                          <span>{lang === 'tr' ? 'PROJELERE & İŞ BİRLİĞİNE AÇIK' : 'OPEN TO WORK & COLLABORATION'}</span>
                         </div>
                       </div>
-                      <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.05em] leading-[1.05] text-white">
+
+                      <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.1] text-white">
                         {lang === 'tr' ? (
                           <>
-                            Ruh Sağlığı & <br />
-                            <span className="font-serif italic text-white">Yapay Zeka</span>
+                            İnsan Psikolojisi & <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-sky-300 font-serif italic">Yapay Zeka Mimarisi</span>
                           </>
                         ) : (
                           <>
-                            Mental Health & <br />
-                            <span className="font-serif italic text-white">Artificial Intelligence</span>
+                            Human Psychology & <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-sky-300 font-serif italic">AI Systems Engineering</span>
                           </>
                         )}
                       </h1>
-                      <p className="text-sm sm:text-base text-white font-semibold leading-relaxed">
-                        {currentProfile.about}
+
+                      <p className="text-xs sm:text-sm text-white/90 font-medium leading-relaxed max-w-xl">
+                        {lang === 'tr' 
+                          ? 'Aksaray Üniversitesi PDR mezuniyeti ve 3 yıllık özel eğitim tecrübesiyle; insan zihninin dinamiklerini yapay zeka (LLM / Gemini Multimodal Vision), mobil ve Python otomasyonlarıyla buluşturuyorum. Bilişsel yükü azaltan, şefkatli ve yüksek etkili dijital ürünler inşa ediyorum.'
+                          : 'Bridging a degree in Psychological Counseling (GPC) and 3 years of classroom special ed with modern AI (Gemini Vision / LLMs), mobile apps, and Python system automations to minimize cognitive load.'}
                       </p>
+
+                      {/* Direct Target Audience Card (Kime Yardımcı Oluyorum?) */}
+                      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-teal-950/20 to-black/60 border border-emerald-500/30 flex items-start gap-3 w-full shadow-md">
+                        <Users size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                        <div className="space-y-1">
+                          <span className="text-[10px] uppercase tracking-wider text-emerald-300 font-extrabold flex items-center gap-1.5">
+                            {lang === 'tr' ? '🎯 KİME VE HANGİ EKİPLERE YARDIMCI OLUYORUM?' : '🎯 TARGET AUDIENCE & WHO I EMPOWER'}
+                          </span>
+                          <p className="text-xs text-white/95 font-medium leading-relaxed">
+                            {lang === 'tr'
+                              ? "Yapay Zeka & EdTech Startup'ları, araştırma enstitüleri, bilişsel ergonomi ve kullanıcı kaygısını azaltmak isteyen kurumsal ürün ekipleri ve hızlı uçtan uca MVP arayan freelance müşteriler."
+                              : "AI & EdTech startups, academic institutes, product teams building cognitive/wellness tools, and freelance clients seeking rapid end-to-end MVPs."}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* 3 Core Specialization Pillars (Ne Yapıyorum / Nasıl Konumlanıyorum?) */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full pt-1">
+                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-400/40 transition-colors">
+                          <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
+                            <Brain size={13} />
+                            <span>{lang === 'tr' ? 'Bilişsel & PDR' : 'Cognitive & CBT'}</span>
+                          </div>
+                          <p className="text-[10px] text-white/80 mt-1 leading-snug">
+                            {lang === 'tr' ? 'BDT kurgulu rehberlik, duygu regülasyonu & ölçme araçları.' : 'CBT reflection engines & psychological assessments.'}
+                          </p>
+                        </div>
+
+                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-400/40 transition-colors">
+                          <div className="flex items-center gap-1.5 text-sky-400 text-xs font-bold">
+                            <Sparkles size={13} />
+                            <span>{lang === 'tr' ? 'Çok Modlu AI' : 'Multimodal AI'}</span>
+                          </div>
+                          <p className="text-[10px] text-white/80 mt-1 leading-snug">
+                            {lang === 'tr' ? 'Gemini Vision el yazısı analizi, OCR savunması & promptlar.' : 'Gemini stroke recognition & adversarial testing.'}
+                          </p>
+                        </div>
+
+                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-400/40 transition-colors">
+                          <div className="flex items-center gap-1.5 text-teal-400 text-xs font-bold">
+                            <Code2 size={13} />
+                            <span>{lang === 'tr' ? 'Yazılım & Otomasyon' : 'Full-Stack & Bots'}</span>
+                          </div>
+                          <p className="text-[10px] text-white/80 mt-1 leading-snug">
+                            {lang === 'tr' ? 'Python botları, React Native & offline-first Kanban.' : 'Python bots, React Native & offline-first apps.'}
+                          </p>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-2.5">
-                      <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-bold text-white">
-                        {lang === 'tr' ? 'Psikolojik Danışmanlık' : 'Counseling & Psychology'}
-                      </span>
-                      <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-bold text-white">
-                        {lang === 'tr' ? 'Yapay Zeka (AI)' : 'Artificial Intelligence (AI)'}
-                      </span>
-                      <span className="px-3.5 py-1.5 liquid-glass spinning-glow-border rounded-full text-xs font-bold text-white">
-                        {lang === 'tr' ? 'Python Geliştirme' : 'Python Automation'}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2.5 pt-1">
                       <motion.button 
                         onClick={() => {
                           soundEngine.playTabSwitch();
                           setActiveTab('projects');
                         }}
                         animate={{
-                          scale: [1, 1.05, 1],
+                          scale: [1, 1.04, 1],
                           boxShadow: [
                             "0 0 0px rgba(52, 211, 153, 0)",
-                            "0 0 24px rgba(52, 211, 153, 0.8)",
+                            "0 0 20px rgba(52, 211, 153, 0.7)",
                             "0 0 0px rgba(52, 211, 153, 0)"
                           ]
                         }}
@@ -2322,29 +2715,35 @@ export default function App() {
                           repeat: Infinity,
                           ease: "easeInOut"
                         }}
-                        className="inline-flex items-center gap-3 pl-5 pr-2 py-2 bg-gradient-to-r from-emerald-600/40 via-teal-500/30 to-emerald-500/40 hover:from-emerald-500/60 hover:to-teal-400/50 border border-emerald-400/80 rounded-full text-sm font-extrabold text-white transition-all group active:scale-95 cursor-pointer relative shadow-lg"
+                        className="inline-flex items-center gap-2.5 pl-4 pr-3 py-2 bg-gradient-to-r from-emerald-600/50 via-teal-500/40 to-emerald-500/50 hover:from-emerald-500/70 hover:to-teal-400/60 border border-emerald-400/80 rounded-full text-xs sm:text-sm font-extrabold text-white transition-all group active:scale-95 cursor-pointer relative shadow-lg"
                         id="cta-explore-projects"
                       >
-                        <span className="relative flex h-2.5 w-2.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-90"></span>
-                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400"></span>
-                        </span>
-                        <span>{lang === 'tr' ? 'Projelerim' : 'My Projects'}</span>
-                        <div className="w-7 h-7 rounded-full bg-emerald-400/25 border border-emerald-300/40 flex items-center justify-center text-white transition-transform duration-300 group-hover:translate-x-1">
-                          <ArrowRight size={14} className="text-emerald-300" />
-                        </div>
+                        <BookOpen size={14} className="text-emerald-300" />
+                        <span>{lang === 'tr' ? 'Vaka Hikayelerini İncele' : 'Explore Case Studies'}</span>
+                        <ArrowRight size={13} className="text-emerald-300 group-hover:translate-x-0.5 transition-transform" />
                       </motion.button>
+
+                      <button 
+                        onClick={() => {
+                          soundEngine.playTabSwitch();
+                          setActiveTab('contact');
+                        }}
+                        className="inline-flex items-center gap-2 px-4 py-2 liquid-glass hover:bg-white/15 rounded-full text-xs sm:text-sm font-bold text-white transition-all hover:scale-105 active:scale-95 border border-white/20 hover:border-emerald-400/50 cursor-pointer shadow-md"
+                      >
+                        <Mail size={13} className="text-emerald-400" />
+                        <span>{lang === 'tr' ? 'İletişime Geç & Teklif Al' : 'Contact & Inquire'}</span>
+                      </button>
 
                       <a
                         href={profile.github || "https://github.com/Emirhan0008"}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2.5 px-4 py-2 liquid-glass-strong hover:bg-white/15 rounded-full text-xs sm:text-sm font-semibold font-mono text-white transition-all hover:scale-105 active:scale-95 border border-white/20 hover:border-emerald-400/50 shadow-md group cursor-pointer"
+                        className="inline-flex items-center gap-2 px-3 py-2 liquid-glass hover:bg-white/10 rounded-full text-xs font-semibold font-mono text-white/80 hover:text-white transition-all border border-white/10 hover:border-emerald-400/30"
                         title={`GitHub: ${profile.name}`}
                       >
-                        <Github size={15} className="text-white group-hover:text-emerald-400 transition-colors" />
-                        <span>github.com/Emirhan0008</span>
-                        <ExternalLink size={12} className="opacity-60 group-hover:opacity-100 transition-opacity" />
+                        <Github size={13} className="text-white/80" />
+                        <span>GitHub</span>
+                        <ExternalLink size={10} className="opacity-60" />
                       </a>
                     </div>
                   </div>
@@ -2367,16 +2766,18 @@ export default function App() {
                           {profile.name.toUpperCase()}
                         </span>
                       </div>
-                      <a 
-                        href="https://github.com/Emirhan0008" 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        className="inline-flex items-center gap-1.5 text-[11px] font-mono text-white/80 hover:text-emerald-400 transition-colors font-bold px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10"
-                      >
-                        <Github size={12} />
-                        <span>github.com/Emirhan0008</span>
-                        <ExternalLink size={10} className="opacity-60" />
-                      </a>
+                      <div className="flex items-center gap-2">
+                        <a 
+                          href="https://github.com/Emirhan0008" 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="inline-flex items-center gap-1.5 text-[11px] font-mono text-white/80 hover:text-emerald-400 transition-colors font-bold px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10"
+                        >
+                          <Github size={12} />
+                          <span>github.com/Emirhan0008</span>
+                          <ExternalLink size={10} className="opacity-60" />
+                        </a>
+                      </div>
                     </div>
                   </footer>
                 </motion.div>
@@ -2591,6 +2992,65 @@ export default function App() {
                   transition={{ duration: 0.4 }}
                   className="flex-1 flex flex-col gap-3.5 overflow-y-auto pr-1 min-h-0 scrollbar-thin scrollbar-thumb-white/20"
                 >
+                  {/* Executive Value Proposition & Positioning Card */}
+                  <div className="p-4 sm:p-5 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3.5 bg-gradient-to-br from-emerald-950/20 via-black/40 to-teal-950/20 border border-emerald-500/30">
+                    <div className="flex items-center justify-between pb-1.5 border-b border-white/10">
+                      <span className="text-[10px] tracking-wider text-emerald-400 uppercase font-extrabold flex items-center gap-1.5">
+                        <Compass size={13} className="text-emerald-400" />
+                        {lang === 'tr' ? 'EMİRHAN YILMAZ NASIL KONUMLANIYOR & NE İŞ YAPAR?' : 'CORE POSITIONING & VALUE PROPOSITION'}
+                      </span>
+                      <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/30">
+                        {lang === 'tr' ? 'PDR + AI MİMARI' : 'COUNSELOR + AI ARCHITECT'}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-sm sm:text-base font-extrabold text-white leading-snug">
+                        {lang === 'tr'
+                          ? 'İnsan Psikolojisi İlkelerini, Çok Modlu Yapay Zeka ve Sistem Yazılımlarıyla Birleştiren Hibrit Geliştirici.'
+                          : 'A Hybrid Technologist Bridging Counseling Psychology with Multimodal AI and Scalable Systems.'}
+                      </h3>
+                      <p className="text-xs text-white/90 leading-relaxed font-normal">
+                        {lang === 'tr'
+                          ? 'Ben geleneksel bir kodlayıcı değilim; insan davranışını (BDT, motivasyon, kaygı ve dikkat döngüleri) 4 yıllık PDR eğitimi ve 3 yıllık özel eğitim saha pratiğiyle deneyimlemiş bir psikolojik danışmanım. Bu insani derinliği Python otomasyonları, Gemini Vision multimodal yapay zeka ve modern web/mobil mimarileriyle birleştirerek bilişsel sürtünmeyi sıfırlayan sistemler kuruyorum.'
+                          : 'I am not just writing code; I bring 4 years of formal psychological counseling education and 3 years of hands-on special ed teaching into modern engineering. I design tools where mental models, anxiety regulation, and cognitive load are solved alongside high-performance AI and automation architecture.'}
+                      </p>
+                    </div>
+
+                    {/* 3 Quick Pillars of Engagement */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-white/5">
+                      <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1">
+                        <span className="text-[10px] text-emerald-300 font-extrabold flex items-center gap-1">
+                          <CheckCircle2 size={11} className="text-emerald-400" />
+                          {lang === 'tr' ? 'Kimler İçin İdeal?' : 'Best Suited For'}
+                        </span>
+                        <p className="text-[10px] text-white/75 leading-tight">
+                          {lang === 'tr' ? 'AI/EdTech girişimleri, sağlık/wellness platformları ve insan odaklı ürün geliştiren takımlar.' : 'AI/EdTech startups, mental wellness apps, and human-centric engineering teams.'}
+                        </p>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1">
+                        <span className="text-[10px] text-sky-300 font-extrabold flex items-center gap-1">
+                          <Zap size={11} className="text-sky-400" />
+                          {lang === 'tr' ? 'Hangi Katkıyı Sağlar?' : 'Key Deliverables'}
+                        </span>
+                        <p className="text-[10px] text-white/75 leading-tight">
+                          {lang === 'tr' ? 'Çalışan yapay zeka MVP prototipleri, pedagojik akış kurgusu, Python botları & hızlı canlıya çıkış.' : 'Functional multimodal AI MVPs, pedagogical UX flows, and robust system bots.'}
+                        </p>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1">
+                        <span className="text-[10px] text-teal-300 font-extrabold flex items-center gap-1">
+                          <Target size={11} className="text-teal-400" />
+                          {lang === 'tr' ? 'İletişim Hızı' : 'Availability'}
+                        </span>
+                        <p className="text-[10px] text-white/75 leading-tight">
+                          {lang === 'tr' ? 'Tam zamanlı pozisyonlar, sözleşmeli danışmanlık ve freelance projeler için hemen müsait.' : 'Open for full-time roles, freelance MVPs, and advisory contracts.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Education & Certification Card */}
                   <div className="p-4 sm:p-5 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3">
                     <div className="flex items-center justify-between pb-1 border-b border-white/5">
@@ -2916,8 +3376,23 @@ export default function App() {
                         )}
                       </div>
 
-                      {/* Category Filter Pills */}
+                      {/* Category Filter Pills & Case Study Story Filter */}
                       <div className="flex flex-wrap gap-1.5 p-1 liquid-glass spinning-glow-border rounded-xl text-[10px]">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            soundEngine.playTabSwitch();
+                            setCaseStudyOnlyFilter(!caseStudyOnlyFilter);
+                          }}
+                          className={`px-2.5 py-1 rounded-md transition-all font-bold cursor-pointer flex items-center gap-1 border ${
+                            caseStudyOnlyFilter
+                              ? 'bg-emerald-500 text-black border-emerald-400 font-extrabold shadow-sm'
+                              : 'text-emerald-300 border-emerald-500/40 hover:text-white hover:bg-emerald-500/20'
+                          }`}
+                        >
+                          <BookOpen size={10} />
+                          <span>{lang === 'tr' ? '📖 Vaka Hikayeleri' : '📖 Case Studies'}</span>
+                        </button>
                         {[
                           { id: 'Tümü', label: t.filter.categories.all },
                           { id: 'Web & Bulut', label: t.filter.categories.webCloud },
@@ -2931,9 +3406,10 @@ export default function App() {
                             onClick={() => {
                               soundEngine.playTabSwitch();
                               setProjectFilter(cat.id);
+                              if (cat.id !== 'Tümü') setCaseStudyOnlyFilter(false);
                             }}
                             className={`px-2.5 py-1 rounded-md transition-all font-bold cursor-pointer ${
-                              projectFilter === cat.id 
+                              !caseStudyOnlyFilter && projectFilter === cat.id 
                                 ? 'bg-white/20 text-white font-extrabold shadow-xs' 
                                 : 'text-white/75 hover:text-white hover:bg-white/10'
                             }`}
@@ -2988,12 +3464,18 @@ export default function App() {
                     )}
 
                     {/* Active Filters Reset Bar */}
-                    {(projectFilter !== 'Tümü' || selectedTech || searchQuery.trim()) && (
+                    {(projectFilter !== 'Tümü' || selectedTech || searchQuery.trim() || caseStudyOnlyFilter) && (
                       <div className="flex items-center justify-between gap-2 px-3 py-1.5 bg-emerald-950/30 border border-emerald-500/20 rounded-xl text-xs text-white/80 shrink-0">
                         <div className="flex items-center gap-2 overflow-hidden flex-wrap">
                           <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
                             {lang === 'tr' ? 'Aktif Filtreler:' : 'Active Filters:'}
                           </span>
+                          {caseStudyOnlyFilter && (
+                            <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-[10px] font-bold text-emerald-300 flex items-center gap-1">
+                              📖 {lang === 'tr' ? 'Vaka Hikayeleri' : 'Case Studies'}
+                              <button onClick={() => setCaseStudyOnlyFilter(false)} className="hover:text-red-400">×</button>
+                            </span>
+                          )}
                           {projectFilter !== 'Tümü' && (
                             <span className="px-2 py-0.5 rounded bg-white/10 text-[10px] font-bold text-white flex items-center gap-1">
                               {projectFilter}
@@ -3019,6 +3501,7 @@ export default function App() {
                             setProjectFilter('Tümü');
                             setSelectedTech(null);
                             setSearchQuery('');
+                            setCaseStudyOnlyFilter(false);
                           }}
                           className="text-[10px] font-extrabold text-emerald-400 hover:text-emerald-300 underline cursor-pointer shrink-0"
                         >
@@ -3082,12 +3565,13 @@ export default function App() {
                             onClick={() => {
                               soundEngine.playGlassClick();
                               setSelectedProject(project);
+                              setProjectDetailTab('casestudy');
                             }}
-                            className={`group cursor-pointer p-2.5 liquid-glass spinning-glow-border rounded-xl flex flex-col h-[255px] shrink-0 justify-between hover:bg-white/5 transition-all relative overflow-hidden ${
+                            className={`group cursor-pointer p-3 liquid-glass spinning-glow-border rounded-2xl flex flex-col min-h-[305px] h-auto shrink-0 justify-between hover:bg-white/5 transition-all relative overflow-hidden ${
                               currentSelectedProject?.id === project.id ? 'ring-2 ring-emerald-400 border-emerald-400 bg-white/10 shadow-lg shadow-emerald-500/10' : ''
                             }`}
                           >
-                            <div className="relative h-[115px] w-full rounded-lg overflow-hidden bg-zinc-900 border border-white/10 shrink-0">
+                            <div className="relative h-[120px] w-full rounded-xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0">
                               <img 
                                 src={project.image} 
                                 alt={project.title} 
@@ -3150,7 +3634,7 @@ export default function App() {
                               )}
                               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3">
                                 <span className="text-[10px] text-white font-bold inline-flex items-center gap-1">
-                                  {t.projectCard.details} <ChevronRight size={10} />
+                                  {project.caseStudy ? (lang === 'tr' ? 'Vaka Hikayesini Oku' : 'Read Case Study') : t.projectCard.details} <ChevronRight size={10} />
                                 </span>
                                 {project.demoUrl && (
                                   <a
@@ -3166,51 +3650,104 @@ export default function App() {
                               </div>
                             </div>
 
-                            <div className="space-y-1 px-1 flex-1 flex flex-col justify-center">
-                              <div className="flex items-center justify-between gap-1">
-                                <span className="text-[10px] uppercase tracking-wider text-white/90 font-extrabold">{project.category}</span>
-                                {project.demoUrl && (
-                                  <span className="text-[9px] text-emerald-400 font-bold flex items-center gap-0.5">
-                                    <ExternalLink size={8} /> {t.projectCard.statusActive}
-                                  </span>
-                                )}
-                              </div>
-                              <h3 className="text-sm font-extrabold text-white group-hover:text-emerald-300 transition-colors truncate leading-snug">
-                                <HighlightText text={project.title} query={searchQuery} />
-                              </h3>
-                              <p className="text-xs text-white/95 line-clamp-2 leading-relaxed font-semibold">
-                                <HighlightText text={project.description} query={searchQuery} />
-                              </p>
-                              {/* Clickable Tech Stack Tags for Quick Filter */}
-                              <div className="flex flex-wrap gap-1 mt-1 overflow-hidden max-h-[22px]">
-                                {project.tech.slice(0, 3).map((tItem, tIdx) => {
-                                  const isSelected = selectedTech === tItem;
-                                  const isSearchMatch = searchQuery && tItem.toLowerCase().includes(searchQuery.toLowerCase());
-                                  return (
-                                    <span 
-                                      key={tIdx} 
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        soundEngine.playGlassClick();
-                                        setSelectedTech(isSelected ? null : tItem);
-                                      }}
-                                      className={`text-[9px] font-mono px-1.5 py-0.5 rounded transition-all cursor-pointer ${
-                                        isSelected 
-                                          ? 'bg-emerald-500 text-black font-extrabold shadow-xs' 
-                                          : isSearchMatch 
-                                            ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-400/50' 
-                                            : 'bg-white/10 text-white/70 hover:text-white hover:bg-white/20'
-                                      }`}
-                                    >
-                                      {tItem}
+                            <div className="space-y-2 px-1 flex-1 flex flex-col justify-between pt-2">
+                              <div>
+                                <div className="flex items-center justify-between gap-1 pb-1">
+                                  <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-extrabold truncate">{project.category}</span>
+                                  {project.caseStudy ? (
+                                    <span className="text-[9px] text-emerald-300 font-bold flex items-center gap-1 bg-emerald-950/80 border border-emerald-500/40 px-1.5 py-0.5 rounded shrink-0">
+                                      <BookOpen size={9} className="text-emerald-400" />
+                                      <span>{lang === 'tr' ? 'Vaka Analizi' : 'Case Study'}</span>
                                     </span>
-                                  );
-                                })}
-                                {project.tech.length > 3 && (
-                                  <span className="text-[9px] font-mono text-white/40 self-center">
-                                    +{project.tech.length - 3}
+                                  ) : project.demoUrl ? (
+                                    <span className="text-[9px] text-emerald-400 font-bold flex items-center gap-0.5 shrink-0">
+                                      <ExternalLink size={8} /> {t.projectCard.statusActive}
+                                    </span>
+                                  ) : null}
+                                </div>
+                                <h3 className="text-sm font-extrabold text-white group-hover:text-emerald-300 transition-colors truncate leading-snug">
+                                  <HighlightText text={project.title} query={searchQuery} />
+                                </h3>
+                              </div>
+
+                              {/* Low-Click: 4-Point Case Study Essence directly visible */}
+                              <div className="space-y-1 p-2 rounded-xl bg-black/40 border border-white/5 text-[11px]">
+                                <div className="flex items-start gap-1.5 text-white/90 leading-tight">
+                                  <span className="text-[9px] font-bold text-rose-400 uppercase tracking-wider shrink-0 mt-0.5">
+                                    {lang === 'tr' ? 'Problem:' : 'Need:'}
                                   </span>
-                                )}
+                                  <p className="line-clamp-1 text-white/80">
+                                    {project.caseStudy?.challenge || project.description}
+                                  </p>
+                                </div>
+                                <div className="flex items-start gap-1.5 text-white/90 leading-tight">
+                                  <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider shrink-0 mt-0.5">
+                                    {lang === 'tr' ? 'Rol & Katkı:' : 'Role & Team:'}
+                                  </span>
+                                  <p className="line-clamp-1 text-amber-200/90 font-medium">
+                                    {project.caseStudy?.role || (lang === 'tr' ? 'Full-Stack & Bilişsel Mimari' : 'Full-Stack & AI Architecture')} {project.caseStudy?.contribution ? `(${project.caseStudy.contribution.split(':')[0]})` : `(${lang === 'tr' ? 'Bireysel Ekip' : 'Solo'})`}
+                                  </p>
+                                </div>
+                                <div className="flex items-start gap-1.5 text-white/95 leading-tight">
+                                  <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider shrink-0 mt-0.5">
+                                    {lang === 'tr' ? 'Sonuç:' : 'Result:'}
+                                  </span>
+                                  <p className="line-clamp-1 text-emerald-300/90 font-medium">
+                                    {project.caseStudy?.impact || project.highlights[0] || project.description}
+                                  </p>
+                                </div>
+                              </div>
+
+                              {/* Tech Chips + Direct GitHub/Live Links */}
+                              <div className="flex items-center justify-between gap-1 pt-1 border-t border-white/5">
+                                <div className="flex flex-wrap gap-1 overflow-hidden max-h-[22px]">
+                                  {project.tech.slice(0, 3).map((tItem, tIdx) => {
+                                    const isSelected = selectedTech === tItem;
+                                    const isSearchMatch = searchQuery && tItem.toLowerCase().includes(searchQuery.toLowerCase());
+                                    return (
+                                      <span 
+                                        key={tIdx} 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          soundEngine.playGlassClick();
+                                          setSelectedTech(isSelected ? null : tItem);
+                                        }}
+                                        className={`text-[9px] font-mono px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                                          isSelected 
+                                            ? 'bg-emerald-500 text-black font-extrabold shadow-xs' 
+                                            : isSearchMatch 
+                                              ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-400/50' 
+                                              : 'bg-white/10 text-white/70 hover:text-white hover:bg-white/20'
+                                        }`}
+                                      >
+                                        {tItem}
+                                      </span>
+                                    );
+                                  })}
+                                </div>
+
+                                <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
+                                  {project.demoUrl && (
+                                    <a
+                                      href={sanitizeUrl(project.demoUrl) || '#'}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="p-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-bold transition-all shadow-sm"
+                                      title={lang === 'tr' ? "Canlı Demoyu Aç" : "Open Live Demo"}
+                                    >
+                                      <ExternalLink size={10} />
+                                    </a>
+                                  )}
+                                  <a
+                                    href={project.githubUrl || profile.github || "https://github.com/Emirhan0008"}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold transition-all"
+                                    title={lang === 'tr' ? "GitHub Kodlarını Gör" : "View GitHub Code"}
+                                  >
+                                    <Github size={10} />
+                                  </a>
+                                </div>
                               </div>
                             </div>
                           </motion.div>
@@ -3394,8 +3931,394 @@ export default function App() {
                       </p>
                     </div>
 
-                    {/* Quick Contact Action Pills */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {/* Persona-Based Collaboration Paths */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-extrabold flex items-center gap-1.5">
+                          <Target size={12} /> {lang === 'tr' ? '1. İHTİYACINIZA UYGUN İŞ BİRLİĞİ MODELİNİ SEÇİN' : '1. SELECT YOUR COLLABORATION INTENT'}
+                        </span>
+                        <span className="text-[10px] text-white/50 font-mono">
+                          {lang === 'tr' ? 'Tek tıkla formu doldurur' : 'Auto-prepares inquiry'}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        {/* Option 1: Job / Career / Full-time / Part-time */}
+                        <div
+                          onClick={() => applyContactPersona('job')}
+                          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 text-left relative overflow-hidden group ${
+                            contactIntent === 'job'
+                              ? 'bg-emerald-950/40 border-emerald-400 shadow-md shadow-emerald-500/10'
+                              : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${contactIntent === 'job' ? 'bg-emerald-500 text-black' : 'bg-white/10 text-white'}`}>
+                                <Briefcase size={15} />
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
+                                  {lang === 'tr' ? 'İş Fırsatı' : 'Hiring / Job Opportunity'}
+                                </h4>
+                                <span className="text-[10px] text-emerald-400 font-semibold font-mono">
+                                  {lang === 'tr' ? 'Kariyer / Full-Time / Part-Time' : 'Full-time / Contract / Lead'}
+                                </span>
+                              </div>
+                            </div>
+                            {contactIntent === 'job' && (
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                            )}
+                          </div>
+                          <p className="text-[10px] text-white/75 leading-relaxed">
+                            {lang === 'tr' 
+                              ? 'PDR altyapısı ve yapay zeka mühendisliğini ekibinize dahil etmek için hemen görüşme planlayın.' 
+                              : 'Explore adding counseling psychology & multimodal AI engineering to your team.'}
+                          </p>
+                        </div>
+
+                        {/* Option 2: Freelance / Fast MVP Build */}
+                        <div
+                          onClick={() => applyContactPersona('freelance')}
+                          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 text-left relative overflow-hidden group ${
+                            contactIntent === 'freelance'
+                              ? 'bg-emerald-950/40 border-emerald-400 shadow-md shadow-emerald-500/10'
+                              : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${contactIntent === 'freelance' ? 'bg-emerald-500 text-black' : 'bg-white/10 text-white'}`}>
+                                <Wand2 size={15} />
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
+                                  {lang === 'tr' ? 'Freelance Proje Talebi' : 'Freelance Project Request'}
+                                </h4>
+                                <span className="text-[10px] text-sky-400 font-semibold font-mono">
+                                  {lang === 'tr' ? 'Hızlı MVP / Web / Mobil / Otomasyon' : 'Fast MVP / Web / Mobile Build'}
+                                </span>
+                              </div>
+                            </div>
+                            {contactIntent === 'freelance' && (
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                            )}
+                          </div>
+                          <p className="text-[10px] text-white/75 leading-relaxed">
+                            {lang === 'tr'
+                              ? 'Aklınızdaki fikri çalışan bir dijital ürüne dönüştürelim. İsterseniz mimari tahmin sihirbazını da kullanabilirsiniz.'
+                              : 'Turn your product concept into a functional MVP with multimodal AI and responsive UI.'}
+                          </p>
+                          <div className="pt-0.5">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                soundEngine.playGlassClick();
+                                setShowEstimatorModal(true);
+                              }}
+                              className="text-[9px] text-emerald-400 hover:text-emerald-300 font-bold underline flex items-center gap-1 cursor-pointer"
+                            >
+                              <span>⚡ {lang === 'tr' ? 'Sihirbazla Mimari & Süre Hesapla' : 'Open Architecture Estimator'} →</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Option 3: Speaking Invitation */}
+                        <div
+                          onClick={() => applyContactPersona('speaking')}
+                          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 text-left relative overflow-hidden group ${
+                            contactIntent === 'speaking'
+                              ? 'bg-emerald-950/40 border-emerald-400 shadow-md shadow-emerald-500/10'
+                              : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${contactIntent === 'speaking' ? 'bg-emerald-500 text-black' : 'bg-white/10 text-white'}`}>
+                                <Mic size={15} />
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
+                                  {lang === 'tr' ? 'Konuşma Daveti' : 'Speaking Invitation'}
+                                </h4>
+                                <span className="text-[10px] text-amber-400 font-semibold font-mono">
+                                  {lang === 'tr' ? 'Seminer / Konferans / Atölye' : 'Keynote / Conference / Workshop'}
+                                </span>
+                              </div>
+                            </div>
+                            {contactIntent === 'speaking' && (
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                            )}
+                          </div>
+                          <p className="text-[10px] text-white/75 leading-relaxed">
+                            {lang === 'tr'
+                              ? "Kurum veya etkinliğinizde 'İnsan Psikolojisi & Yapay Zeka Mimarisi' veya 'Eğitimde Bilişsel Ergonomi' konuşması planlayın."
+                              : 'Invite Emirhan for keynotes or hands-on workshops on cognitive ergonomics and human-centered AI.'}
+                          </p>
+                        </div>
+
+                        {/* Option 4: Brand & Collaboration / Media Kit */}
+                        <div
+                          onClick={() => applyContactPersona('collaboration')}
+                          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 text-left relative overflow-hidden group ${
+                            contactIntent === 'collaboration'
+                              ? 'bg-emerald-950/40 border-emerald-400 shadow-md shadow-emerald-500/10'
+                              : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${contactIntent === 'collaboration' ? 'bg-emerald-500 text-black' : 'bg-white/10 text-white'}`}>
+                                <Users size={15} />
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
+                                  {lang === 'tr' ? 'Marka ve İş Birliği' : 'Brand & Collaboration'}
+                                </h4>
+                                <span className="text-[10px] text-teal-400 font-semibold font-mono">
+                                  {lang === 'tr' ? 'Ortak Proje / Sponsorluk / Medya' : 'Partnership / Sponsor / Media'}
+                                </span>
+                              </div>
+                            </div>
+                            {contactIntent === 'collaboration' && (
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
+                            )}
+                          </div>
+                          <p className="text-[10px] text-white/75 leading-relaxed">
+                            {lang === 'tr'
+                              ? 'Teknoloji toplulukları, ürün incelemeleri ve açık kaynak yapay zeka araçları üzerine ortak projeler.'
+                              : 'Collaborate on tech community content, product integrations, or joint research initiatives.'}
+                          </p>
+                          <div className="pt-0.5">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                soundEngine.playGlassClick();
+                                setShowMediaKitModal(true);
+                              }}
+                              className="text-[9px] text-emerald-400 hover:text-emerald-300 font-bold underline flex items-center gap-1 cursor-pointer"
+                            >
+                              <span>📁 {lang === 'tr' ? 'Medya Kitini İncele (Media Kit)' : 'View Speaker Media Kit'} →</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 2: Direct Contact Form or Channels */}
+                    <div className="pt-2">
+                      <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-extrabold flex items-center gap-1.5 pb-2">
+                        <Send size={12} /> {lang === 'tr' ? '2. DOĞRUDAN İLETİŞİM FORMU (SİTEDEN AYRILMADAN)' : '2. DIRECT ON-SITE INQUIRY FORM'}
+                      </span>
+                    </div>
+
+                    {/* Direct Contact Form Card */}
+                    <div className="p-4 sm:p-5 rounded-2xl liquid-glass border border-white/10 flex flex-col gap-3.5">
+                      <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                            <Mail size={14} />
+                          </div>
+                          <div>
+                            <h3 className="text-xs sm:text-sm font-bold text-white">
+                              {lang === 'tr' ? 'Doğrudan İletişim Formu' : 'Direct Inquiry Form'}
+                            </h3>
+                            <p className="text-[10px] text-white/60">
+                              {lang === 'tr' ? 'Site içinden ayrılmadan anında mesajınızı iletin' : 'Submit your message on-site without page reloads'}
+                            </p>
+                          </div>
+                        </div>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/30 truncate max-w-[150px]">
+                          {profile.email || 'emirhan0008@gmail.com'}
+                        </span>
+                      </div>
+
+                      {/* Success state if message was submitted on-site */}
+                      {contactSuccessMessage ? (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="p-5 rounded-2xl bg-gradient-to-br from-emerald-950/70 to-teal-950/40 border border-emerald-400/50 flex flex-col items-center text-center gap-3 shadow-xl"
+                        >
+                          <div className="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-400 text-emerald-300 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                            <CheckCircle2 size={24} className="text-emerald-400" />
+                          </div>
+                          <div className="space-y-1 max-w-md">
+                            <h4 className="text-sm sm:text-base font-extrabold text-white">
+                              {lang === 'tr' ? 'Mesajınız Başarıyla İletildi!' : 'Inquiry Submitted Successfully!'}
+                            </h4>
+                            <p className="text-xs text-white/85 leading-relaxed">
+                              {contactSuccessMessage}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                            <button
+                              type="button"
+                              onClick={() => setContactSuccessMessage(null)}
+                              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs cursor-pointer transition-all"
+                            >
+                              {lang === 'tr' ? 'Yeni Mesaj Gönder' : 'Send Another Message'}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleWhatsAppOpen}
+                              className="px-4 py-2 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 font-extrabold text-xs flex items-center gap-1.5 cursor-pointer shadow-md"
+                            >
+                              <Phone size={13} className="text-emerald-400" />
+                              <span>{lang === 'tr' ? "WhatsApp'tan da İlet" : 'Also Send via WhatsApp'}</span>
+                            </button>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <form onSubmit={handleDirectInAppSubmit} className="flex flex-col gap-3">
+                          {/* Row 1: Name & Company */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div className="space-y-1">
+                              <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1 flex items-center justify-between">
+                                <span>{t.contact.nameLabel} *</span>
+                              </label>
+                              <input 
+                                type="text" 
+                                required
+                                maxLength={100}
+                                placeholder={t.contact.namePlaceholder}
+                                value={formData.name}
+                                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                className="w-full py-2 px-3 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 font-medium"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">
+                                {lang === 'tr' ? 'Şirket / Kurum Adı' : 'Company / Organization'}
+                              </label>
+                              <input 
+                                type="text" 
+                                maxLength={100}
+                                placeholder={lang === 'tr' ? 'Örn: TechCorp, Enstitü, Freelance...' : 'e.g. Acme Corp, Institute, Startup...'}
+                                value={formData.company}
+                                onChange={e => setFormData({ ...formData, company: e.target.value })}
+                                className="w-full py-2 px-3 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 font-medium"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Row 2: Email & Intent Select Box */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div className="space-y-1">
+                              <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">
+                                {lang === 'tr' ? 'E-Posta Adresi *' : 'Email Address *'}
+                              </label>
+                              <input 
+                                type="email" 
+                                required
+                                maxLength={100}
+                                placeholder="adiniz@sirket.com"
+                                value={formData.email}
+                                onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                className="w-full py-2 px-3 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 font-medium"
+                              />
+                            </div>
+
+                            <div className="space-y-1">
+                              <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">
+                                {lang === 'tr' ? 'Niyet Türü (Select Box) *' : 'Inquiry Intent *'}
+                              </label>
+                              <select
+                                value={contactIntent}
+                                onChange={e => applyContactPersona(e.target.value as any)}
+                                className="w-full py-2 px-3 rounded-xl bg-black/70 border border-white/15 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white font-medium cursor-pointer"
+                              >
+                                <option value="job" className="bg-zinc-900 text-white">💼 {lang === 'tr' ? 'İş Fırsatı (Kariyer / Pozisyon Teklifi)' : 'Job Opportunity / Career Role'}</option>
+                                <option value="freelance" className="bg-zinc-900 text-white">🚀 {lang === 'tr' ? 'Freelance Proje Talebi (Hızlı MVP / Web / Mobil)' : 'Freelance Project Request (MVP / Web)'}</option>
+                                <option value="speaking" className="bg-zinc-900 text-white">🎤 {lang === 'tr' ? 'Konuşma Daveti (Seminer / Konferans / Atölye)' : 'Speaking Invitation (Keynote / Workshop)'}</option>
+                                <option value="collaboration" className="bg-zinc-900 text-white">🤝 {lang === 'tr' ? 'Marka ve İş Birliği (Sponsorluk / Medya)' : 'Brand & Partnership (Media Kit)'}</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          {/* Row 3: Message Textarea */}
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between px-1">
+                              <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold">
+                                {t.contact.messageLabel} *
+                              </label>
+                              {formData.message && (
+                                <button
+                                  type="button"
+                                  onClick={() => setFormData({ ...formData, message: '' })}
+                                  className="text-[10px] text-white/50 hover:text-red-400 transition-colors cursor-pointer"
+                                >
+                                  {lang === 'tr' ? 'Temizle' : 'Clear'}
+                                </button>
+                              )}
+                            </div>
+                            <div className="relative w-full rounded-xl bg-black/60 border border-white/15 focus-within:border-emerald-400/80 focus-within:ring-1 focus-within:ring-emerald-400/50 transition-all p-2.5">
+                              <textarea 
+                                required
+                                rows={4}
+                                maxLength={3500}
+                                placeholder={t.contact.messagePlaceholder}
+                                value={formData.message}
+                                onChange={e => setFormData({ ...formData, message: e.target.value })}
+                                className="w-full h-28 max-h-48 min-h-[70px] bg-transparent text-xs text-white placeholder-white/40 resize-y font-sans overflow-y-scroll leading-relaxed focus:outline-hidden"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                            <button 
+                              type="submit"
+                              disabled={isSubmittingContact}
+                              className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md shadow-emerald-500/20 disabled:opacity-50"
+                            >
+                              <Send size={14} />
+                              <span>{isSubmittingContact ? (lang === 'tr' ? 'İletiliyor...' : 'Submitting...') : (lang === 'tr' ? 'Site Üzerinden Mesajı Gönder' : 'Submit Inquiry Directly')}</span>
+                            </button>
+
+                            <button 
+                              type="button"
+                              onClick={handleWhatsAppOpen}
+                              className="py-2.5 px-3 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md shadow-emerald-950/40"
+                              title={lang === 'tr' ? "Mesajı WhatsApp üzerinden de açar" : "Opens prepared message in WhatsApp"}
+                            >
+                              <Phone size={14} className="text-emerald-400" />
+                              <span>WhatsApp</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={handleDirectEmailOpen}
+                              className="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                              title={lang === 'tr' ? "E-Posta uygulamanızla açar" : "Opens your default email client"}
+                            >
+                              <Mail size={13} className="text-white/80" />
+                              <span>{lang === 'tr' ? 'E-Posta Aç' : 'Email Client'}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(profile.email || 'emirhan0008@gmail.com');
+                                setCopiedEmail(true);
+                                setTimeout(() => setCopiedEmail(false), 2500);
+                              }}
+                              className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
+                            >
+                              <Copy size={12} className="text-white/70" />
+                              <span>{copiedEmail ? t.hero.copied : t.hero.copyEmail}</span>
+                            </button>
+                          </div>
+                        </form>
+                      )}
+                    </div>
+
+                    {/* Quick Access Channel Pills */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                       <a
                         href={profile.github || "https://github.com/Emirhan0008"}
                         target="_blank"
@@ -3407,6 +4330,18 @@ export default function App() {
                         <span className="truncate font-mono">GitHub</span>
                         <ExternalLink size={10} className="text-white/40 ml-auto shrink-0 group-hover:text-white" />
                       </a>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundEngine.playGlassClick();
+                          setShowMediaKitModal(true);
+                        }}
+                        className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2 text-xs text-emerald-300 font-bold transition-all hover:scale-102 cursor-pointer"
+                      >
+                        <Award size={13} className="text-emerald-400 shrink-0" />
+                        <span className="truncate">{lang === 'tr' ? 'Medya Kiti' : 'Media Kit'}</span>
+                      </button>
 
                       <button
                         type="button"
@@ -3423,16 +4358,6 @@ export default function App() {
 
                       <button
                         type="button"
-                        onClick={handleDirectEmailOpen}
-                        className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer"
-                        title={lang === 'tr' ? "Hazırlanan mesajla e-posta uygulamasını açar" : "Opens default email application with drafted message"}
-                      >
-                        <Mail size={13} className="text-white/70 shrink-0" />
-                        <span className="truncate">{lang === 'tr' ? 'E-Posta Aç' : 'Open Email'}</span>
-                      </button>
-
-                      <button
-                        type="button"
                         onClick={handleWhatsAppOpen}
                         className="p-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-500/20 flex items-center gap-2 text-xs text-emerald-300 font-bold transition-all hover:scale-102 cursor-pointer"
                         title={lang === 'tr' ? "Hazırlanan mesajla WhatsApp uygulamasını açar" : "Opens WhatsApp with drafted message"}
@@ -3440,116 +4365,6 @@ export default function App() {
                         <Phone size={13} className="text-emerald-400 shrink-0" />
                         <span className="truncate">WhatsApp</span>
                       </button>
-                    </div>
-
-                    {/* Email Compose Card */}
-                    <div className="p-4 sm:p-5 rounded-2xl liquid-glass border border-white/10 flex flex-col gap-3.5">
-                      <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                            <Mail size={14} />
-                          </div>
-                          <div>
-                            <h3 className="text-xs sm:text-sm font-bold text-white">
-                              {lang === 'tr' ? 'Doğrudan İletişim Formu' : 'Direct Inquiry Form'}
-                            </h3>
-                            <p className="text-[10px] text-white/60">
-                              {lang === 'tr' ? 'Mesajınız gerçek istemciniz (E-Posta / WhatsApp) üzerinden iletilir' : 'Your inquiry is dispatched via your local client (Email / WhatsApp)'}
-                            </p>
-                          </div>
-                        </div>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/30 truncate max-w-[150px]">
-                          {profile.email || 'emirhan0008@gmail.com'}
-                        </span>
-                      </div>
-
-                      <form onSubmit={handleDirectEmailOpen} className="flex flex-col gap-3">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                          <div className="space-y-1">
-                            <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">{t.contact.nameLabel}</label>
-                            <input 
-                              type="text" 
-                              maxLength={100}
-                              placeholder={t.contact.namePlaceholder}
-                              value={formData.name}
-                              onChange={e => setFormData({ ...formData, name: e.target.value })}
-                              className="w-full py-2 px-3 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 font-medium"
-                            />
-                          </div>
-
-                          <div className="space-y-1">
-                            <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">{t.contact.subjectLabel}</label>
-                            <select
-                              value={contactSubject}
-                              onChange={e => setContactSubject(e.target.value)}
-                              className="w-full py-2 px-3 rounded-xl bg-black/60 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white font-medium"
-                            >
-                              <option value="Proje Teklifi / Danışmanlık" className="bg-zinc-900">{t.contact.subjects.projectProposal}</option>
-                              <option value="Yazılım & Yapay Zeka Entegrasyonu" className="bg-zinc-900">{t.contact.subjects.aiConsulting}</option>
-                              <option value="Akademik & PDR Çalışması" className="bg-zinc-900">{t.contact.subjects.specialEdu}</option>
-                              <option value="Genel İletişim / Soru" className="bg-zinc-900">{t.contact.subjects.general}</option>
-                            </select>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between px-1">
-                            <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold">{t.contact.messageLabel}</label>
-                            {formData.message && (
-                              <button
-                                type="button"
-                                onClick={() => setFormData({ ...formData, message: '' })}
-                                className="text-[10px] text-white/50 hover:text-red-400 transition-colors cursor-pointer"
-                              >
-                                {lang === 'tr' ? 'Temizle' : 'Clear'}
-                              </button>
-                            )}
-                          </div>
-                          <div className="relative w-full rounded-xl bg-black/60 border border-white/15 focus-within:border-emerald-400/80 focus-within:ring-1 focus-within:ring-emerald-400/50 transition-all p-2.5">
-                            <textarea 
-                              rows={4}
-                              maxLength={3500}
-                              placeholder={t.contact.messagePlaceholder}
-                              value={formData.message}
-                              onChange={e => setFormData({ ...formData, message: e.target.value })}
-                              className="w-full h-28 max-h-48 min-h-[70px] bg-transparent text-xs text-white placeholder-white/40 resize-y font-sans overflow-y-scroll leading-relaxed focus:outline-hidden"
-                            />
-                          </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-2 pt-0.5">
-                          <button 
-                            type="submit"
-                            className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md shadow-emerald-500/20"
-                          >
-                            <Mail size={14} />
-                            <span>{lang === 'tr' ? 'E-Postayla Gönder' : 'Send via Email'}</span>
-                          </button>
-
-                          <button 
-                            type="button"
-                            onClick={handleWhatsAppOpen}
-                            className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md shadow-emerald-950/40"
-                          >
-                            <Phone size={14} className="text-emerald-400" />
-                            <span>{lang === 'tr' ? 'WhatsApp ile Gönder' : 'Send via WhatsApp'}</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              navigator.clipboard.writeText(profile.email || 'emirhan0008@gmail.com');
-                              setCopiedEmail(true);
-                              setTimeout(() => setCopiedEmail(false), 2500);
-                            }}
-                            className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
-                          >
-                            <Copy size={12} className="text-white/70" />
-                            <span>{copiedEmail ? t.hero.copied : t.hero.copyEmail}</span>
-                          </button>
-                        </div>
-                      </form>
                     </div>
                   </div>
                 </motion.div>
@@ -3763,6 +4578,24 @@ export default function App() {
         )}
       </AnimatePresence>
 
+      {/* Official Media Kit Modal Overlay */}
+      <MediaKitModal
+        isOpen={showMediaKitModal}
+        onClose={() => setShowMediaKitModal(false)}
+        lang={lang}
+        onSelectIntent={(intent) => {
+          applyContactPersona(intent);
+          setActiveTab('contact');
+        }}
+      />
+
+      {/* Search & AI Visibility Diagnostic Modal Overlay */}
+      <VisibilityDiagnosticModal
+        isOpen={showVisibilityModal}
+        onClose={() => setShowVisibilityModal(false)}
+        lang={lang}
+      />
+
       {/* Tech Radar Modal Overlay */}
       <AnimatePresence>
         {showTechRadarModal && (
@@ -3866,6 +4699,12 @@ export default function App() {
         onToggleTheme={() => {
           setTheme(prev => prev === 'terminal' ? 'normal' : 'terminal');
         }}
+      />
+
+      {/* Mindful Pure Rule-Based Zen CBT Reflection Widget (100% Offline • Zero Server/API Calls) */}
+      <ZenCbtTherapyWidget
+        theme={theme}
+        lang={lang}
       />
 
       {/* SECURE IN-APP PROMPT MODAL (Non-blocking replacement for window.prompt) */}
@@ -4018,6 +4857,7 @@ export default function App() {
           setShowAdminToast(true);
           setTimeout(() => setShowAdminToast(false), 3500);
         }}
+        onOpenVisibilityModal={() => setShowVisibilityModal(true)}
       />
 
     </div>

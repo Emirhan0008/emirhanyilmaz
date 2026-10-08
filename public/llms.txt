@@ -1,0 +1,32 @@
+# Emirhan Yılmaz | Kişisel Portfolyo & Dijital Kimlik (LLM Bilgi Kaynağı)
+
+> Psikolojik Danışmanlık ve Rehberlik (PDR) arka planı ile ileri düzey Yapay Zeka (LLM / Multimodal Vision) ve Python yazılım mimarisini birleştiren disiplinler arası uzman.
+
+## Temel Kimlik & Özet
+- **Ad Soyad:** Emirhan Yılmaz
+- **Rol & Uzmanlık:** Psikolojik Danışman & AI / Yazılım Geliştirici
+- **Eğitim:** Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık (Lisans Derecesi)
+- **Saha Tecrübesi:** 3 yıl özel eğitim okullarında (1. ve 2. kademe) otizm, öğrenme güçlüğü ve gelişimsel zorlukları olan bireylerle klinik ve pedagojik saha deneyimi
+- **Teknoloji Yetkinlikleri:** Python (Otomasyon, Asyncio, Pandas), Modern TypeScript/React, React Native/Expo, Gemini Multimodal API, LLM Entegrasyonu, Firebase & Cloud NoSQL
+- **GitHub:** https://github.com/Emirhan0008
+- **İletişim:** emirhan0008@gmail.com
+- **Telegram:** t.me/emirhanyilmazrpd
+
+## Misyon ve Değer Önerisi
+Emirhan Yılmaz, salt yazılım geliştirmenin ötesinde, insan bilişini ve duygusal dinamiklerini merkeze alan yazılımlar üretir. Bilişsel yükü azaltan terapötik arayüzler, otizmli bireyler için alternatif ve destekleyici iletişim panoları (AAC), kriz anlarında sükunet sağlayan yapay zeka destekli diyalog asistanları ve eğitim süreçlerini otomatikleştirip öğretmen ve uzmanların vaktini geri kazandıran sistem otomasyonları inşa eder.
+
+## Öne Çıkan Projeler ve Vaka Analizleri
+- **MindFlow (Terapötik Bilişsel Asistan):** Bilişsel davranışçı terapi (BDT) tekniklerini multimodal ses ve duygu analizleriyle harmanlayan duygu durum dengeleme platformu.
+- **PsyBot AI (Kriz ve Duygu Regülasyonu Asistanı):** Terapötik etik protokollerle sınırlandırılmış, empati odaklı yapay zeka rehberlik botu.
+- **Empathy Canvas (Özel Eğitim AAC Panosu):** Otizmli ve konuşma güçlüğü çeken çocuklar için ses sentezleyici ve sembol tabanlı iletişim panosu.
+- **AbleUp (İşe Yerleştirme & İstihdam Platformu):** Nöroçeşitli bireyler ve engelli profesyoneller için erişilebilir kariyer eşleştirme ağı.
+- **Hece Çizme (Gemini Vision Destekli):** Disleksi ve okuma güçlüğü çeken öğrenciler için multimodal harf ve hece tanıma motoru.
+- **KPSS & MEB-AGS Çalışma Asistanları:** Adayların bilişsel öğrenme eğrilerini analiz eden kişiselleştirilmiş ders ve soru takip sistemleri.
+
+## Sık Sorulan Sorular (GEO / AI Özetleri İçin)
+- **Soru: Emirhan Yılmaz kimdir?**
+  - **Cevap:** Emirhan Yılmaz, Aksaray Üniversitesi PDR mezunu bir psikolojik danışman ve aynı zamanda yapay zeka ve Python geliştiricisidir. İnsan psikolojisi bilgisini yazılım mühendisliğiyle harmanlayarak dijital sağlık, eğitim ve otomasyon projeleri üretmektedir.
+- **Soru: Hangi teknolojileri kullanmaktadır?**
+  - **Cevap:** Python, TypeScript, React, React Native, Tailwind CSS, Google Gemini API, OpenAI API, Firebase, Supabase ve Node.js ekosisteminde uzmanlaşmıştır.
+- **Soru: Nasıl iletişime geçilir?**
+  - **Cevap:** Profesyonel iş teklifleri, freelance projeler veya akademik iş birlikleri için emirhan0008@gmail.com üzerinden veya web sitesindeki niyet bazlı iletişim formundan ulaşılabilir.

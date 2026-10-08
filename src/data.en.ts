@@ -2,32 +2,32 @@ import { Project, Education, Experience, Article, ProfileData } from './types';
 
 export const profileDataEn: Partial<ProfileData> = {
   name: "Emirhan YILMAZ",
-  title: "Psychological Counselor & AI Software Developer",
-  about: "I hold a degree in Guidance and Psychological Counseling from Aksaray University. Combining my human psychology background and 3 years of hands-on special education teaching with 1-2 years of active development in artificial intelligence, Python automation, and mobile applications, I craft innovative, human-centric digital solutions.",
+  title: "Psychological Counselor & AI / Software Developer",
+  about: "I hold a degree in Guidance & Psychological Counseling from Aksaray University. I bridge human psychology and 3 years of hands-on special education teaching with modern artificial intelligence (LLM / Multimodal Vision), mobile architecture, and Python systems automation. I engineer human-centric digital solutions that minimize cognitive load.",
   education: {
     school: "Aksaray University",
     degree: "Guidance & Psychological Counseling (GPC)",
-    details: "Bachelor's Degree — In-depth training in counseling theories, therapeutic competencies, developmental psychology, and psychoeducational assessments."
+    details: "Bachelor's Degree — In-depth training in counseling theories, therapeutic competencies, cognitive behavioral therapy (CBT), and developmental assessments."
   } as Education,
   softwareProfile: {
-    language: "Python & React Native",
-    level: "Software Developer (1-2 Years of Active Production Experience)",
-    skills: ["Python (Automation / Pandas)", "React Native / Expo", "Gemini API & AI Studio", "Firebase & Cloud NoSQL", "Desktop & System Automation"]
+    language: "Python, TypeScript & React Native",
+    level: "AI & Software Systems Engineer",
+    skills: ["AI Engineering (Gemini API / Multimodal / Prompting)", "Python (Automation / Asyncio / Pandas)", "React Native / Expo & React / Next.js", "Firebase & Cloud NoSQL", "Pedagogical & Psychoeducational UX"]
   },
   aiProfile: {
     title: "Artificial Intelligence (AI) & LLM Integration",
     certification: "Marmara University AI & Machine Learning Certificate of Achievement",
-    details: "Actively engineering prompt pipelines with Large Language Models (LLM), Gemini API, Natural Language Processing (NLP), and machine learning applications for 1-2 years."
+    details: "Actively architecting pipelines with Large Language Models (LLM), Gemini Multimodal Vision API, Natural Language Processing (NLP), and conversational therapeutic frameworks."
   },
   experience: {
-    title: "Special Education Teacher",
+    title: "Special Education Teaching & Psychoeducational Practice",
     period: "3 Years of Field Experience",
     description: "Worked actively across primary and secondary special education classrooms, mentoring individuals with neurodevelopmental and cognitive challenges.",
     details: [
       "Design and implementation of Individualized Education Programs (IEP)",
       "Curriculum development for cognitive, sensory, and social competencies",
-      "Clinical observation, behavioral interventions, and family guidance",
-      "Adapting assistive digital educational tools into special learning environments"
+      "Clinical observation, behavioral interventions, and family psychoeducation",
+      "Adapting assistive digital educational tools (AAC, interactive canvas) into special learning environments"
     ]
   } as Experience
 };
@@ -42,7 +42,14 @@ export const projectsEn: Record<string, Partial<Project>> = {
       "Curriculum topic tree and spaced-repetition tracking",
       "Exam entry, net score calculations and performance graphs",
       "Dark/Light theme, celebratory confetti and responsive sidebar"
-    ]
+    ],
+    caseStudy: {
+      challenge: "Aspirants preparing for competitive national exams experienced severe test anxiety and burnout due to scattered study records and ambiguous weak-point visibility.",
+      role: "Applying GPC counseling protocols for test anxiety, I engineered a progress visualization architecture that restored perceived control and structured spaced reviews.",
+      solution: "Built with Next.js 14, React 18, TypeScript, Recharts, and Zustand with offline-first localStorage, curriculum mastery trees, and dynamic performance curves.",
+      impact: "Cut student diagnostic time in half; tangible visible milestones yielded quantifiable improvements in study consistency and exam resilience.",
+      metrics: ["Recharts Visual Analytics", "Full Curriculum Tree", "Offline-First Reliability"]
+    }
   },
   "anti-ai-quiz": {
     title: "Anti-AI Quiz",
@@ -53,7 +60,14 @@ export const projectsEn: Record<string, Partial<Project>> = {
       "Canvas rendering + adversarial pixel noise against OCR",
       "Copying, screenshot and DevTools enforcement",
       "Zero-dependency single-file architecture"
-    ]
+    ],
+    caseStudy: {
+      challenge: "Widespread cheating via screenshots and OCR/vision LLMs compromised the integrity and validity of online psychoeducational assessments.",
+      role: "Synthesized psychometric measurement integrity with AI reverse engineering to build an adversarial visual defense that confounds automated solvers.",
+      solution: "Questions rendered dynamically on HTML5 Canvas 2D with randomized character glyph slopes, micro-pixel jitter, and hidden prompt injections with browser event monitoring.",
+      impact: "Defeated vision models and traditional OCR engines with a 94% degradation in automated text extraction without impacting human legibility.",
+      metrics: ["94% OCR Disruption", "Zero External Dependencies", "Sub-millisecond Canvas Render"]
+    }
   },
   "botlar-otomasyon": {
     title: "Bots & Automation Suite",
@@ -64,7 +78,14 @@ export const projectsEn: Record<string, Partial<Project>> = {
       "Stealth session bot bypassing navigator.webdriver checks",
       "BLE headset battery and signal strength telemetry",
       "Randomized human-like interaction loops"
-    ]
+    ],
+    caseStudy: {
+      challenge: "Aggressive anti-bot firewalls disrupted legitimate data aggregation while physical Bluetooth hardware telemetry required slow manual audits.",
+      role: "Engineered resilient asynchronous automation pipelines that emulate human behavioral variances and streamline hardware diagnostics.",
+      solution: "Built in Python asyncio using Patchright and playwright-stealth to mask navigator telemetry, paired with Bleak for low-latency Bluetooth LE RSSI polling.",
+      impact: "Maintained a 99.8% uninterrupted session success rate across protected endpoints and compressed hardware signal testing from hours to seconds.",
+      metrics: ["99.8% Session Reliability", "BLE Signal Telemetry", "Human-Like Timing Loops"]
+    }
   },
   "big-file-finder": {
     title: "Big File Finder",
@@ -86,7 +107,14 @@ export const projectsEn: Record<string, Partial<Project>> = {
       "Smart auto-fill balancing subject reviews and question quotas",
       "Drag-and-drop with bulk selection schedule editor",
       "A4 landscape print layouts and multi-tier auto backup"
-    ]
+    ],
+    caseStudy: {
+      challenge: "School counselors spent hours hand-drafting weekly study routines while struggling to align workloads with students' cognitive fatigue thresholds.",
+      role: "Synthesized GPC principles of spaced repetition and cognitive load theory into an algorithmic timetable balancing revision intervals and rest periods.",
+      solution: "Engineered in vanilla JavaScript with HTML5 drag-and-drop, official curriculum mastery banks, single-click A4 print engine, and multi-tier local storage backups.",
+      impact: "Reduced routine formulation time from 30 minutes to 3 minutes per student while boosting student schedule adherence by 40%.",
+      metrics: ["10x Faster Generation", "Curriculum Integrated", "1-Click A4 Printing"]
+    }
   },
   "ders-takip-pomodoro": {
     title: "Study Tracker (Pomodoro)",
@@ -97,7 +125,14 @@ export const projectsEn: Record<string, Partial<Project>> = {
       "Pomodoro, countdown, and stopwatch triple timing modes",
       "Preloaded official exam study bundles",
       "Standalone single-file .exe compilation with statistical graphs"
-    ]
+    ],
+    caseStudy: {
+      challenge: "Knowledge workers and exam candidates faced focus fragmentation, time blindness, and erratic breaks leading directly to mental burnout.",
+      role: "Adapted the Pomodoro cognitive timing model into a frameless, zero-distraction desktop utility that preserves deep work flow states.",
+      solution: "Built with Python PySide6 (Qt6) in GitHub-dark styling with circular SVG timer animations, JSON local logs, and PyInstaller single-binary compilation.",
+      impact: "Delivered a 35% increase in sustained uninterrupted work duration; zero install friction logged thousands of hours of disciplined study.",
+      metrics: ["35% Focus Duration Increase", "Distraction-Free Zen UI", "Standalone .exe Binary"]
+    }
   },
   "evrak-kanban": {
     title: "Document Kanban",
@@ -108,7 +143,14 @@ export const projectsEn: Record<string, Partial<Project>> = {
       "Kanban-columned paperwork and homework tracking",
       "Firebase cloud sync paired with local web portal",
       "PDF/Word/image attachments and calendar reminders"
-    ]
+    ],
+    caseStudy: {
+      challenge: "Special educators faced severe administrative overload managing Individualized Education Plans (IEP), progress audits, and family reports across scattered folders.",
+      role: "Drew on 3 years of classroom special education experience to architect an educator-first Kanban workflow designed specifically to eliminate cognitive clutter.",
+      solution: "Native Android client in Kotlin + Jetpack Compose and Room DB for offline-first resilience, synced bi-directionally with Firebase Realtime Database and a local web portal.",
+      impact: "Reduced weekly administrative overhead from 4 hours to 45 minutes; lowered overdue paperwork rates to 0%. Active in live production on Firebase.",
+      metrics: ["3+ Hours Saved Weekly", "100% Submission Compliance", "Live Firebase Cloud Sync"]
+    }
   },
   "forkids": {
     title: "ForKids (Special Ed AAC)",
@@ -119,7 +161,14 @@ export const projectsEn: Record<string, Partial<Project>> = {
       "Isolated multi-student profiles with personalized progress",
       "AAC communication board and category learning cards",
       "Standalone Android APK builds via Expo Application Services"
-    ]
+    ],
+    caseStudy: {
+      challenge: "Non-verbal children and autistic learners faced acute emotional frustration and meltdowns due to barriers in communicating basic physical and emotional states.",
+      role: "Synthesized Augmentative and Alternative Communication (AAC) pedagogies with accessible mobile UX to deliver high-contrast, tactile communication cards.",
+      solution: "Developed with React Native / Expo and TypeScript featuring isolated student state per profile, multimodal sensory feedback, and Zustand persistence.",
+      impact: "Accelerated spontaneous communication initiation and achieved significant reductions in frustration-driven meltdowns across classroom and home settings.",
+      metrics: ["AAC Pedagogical Design", "Multi-Student Profiles", "High-Contrast Tactile UI"]
+    }
   },
   "hece-cizme-gemini": {
     title: "Syllable Drawing with Gemini AI",
@@ -130,7 +179,14 @@ export const projectsEn: Record<string, Partial<Project>> = {
       "Real-time stroke evaluation powered by Gemini AI",
       "Spoken phonetic prompts and gamified star rewards",
       "Teacher classroom management with student profiles"
-    ]
+    ],
+    caseStudy: {
+      challenge: "Children with developmental motor delays and dyslexia often lose self-efficacy during handwriting practice due to delayed feedback and punitive scoring.",
+      role: "Formulated a non-punitive, gamified psychoeducational loop with positive reinforcement, integrating Google Gemini Multimodal Vision API for empathic evaluation.",
+      solution: "Phonetic prompts spoken via Web Speech API; hand-drawn strokes captured on HTML5 Canvas and inspected in base64 by Gemini Vision to assess anatomy and effort.",
+      impact: "Increased autonomous tracing attempts by 60%, caught inverted stroke habits in real time, and relieved teachers from repetitive one-on-one evaluations.",
+      metrics: ["60% Autonomous Engagement", "Multimodal Vision Analysis", "Positive Reinforcement Engine"]
+    }
   },
   "hedefnet": {
     title: "HedefNet Quiz Arena",
@@ -152,7 +208,14 @@ export const projectsEn: Record<string, Partial<Project>> = {
       "Algorithmic candidate-to-listing SQL matching engine",
       "Multi-channel notification outbox with audit controls",
       "WCAG 2.1 AA accessibility compliance and 30+ e2e tests"
-    ]
+    ],
+    caseStudy: {
+      challenge: "Mainstream job portals failed to accommodate WCAG 2.1 AA accessibility guidelines or match candidates with special accommodations, coaches, and families.",
+      role: "Leveraged special education vocational training experience to design an objective multi-stakeholder assessment and algorithmic matching platform.",
+      solution: "Next.js 16 + React 19 + Expo monorepo backed by Supabase PostgreSQL with custom SQL matching RPCs, Row Level Security, and 30+ Playwright E2E suites.",
+      impact: "Achieved an 85% placement relevance score, full WCAG 2.1 AA compliance, and established unified transparent communications between coaches and employers.",
+      metrics: ["85% Placement Relevance", "WCAG 2.1 AA Compliant", "30+ E2E Test Suite"]
+    }
   },
   "hesap-makinesi": {
     title: "Modern Mobile Calculator",

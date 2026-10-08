@@ -1,3 +1,12 @@
+export interface ProjectCaseStudy {
+  challenge: string;     // 1. Problem: Bu proje hangi ihtiyacı karşılamak veya hangi sorunu çözmek için üretildi?
+  role: string;          // 2. Rol: Projedeki kesin görev (Full-Stack Geliştirici, Bilişsel UI/UX Tasarımcısı, vb.)
+  contribution?: string; // 3. Katkı: Ekip yapısı (Bireysel / X kişilik ekip) ve üstlenilen somut sorumluluklar
+  solution?: string;     // Teknik Mimari & Yapay Zeka kurgusu
+  impact: string;        // 4. Doğrulanabilir Sonuç ve Etki
+  metrics?: string[];    // Doğrulanabilir ölçüm ve kazanımlar
+}
+
 export interface Project {
   id: string;
   title: string;
@@ -13,6 +22,7 @@ export interface Project {
   githubUrl?: string;
   folder?: string;
   isLive?: boolean;
+  caseStudy?: ProjectCaseStudy;
 }
 
 export interface Education {

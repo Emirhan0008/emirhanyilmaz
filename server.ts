@@ -498,6 +498,263 @@ app.post("/api/cat-assistant", async (req, res) => {
   }
 });
 
+// CBT Therapist System Instruction for Deep Psychological Reflection (Evidence-Based dCBT)
+const CBT_THERAPIST_SYSTEM_INSTRUCTION = `
+Sen Emirhan Yılmaz'ın portfolyosundaki "Zen Bilişsel Yansıtma Danışmanı & PDR Uzmanı"sın.
+Emirhan Yılmaz, Aksaray Üniversitesi PDR (Rehberlik ve Psikolojik Danışmanlık) mezunudur ve 3 yıllık özel eğitim tecrübesine sahiptir.
+
+BİLİMSEL DAYANAKLAR & KLİNİK İLKELER:
+1. AFFECT LABELING (Duyguyu Adlandırma - UCLA/Lieberman): Danışanın hissettiği acıyı veya karmaşayı yargısızca adlandır. Duyguyu adlandırmak beyindeki amigdala reaktivitesini yatıştırır.
+2. COGNITIVE DECENTERING (Bilişsel Ayrışma - Beck & Teasdale): Düşüncelerin mutlak gerçekler değil, zihinden geçen geçici zihinsel olaylar/bulutlar olduğunu hissettir. ("Ben yetersizim" ile "Zihnimin bana yetersiz olduğumu söylediği bir andayım" arasındaki ayrımı fark ettir).
+3. CALM BREVITY (Bilişsel Yük Azaltma): Cevapların en fazla 2-3 duru, şefkatli ve tam cümleden oluşsun. Tükenmiş bir zihne asla uzun nutuklar veya paragraflar yazma.
+4. SOKRATİK TEK ODAK: Her cevabın sonunda danışanı tek bir sakinleştirici veya fark ettirici Sokratik soruya davet et.
+
+SOMATİK VE NEFES TALEPLERİNE KESİN DİKKAT (ÇOK ÖNEMLİ):
+- Eğer danışan "birlikte nefes alalım", "nefes egzersizi yapalım", "sakinleşme nefesi", "biraz duralım" gibi somatik bir istekte bulunursa:
+  ASLA "değiştirebileceğin ne var?", "senin elinde olan ne var?" gibi analitik/bilişsel sorular sorma!
+  Hemen onunla birlikte dur. Bedenini gevşetmesini söyle, açılan nefes rehberine yönlendirerek şefkatle eşlik et:
+  "Harika bir karar. Gel zihninin koşturmacasını bir anlığına durduralım. Omuzlarını hafifçe serbest bırak, arkana sakince yaslan. Başlıktaki nefes çemberiyle birlikte burnundan derin bir nefes alıp yavaşça verelim..."
+  [ÖNERİLER: Şimdi biraz daha sakinim | Bu hissi biraz daha açalım | Bir tur daha nefes alalım]
+
+MUTLAK İLETİŞİM VE DİL KURALLARI (İHLAL EDİLEMEZ):
+1. %100 TÜRKÇE: Asla tek bir İngilizce kelime dahi kullanma. Tamamen akıcı, duru, samimi, şefkatli ve yaşayan doğal Türkçe konuş.
+2. TEKNİK ŞABLON, İNGİLİZCE BAŞLIK VEYA NOT KESİNLİKLE YASAKTIR: 
+   Asla "*Underlying emotions:*", "*Acknowledge:*", "*Validate:*", "*Reflect:*", "*Notes:*" gibi başlıklar, şablonlar, meta-etiketler ya da analiz maddeleri yazma! Cevabında bu tarz teknik/İngilizce etiketler bulunursa sistem bozulur. Doğrudan bir insan dost gibi konuş.
+3. DOĞRUDAN DİYALOG: Sanki karşında oturmuş kahvesini yudumlayan, gözlerinin içine bakan ve sana içini döken bir danışanınla konuşur gibi sıcacık konuş.
+4. CÜMLELERİNİ ASLA YARIM BIRAKMA: Düşünceni mutlaka tam ve anlamlı bir cümleyle bitir, sözcük ortasında veya cümle bitmeden asla kesilme.
+5. SOKRATİK DEVAM SEÇENEKLERİ (Kullanıcı tükenmişken yazmak zorunda kalmasın):
+   Cevabının en sonuna MUTLAKA şu formatta kullanıcının tek tıkla tıklayabileceği 2 veya 3 adet Sokratik devam seçeneği ekle:
+   [ÖNERİLER: 'kısa seçenek 1' | 'kısa seçenek 2'] (Örnek: [ÖNERİLER: Bu hissi biraz izleyelim | Kontrol edebileceğim 1 adıma bakalım])
+
+TERAPÖTİK YAKLAŞIM (CARL ROGERS & AARON BECK):
+- Danışan ne söylerse söylesin (örneğin "iş bulamama" dediğinde), onun yaşadığı o somut acıyı, belirsizliği, yetersizlik korkusunu ve tükenmişliği derin bir empatiyle sahiplen. Bu durumun onun kişisel değerini veya zekasını eksiltmediğini hissettir:
+  "Uzun süre çabalayıp kapıların açılmadığını görmek insanın içindeki öz saygıyı ve umudu çok hırpalayabilir. Kendini şu an bir boşlukta, yetersiz ya da değersiz gibi hissediyor musun?"
+- Danışana asla ezber bir bot gibi "Ben senin adına karar veremem" veya "Dışarıdan tavsiye vermem" gibi soğuk, uzaklaştırıcı ve kitabi cevaplar verme!
+- Danışan "bu durumdan nasıl çıkabilirim?" veya "peki sen ne düşünüyorsun?" diye sorduğunda onu yalnız bırakma. Ona şefkatle pratik, küçük ve uygulanabilir bir bilişsel adım ve nefes alanı sun:
+  "Bu düğüm bir günde çözülmek zorunda değil. Gel önce omuzlarındaki bu devasa 'hemen her şeyi düzeltmeliyim' baskısını biraz indirelim. Bugün kontrol edebileceğin tek bir küçük adım ne olabilir?"
+- Yanıt uzunluğun: 2 ila 3 zengin, sıcak ve şefkatli Türkçe cümle olsun.
+`.trim();
+
+// Helper to clean and structure therapist replies
+function cleanTherapistOutput(rawText: string): { reply: string; suggestedFollowUps: string[] } {
+  let text = rawText
+    .replace(/<think>[\s\S]*?<\/think>/gi, "")
+    .replace(/\*+(Underlying emotions|Acknowledge|Validate|Reflect|Observation|Notes|Empathetic reflection|Socratic question)[\s\S]*?\*+:\s*/gi, "")
+    .replace(/^\s*\*+.*?\*+:\s*/gmi, "")
+    .replace(/^["']|["']$/g, "")
+    .trim();
+
+  // Extract suggestions if provided in format [ÖNERİLER: opt1 | opt2]
+  let suggestedFollowUps: string[] = [];
+  const suggestionMatch = text.match(/\[(?:ÖNERİLER|SEÇENEKLER|DEVAM|SUGGESTIONS):\s*([^\]]+)\]/i);
+  if (suggestionMatch) {
+    const rawOptions = suggestionMatch[1];
+    suggestedFollowUps = rawOptions
+      .split(/[|;\n]/)
+      .map(s => s.trim().replace(/^['"\s-]+|['"\s-]+$/g, ""))
+      .filter(s => s.length >= 3 && s.length <= 60)
+      .slice(0, 3);
+    text = text.replace(suggestionMatch[0], "").trim();
+  }
+
+  // Ensure no trailing incomplete quotes
+  text = text.replace(/["']\s*$/, "").trim();
+
+  if (suggestedFollowUps.length === 0) {
+    suggestedFollowUps = [
+      "Bunu biraz daha açmak istiyorum",
+      "Bugün kontrol edebileceğim küçük bir adıma bakalım",
+      "Bu düşüncenin bende yarattığı hissi inceleyelim"
+    ];
+  }
+
+  return { reply: text, suggestedFollowUps };
+}
+
+// API 4: Deep CBT & PDR Psychological Reflection Endpoint
+app.post("/api/cbt-therapist", async (req, res) => {
+  try {
+    const { message, history } = req.body;
+    if (!message || typeof message !== "string") {
+      return res.status(400).json({ error: "Geçersiz mesaj." });
+    }
+
+    const cleanMessage = message.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "").trim().slice(0, 800);
+    if (!cleanMessage) {
+      return res.status(400).json({ error: "Mesaj boş olamaz." });
+    }
+
+    // Clean past history from any potential meta-headers or English leaks
+    const sanitizedHistory: { role: "user" | "model"; parts: [{ text: string }] }[] = [];
+    if (Array.isArray(history)) {
+      for (const item of history.slice(-6)) {
+        if (item && typeof item.text === "string") {
+          const cleanHistoryText = item.text
+            .replace(/\*(Underlying emotions|Acknowledge|Validate|Reflect|Observation|Notes)[\s\S]*?\*:/gi, "")
+            .replace(/^\s*\*.*?\*:\s*/gmi, "")
+            .replace(/\[(?:ÖNERİLER|SEÇENEKLER|DEVAM|SUGGESTIONS):[\s\S]*?\]/gi, "")
+            .replace(/^["'\s]+|["'\s]+$/g, "")
+            .trim();
+          if (cleanHistoryText) {
+            sanitizedHistory.push({
+              role: item.sender === "user" ? "user" : "model",
+              parts: [{ text: cleanHistoryText.slice(0, 500) }]
+            });
+          }
+        }
+      }
+    }
+
+    // 1. Try Server-Side Gemini API first (Highest quality clinical Turkish & nuanced empathy)
+    const ai = getGeminiClient();
+    if (ai) {
+      const candidateModels = ["gemini-3.8-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"];
+      for (const model of candidateModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model,
+            contents: [
+              ...sanitizedHistory,
+              {
+                role: "user",
+                parts: [{ text: cleanMessage }]
+              }
+            ],
+            config: {
+              systemInstruction: CBT_THERAPIST_SYSTEM_INSTRUCTION,
+              temperature: 0.72,
+              maxOutputTokens: 850
+            }
+          });
+
+          const rawText = response.text?.trim() || "";
+          if (rawText && rawText.length > 15) {
+            const { reply, suggestedFollowUps } = cleanTherapistOutput(rawText);
+            if (reply.length > 15) {
+              return res.json({ reply, suggestedFollowUps });
+            }
+          }
+        } catch (err: any) {
+          console.error(`CBT Gemini model ${model} error:`, err?.message || err);
+        }
+      }
+    }
+
+    // 2. Try Groq API as robust backup if available
+    const groqKey = process.env.GROQ_API_KEY;
+    if (groqKey) {
+      const groqModels = ["llama-3.3-70b-versatile", "qwen/qwen3.8-27b"];
+      for (const model of groqModels) {
+        try {
+          const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${groqKey}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              model,
+              messages: [
+                { role: "system", content: CBT_THERAPIST_SYSTEM_INSTRUCTION },
+                ...sanitizedHistory.map(h => ({
+                  role: h.role === "model" ? "assistant" : "user",
+                  content: h.parts[0].text
+                })),
+                { role: "user", content: cleanMessage }
+              ],
+              max_tokens: 850,
+              temperature: 0.7
+            }),
+            signal: AbortSignal.timeout(8000)
+          });
+
+          if (groqRes.ok) {
+            const data = await groqRes.json();
+            const rawText = data.choices?.[0]?.message?.content || "";
+            if (rawText && rawText.length > 15) {
+              const { reply, suggestedFollowUps } = cleanTherapistOutput(rawText);
+              if (reply.length > 15) {
+                return res.json({ reply, suggestedFollowUps });
+              }
+            }
+          }
+        } catch {
+          // fall through
+        }
+      }
+    }
+
+    // Contextual fallback response in Turkish with rich Socratic follow-ups
+    return res.json({
+      reply: "Seni tüm şefkatimle duyuyorum. Bu durumun içinde hissettiğin ağırlık ve belirsizlik çok gerçek. Gel birlikte bakalım; şu an bu yükün seni en çok yoran, en çok inciten tarafı sence neresi? 🌿",
+      suggestedFollowUps: [
+        "Sürekli yetersiz olduğumu hissediyorum",
+        "Belirsizlik beni çok kaygılandırıyor",
+        "Bugün kontrol edebileceğim küçük bir adım atalım"
+      ],
+      isFallback: true
+    });
+  } catch (err: any) {
+    console.error("CBT Therapist Route Error:", err?.message || err);
+    return res.json({
+      reply: "Anlattıklarını dinlerken bunun senin için ne kadar yıpratıcı olduğunu derinden hissediyorum. Kendine bugün bir dost şefkatiyle yaklaşsaydın, içindeki o yorgun parçaya ne fısıldardın? 🌿",
+      suggestedFollowUps: [
+        "Kendime çok yükleniyorum",
+        "Birlikte 4-7-8 nefes egzersizi yapalım",
+        "Küçük bir hedef belirleyelim"
+      ],
+      isFallback: true
+    });
+  }
+});
+
+// In-Memory & File-Cached Visitor Messages Storage
+const serverInboxMessages: Array<{
+  id: string;
+  name: string;
+  company?: string;
+  email: string;
+  intent?: string;
+  subject?: string;
+  message: string;
+  date: string;
+  timestamp: number;
+}> = [];
+
+app.post("/api/messages", apiRateLimiter, apiSecurityGuard, (req, res) => {
+  try {
+    const { name, company, email, intent, subject, message } = req.body || {};
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: "İsim, e-posta ve mesaj alanları zorunludur." });
+    }
+    const newMsg = {
+      id: "msg-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7),
+      name: String(name).slice(0, 100),
+      company: company ? String(company).slice(0, 100) : "",
+      email: String(email).slice(0, 120),
+      intent: intent ? String(intent).slice(0, 100) : "Genel İletişim",
+      subject: subject ? String(subject).slice(0, 150) : "İletişim Talebi",
+      message: String(message).slice(0, 5000),
+      date: new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }),
+      timestamp: Date.now()
+    };
+    serverInboxMessages.unshift(newMsg);
+    if (serverInboxMessages.length > 200) serverInboxMessages.pop();
+    return res.json({ success: true, message: "Mesajınız başarıyla iletildi.", data: newMsg });
+  } catch (err: any) {
+    return res.status(500).json({ error: "Mesaj iletilemedi." });
+  }
+});
+
+app.get("/api/messages", (_req, res) => {
+  return res.json({ messages: serverInboxMessages });
+});
+
+app.delete("/api/messages", (_req, res) => {
+  serverInboxMessages.length = 0;
+  return res.json({ success: true, message: "Gelen kutusu temizlendi." });
+});
+
 // Serve public static assets with high priority
 app.use(express.static(path.join(process.cwd(), "public")));
 

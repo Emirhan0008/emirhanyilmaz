@@ -10,6 +10,9 @@
     <meta name="keywords" content="Emirhan Yılmaz, psikoloji, yapay zeka, python, psikolojik danışman, makine öğrenmesi, veri analizi, otomasyon, portfolyo" />
     <meta name="author" content="Emirhan Yılmaz" />
 
+    <!-- Google Search Console Sahiplik Doğrulama -->
+    <meta name="google-site-verification" content="google9927a200e581db27" />
+
     <!-- HTTP Security Headers & Content Security Policy (Anti-XSS, Anti-Clickjacking, Anti-MIME-sniffing) -->
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
@@ -39,35 +42,108 @@
     <meta name="twitter:description" content="Psikolojik Danışmanlık, Yapay Zeka ve Python geliştirme alanlarında disiplinler arası çalışmalar yürüten Emirhan Yılmaz'ın vizyoner kişisel portfolyosu." />
     <meta name="twitter:image" content="/logo.png" />
 
-    <!-- Schema.org Structured Data (JSON-LD) -->
+    <!-- Schema.org Multi-Entity Structured Data Graph (JSON-LD for Google & Generative AI Overviews) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
-      "@type": "ProfilePage",
-      "mainEntity": {
-        "@type": "Person",
-        "name": "Emirhan Yılmaz",
-        "alternateName": "Emirhan0008",
-        "jobTitle": "Psikoloji & Yapay Zeka Uzmanı",
-        "url": "https://emirhanyilmaz.vercel.app/",
-        "image": "https://emirhanyilmaz.vercel.app/logo.png",
-        "sameAs": [
-          "https://github.com/Emirhan0008",
-          "https://t.me/emirhanyilmazrpd"
-        ],
-        "knowsAbout": [
-          "Psikolojik Danışmanlık",
-          "Yapay Zeka Entegrasyonu",
-          "Python",
-          "Makine Öğrenmesi",
-          "Web Geliştirme",
-          "Otomasyon"
-        ]
-      }
+      "@graph": [
+        {
+          "@type": "WebSite",
+          "@id": "https://emirhanyilmaz.vercel.app/#website",
+          "url": "https://emirhanyilmaz.vercel.app/",
+          "name": "Emirhan Yılmaz | Psikoloji & Yapay Zeka Uzmanı",
+          "description": "Psikolojik Danışmanlık, Yapay Zeka ve Python mimarisiyle insan odaklı dijital sağlık, eğitim ve otomasyon projeleri.",
+          "inLanguage": "tr"
+        },
+        {
+          "@type": "ProfilePage",
+          "@id": "https://emirhanyilmaz.vercel.app/#profilepage",
+          "url": "https://emirhanyilmaz.vercel.app/",
+          "name": "Emirhan Yılmaz Dijital Portfolyo & Vaka Analizleri",
+          "isPartOf": { "@id": "https://emirhanyilmaz.vercel.app/#website" },
+          "about": { "@id": "https://emirhanyilmaz.vercel.app/#person" },
+          "primaryImageOfPage": "https://emirhanyilmaz.vercel.app/profile-photo.jpg"
+        },
+        {
+          "@type": "Person",
+          "@id": "https://emirhanyilmaz.vercel.app/#person",
+          "name": "Emirhan Yılmaz",
+          "alternateName": "Emirhan0008",
+          "jobTitle": "Psikolojik Danışman & AI/Yazılım Geliştirici",
+          "url": "https://emirhanyilmaz.vercel.app/",
+          "image": "https://emirhanyilmaz.vercel.app/profile-photo.jpg",
+          "alumniOf": {
+            "@type": "CollegeOrUniversity",
+            "name": "Aksaray Üniversitesi",
+            "department": "Rehberlik ve Psikolojik Danışmanlık"
+          },
+          "knowsAbout": [
+            "Psikolojik Danışmanlık ve Rehberlik (PDR)",
+            "Yapay Zeka & LLM Sistemleri",
+            "Python ile Sistem Otomasyonu",
+            "Multimodal Vision ve Doğal Dil İşleme",
+            "Özel Eğitim ve Pedagojik Yazılım Tasarımı",
+            "React & TypeScript Modern Web Mimarisi"
+          ],
+          "sameAs": [
+            "https://github.com/Emirhan0008",
+            "https://t.me/emirhanyilmazrpd"
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://emirhanyilmaz.vercel.app/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Emirhan Yılmaz kimdir?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Emirhan Yılmaz, Aksaray Üniversitesi PDR mezunu bir psikolojik danışman, yapay zeka entegrasyon uzmanı ve Python geliştiricisidir. 3 yıllık özel eğitim saha deneyimini modern LLM ve web teknolojileriyle harmanlamaktadır."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Emirhan Yılmaz hangi alanlarda projeler geliştirmektedir?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "İnsan bilişini merkeze alan yapay zeka çözümleri, terapötik diyalog sistemleri, nöroçeşitli bireyler için erişilebilir iletişim panoları (AAC), eğitim asistanları ve Python tabanlı iş akışı otomasyonları geliştirmektedir."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Emirhan Yılmaz ile nasıl iletişime geçilebilir?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Profesyonel kariyer teklifleri, freelance yazılım projeleri veya akademik iş birlikleri için emirhan0008@gmail.com adresinden veya resmi portfolyo web sitesi üzerinden doğrudan ulaşabilirsiniz."
+              }
+            }
+          ]
+        }
+      ]
     }
     </script>
   </head>
   <body>
+    <!-- Fallback Semantic Content for Web Crawlers & Non-JS Browsers (Instant SEO Indexing) -->
+    <noscript>
+      <div style="padding: 2rem; font-family: sans-serif; background: #030712; color: #f3f4f6; max-width: 800px; margin: 0 auto; line-height: 1.6;">
+        <h1>Emirhan Yılmaz | Psikolojik Danışman &amp; AI / Yazılım Geliştirici</h1>
+        <p>Aksaray Üniversitesi PDR mezunuyum. İnsan psikolojisi ve 3 yıllık özel eğitim saha tecrübemi; modern yapay zeka (LLM / Multimodal Vision), mobil ve Python otomasyonlarıyla harmanlıyorum.</p>
+        
+        <h2>Öne Çıkan Uzmanlık Alanları</h2>
+        <ul>
+          <li>Yapay Zeka (Gemini API / LLM Prompting &amp; Entegrasyonu)</li>
+          <li>Python (Otomasyon / Asyncio / Veri Analizi)</li>
+          <li>React, TypeScript, Next.js &amp; Tailwind CSS</li>
+          <li>Özel Eğitim &amp; Pedagojik Yazılım Tasarımı</li>
+        </ul>
+
+        <h2>Vaka Analizleri ve Projeler</h2>
+        <p>MindFlow, PsyBot AI, Empathy Canvas AAC, AbleUp ve 30'u aşkın üretim seviyesinde dijital ürün portföyünü inceleyebilirsiniz.</p>
+        <p>İletişim: <a href="mailto:emirhan0008@gmail.com" style="color: #60a5fa;">emirhan0008@gmail.com</a> | GitHub: <a href="https://github.com/Emirhan0008" style="color: #60a5fa;">github.com/Emirhan0008</a></p>
+      </div>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

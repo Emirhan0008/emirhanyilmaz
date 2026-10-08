@@ -253,6 +253,41 @@ class SoundEngine {
     } catch {}
   }
 
+  public playSuccess() {
+    this.playSuccessChime();
+  }
+
+  /**
+   * Meditative Singing Bowl / Serene Zen Chime for CBT Mindfulness
+   */
+  public playZenChime() {
+    if (this.isMuted) return;
+    try {
+      this.initCtx();
+      if (!this.ctx) return;
+      const t = this.ctx.currentTime;
+      // Meditative 432 Hz + harmonics (calming, resonant sine wave)
+      const freqs = [432, 864, 1296];
+      freqs.forEach((freq, idx) => {
+        const osc = this.ctx!.createOscillator();
+        const gain = this.ctx!.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, t);
+
+        const initialGain = 0.035 / (idx + 1);
+        gain.gain.setValueAtTime(0.001, t);
+        gain.gain.linearRampToValueAtTime(initialGain, t + 0.06);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
+
+        osc.connect(gain);
+        gain.connect(this.ctx!.destination);
+
+        osc.start(t);
+        osc.stop(t + 1.85);
+      });
+    } catch {}
+  }
+
   /**
    * Cyber Anomaly / Glitch Tone Warning
    */
