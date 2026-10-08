@@ -144,7 +144,7 @@ export const GmailContactModal: React.FC<GmailContactModalProps> = ({
           initial={{ opacity: 0, scale: 0.95, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          className="relative w-full max-w-xl bg-zinc-950 border border-emerald-500/30 rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col gap-4 text-white overflow-hidden"
+          className="relative w-full max-w-xl max-h-[92vh] overflow-y-auto bg-zinc-950 border border-emerald-500/30 rounded-3xl p-5 sm:p-6 shadow-2xl flex flex-col gap-4 text-white scrollbar-thin scrollbar-thumb-white/20"
         >
           {/* Decorative Glow */}
           <div className="absolute -top-24 -right-24 w-60 h-60 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />

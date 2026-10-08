@@ -4065,9 +4065,9 @@ export default function App() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.4 }}
-                  className="flex-1 flex flex-col gap-3.5 overflow-y-auto pr-1 min-h-0 scrollbar-thin scrollbar-thumb-white/20"
+                  className="flex-1 flex flex-col gap-3 overflow-y-auto overflow-x-hidden pr-1 min-h-0 scrollbar-thin scrollbar-thumb-white/20"
                 >
-                  <div className="p-4 sm:p-5 lg:p-6 liquid-glass spinning-glow-border rounded-[2rem] flex flex-col gap-3.5 justify-start">
+                  <div className="p-3.5 sm:p-5 liquid-glass spinning-glow-border rounded-[2rem] flex flex-col gap-3 justify-start overflow-hidden">
                     <div className="space-y-1">
                       <span className="text-[9px] uppercase tracking-wider text-emerald-400 font-bold">{t.hero.name.toUpperCase()} · {t.nav.contact.toUpperCase()}</span>
                       <h2 className="text-xl sm:text-2xl font-extrabold text-white">{t.contact.heading}</h2>
@@ -4076,206 +4076,156 @@ export default function App() {
                       </p>
                     </div>
 
-                    {/* Persona-Based Collaboration Paths */}
-                    <div className="space-y-2">
+                    {/* Persona-Based Collaboration Paths - Sleek, Compact & Responsive */}
+                    <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-extrabold flex items-center gap-1.5">
-                          <Target size={12} /> {lang === 'tr' ? '1. İHTİYACINIZA UYGUN İŞ BİRLİĞİ MODELİNİ SEÇİN' : '1. SELECT YOUR COLLABORATION INTENT'}
+                          <Target size={12} /> {lang === 'tr' ? '1. İLETİŞİM AMACINIZI SEÇİN' : '1. SELECT YOUR INQUIRY INTENT'}
                         </span>
-                        <span className="text-[10px] text-white/50 font-mono">
-                          {lang === 'tr' ? 'Tek tıkla formu doldurur' : 'Auto-prepares inquiry'}
+                        <span className="text-[9.5px] text-white/50 font-mono">
+                          {lang === 'tr' ? 'Formu tek tıkla yapılandırır' : 'Auto-configures form'}
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                        {/* Option 1: Job / Career / Full-time / Part-time */}
-                        <div
+                      <div className="grid grid-cols-2 gap-2">
+                        {/* Option 1: Job */}
+                        <button
+                          type="button"
                           onClick={() => applyContactPersona('job')}
-                          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 text-left relative overflow-hidden group ${
+                          className={`p-2 sm:p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2 group ${
                             contactIntent === 'job'
-                              ? 'bg-emerald-950/40 border-emerald-400 shadow-md shadow-emerald-500/10'
-                              : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
+                              ? 'bg-emerald-950/60 border-emerald-400 text-white shadow-sm shadow-emerald-500/20 ring-1 ring-emerald-400/30'
+                              : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20'
                           }`}
                         >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${contactIntent === 'job' ? 'bg-emerald-500 text-black' : 'bg-white/10 text-white'}`}>
-                                <Briefcase size={15} />
-                              </div>
-                              <div>
-                                <h4 className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
-                                  {lang === 'tr' ? 'İş Fırsatı' : 'Hiring / Job Opportunity'}
-                                </h4>
-                                <span className="text-[10px] text-emerald-400 font-semibold font-mono">
-                                  {lang === 'tr' ? 'Kariyer / Full-Time / Part-Time' : 'Full-time / Contract / Lead'}
-                                </span>
-                              </div>
-                            </div>
-                            {contactIntent === 'job' && (
-                              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-                            )}
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${contactIntent === 'job' ? 'bg-emerald-500 text-black' : 'bg-white/10 text-white'}`}>
+                            <Briefcase size={13} />
                           </div>
-                          <p className="text-[10px] text-white/75 leading-relaxed">
-                            {lang === 'tr' 
-                              ? 'PDR altyapısı ve yapay zeka mühendisliğini ekibinize dahil etmek için hemen görüşme planlayın.' 
-                              : 'Explore adding counseling psychology & multimodal AI engineering to your team.'}
-                          </p>
-                        </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-bold truncate group-hover:text-emerald-300 transition-colors">
+                              {lang === 'tr' ? 'İş / Kariyer' : 'Hiring / Job'}
+                            </div>
+                            <div className="text-[9px] text-emerald-400 font-mono truncate">
+                              {lang === 'tr' ? 'Pozisyon / Lead' : 'Role / Contract'}
+                            </div>
+                          </div>
+                          {contactIntent === 'job' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />}
+                        </button>
 
-                        {/* Option 2: Freelance / Fast MVP Build */}
-                        <div
+                        {/* Option 2: Freelance */}
+                        <button
+                          type="button"
                           onClick={() => applyContactPersona('freelance')}
-                          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 text-left relative overflow-hidden group ${
+                          className={`p-2 sm:p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2 group ${
                             contactIntent === 'freelance'
-                              ? 'bg-emerald-950/40 border-emerald-400 shadow-md shadow-emerald-500/10'
-                              : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
+                              ? 'bg-emerald-950/60 border-emerald-400 text-white shadow-sm shadow-emerald-500/20 ring-1 ring-emerald-400/30'
+                              : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20'
                           }`}
                         >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${contactIntent === 'freelance' ? 'bg-emerald-500 text-black' : 'bg-white/10 text-white'}`}>
-                                <Wand2 size={15} />
-                              </div>
-                              <div>
-                                <h4 className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
-                                  {lang === 'tr' ? 'Freelance Proje Talebi' : 'Freelance Project Request'}
-                                </h4>
-                                <span className="text-[10px] text-sky-400 font-semibold font-mono">
-                                  {lang === 'tr' ? 'Hızlı MVP / Web / Mobil / Otomasyon' : 'Fast MVP / Web / Mobile Build'}
-                                </span>
-                              </div>
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${contactIntent === 'freelance' ? 'bg-emerald-500 text-black' : 'bg-white/10 text-white'}`}>
+                            <Wand2 size={13} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-bold truncate group-hover:text-emerald-300 transition-colors">
+                              {lang === 'tr' ? 'Freelance Proje' : 'Freelance MVP'}
                             </div>
-                            {contactIntent === 'freelance' && (
-                              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-                            )}
+                            <div className="text-[9px] text-sky-400 font-mono truncate">
+                              {lang === 'tr' ? 'Hızlı MVP / Web' : 'Fast MVP Build'}
+                            </div>
                           </div>
-                          <p className="text-[10px] text-white/75 leading-relaxed">
-                            {lang === 'tr'
-                              ? 'Aklınızdaki fikri çalışan bir dijital ürüne dönüştürelim. İsterseniz mimari tahmin sihirbazını da kullanabilirsiniz.'
-                              : 'Turn your product concept into a functional MVP with multimodal AI and responsive UI.'}
-                          </p>
-                          <div className="pt-0.5">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                soundEngine.playGlassClick();
-                                setShowEstimatorModal(true);
-                              }}
-                              className="text-[9px] text-emerald-400 hover:text-emerald-300 font-bold underline flex items-center gap-1 cursor-pointer"
-                            >
-                              <span>⚡ {lang === 'tr' ? 'Sihirbazla Mimari & Süre Hesapla' : 'Open Architecture Estimator'} →</span>
-                            </button>
-                          </div>
-                        </div>
+                          {contactIntent === 'freelance' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />}
+                        </button>
 
-                        {/* Option 3: Speaking Invitation */}
-                        <div
+                        {/* Option 3: Speaking */}
+                        <button
+                          type="button"
                           onClick={() => applyContactPersona('speaking')}
-                          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 text-left relative overflow-hidden group ${
+                          className={`p-2 sm:p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2 group ${
                             contactIntent === 'speaking'
-                              ? 'bg-emerald-950/40 border-emerald-400 shadow-md shadow-emerald-500/10'
-                              : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
+                              ? 'bg-emerald-950/60 border-emerald-400 text-white shadow-sm shadow-emerald-500/20 ring-1 ring-emerald-400/30'
+                              : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20'
                           }`}
                         >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${contactIntent === 'speaking' ? 'bg-emerald-500 text-black' : 'bg-white/10 text-white'}`}>
-                                <Mic size={15} />
-                              </div>
-                              <div>
-                                <h4 className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
-                                  {lang === 'tr' ? 'Konuşma Daveti' : 'Speaking Invitation'}
-                                </h4>
-                                <span className="text-[10px] text-amber-400 font-semibold font-mono">
-                                  {lang === 'tr' ? 'Seminer / Konferans / Atölye' : 'Keynote / Conference / Workshop'}
-                                </span>
-                              </div>
-                            </div>
-                            {contactIntent === 'speaking' && (
-                              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-                            )}
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${contactIntent === 'speaking' ? 'bg-emerald-500 text-black' : 'bg-white/10 text-white'}`}>
+                            <Mic size={13} />
                           </div>
-                          <p className="text-[10px] text-white/75 leading-relaxed">
-                            {lang === 'tr'
-                              ? "Kurum veya etkinliğinizde 'İnsan Psikolojisi & Yapay Zeka Mimarisi' veya 'Eğitimde Bilişsel Ergonomi' konuşması planlayın."
-                              : 'Invite Emirhan for keynotes or hands-on workshops on cognitive ergonomics and human-centered AI.'}
-                          </p>
-                        </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-bold truncate group-hover:text-emerald-300 transition-colors">
+                              {lang === 'tr' ? 'Konuşma Daveti' : 'Speaking Invite'}
+                            </div>
+                            <div className="text-[9px] text-amber-400 font-mono truncate">
+                              {lang === 'tr' ? 'Seminer / Keynote' : 'Keynote / Event'}
+                            </div>
+                          </div>
+                          {contactIntent === 'speaking' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />}
+                        </button>
 
-                        {/* Option 4: Brand & Collaboration / Media Kit */}
-                        <div
+                        {/* Option 4: Collaboration */}
+                        <button
+                          type="button"
                           onClick={() => applyContactPersona('collaboration')}
-                          className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-2 text-left relative overflow-hidden group ${
+                          className={`p-2 sm:p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2 group ${
                             contactIntent === 'collaboration'
-                              ? 'bg-emerald-950/40 border-emerald-400 shadow-md shadow-emerald-500/10'
-                              : 'bg-white/5 border-white/10 hover:border-white/20 hover:bg-white/10'
+                              ? 'bg-emerald-950/60 border-emerald-400 text-white shadow-sm shadow-emerald-500/20 ring-1 ring-emerald-400/30'
+                              : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10 hover:border-white/20'
                           }`}
                         >
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${contactIntent === 'collaboration' ? 'bg-emerald-500 text-black' : 'bg-white/10 text-white'}`}>
-                                <Users size={15} />
-                              </div>
-                              <div>
-                                <h4 className="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">
-                                  {lang === 'tr' ? 'Marka ve İş Birliği' : 'Brand & Collaboration'}
-                                </h4>
-                                <span className="text-[10px] text-teal-400 font-semibold font-mono">
-                                  {lang === 'tr' ? 'Ortak Proje / Sponsorluk / Medya' : 'Partnership / Sponsor / Media'}
-                                </span>
-                              </div>
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${contactIntent === 'collaboration' ? 'bg-emerald-500 text-black' : 'bg-white/10 text-white'}`}>
+                            <Users size={13} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-xs font-bold truncate group-hover:text-emerald-300 transition-colors">
+                              {lang === 'tr' ? 'Marka & İş Birliği' : 'Brand & Partner'}
                             </div>
-                            {contactIntent === 'collaboration' && (
-                              <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-                            )}
+                            <div className="text-[9px] text-teal-400 font-mono truncate">
+                              {lang === 'tr' ? 'Ortak Proje / Medya' : 'Sponsor / Media'}
+                            </div>
                           </div>
-                          <p className="text-[10px] text-white/75 leading-relaxed">
-                            {lang === 'tr'
-                              ? 'Teknoloji toplulukları, ürün incelemeleri ve açık kaynak yapay zeka araçları üzerine ortak projeler.'
-                              : 'Collaborate on tech community content, product integrations, or joint research initiatives.'}
-                          </p>
-                          <div className="pt-0.5">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                soundEngine.playGlassClick();
-                                setShowMediaKitModal(true);
-                              }}
-                              className="text-[9px] text-emerald-400 hover:text-emerald-300 font-bold underline flex items-center gap-1 cursor-pointer"
-                            >
-                              <span>📁 {lang === 'tr' ? 'Medya Kitini İncele (Media Kit)' : 'View Speaker Media Kit'} →</span>
-                            </button>
-                          </div>
-                        </div>
+                          {contactIntent === 'collaboration' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />}
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[10px] px-1 pt-0.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            soundEngine.playGlassClick();
+                            setShowEstimatorModal(true);
+                          }}
+                          className="text-emerald-400 hover:text-emerald-300 font-bold underline cursor-pointer flex items-center gap-1"
+                        >
+                          <span>⚡ {lang === 'tr' ? 'Sihirbazla Mimari & Süre Hesapla' : 'Architecture & Estimator'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            soundEngine.playGlassClick();
+                            setShowMediaKitModal(true);
+                          }}
+                          className="text-white/60 hover:text-white font-semibold underline cursor-pointer flex items-center gap-1"
+                        >
+                          <span>📁 {lang === 'tr' ? 'Medya Kitini Aç' : 'Speaker Media Kit'}</span>
+                        </button>
                       </div>
                     </div>
 
-                    {/* Step 2: Direct Contact Form or Channels */}
-                    <div className="pt-2">
-                      <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-extrabold flex items-center gap-1.5 pb-2">
-                        <Send size={12} /> {lang === 'tr' ? '2. DOĞRUDAN İLETİŞİM FORMU (SİTEDEN AYRILMADAN)' : '2. DIRECT ON-SITE INQUIRY FORM'}
-                      </span>
-                    </div>
-
-                    {/* Direct Contact Form Card */}
-                    <div className="p-4 sm:p-5 rounded-2xl liquid-glass border border-white/10 flex flex-col gap-3.5">
-                      <div className="flex items-center justify-between border-b border-white/10 pb-2.5">
+                    {/* Step 2: Direct Contact Form Card */}
+                    <div className="p-3.5 sm:p-4 rounded-2xl liquid-glass border border-white/10 flex flex-col gap-3">
+                      <div className="flex items-center justify-between border-b border-white/10 pb-2">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
-                            <Mail size={14} />
+                          <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                            <Mail size={13} />
                           </div>
                           <div>
-                            <h3 className="text-xs sm:text-sm font-bold text-white">
+                            <h3 className="text-xs sm:text-sm font-bold text-white leading-tight">
                               {lang === 'tr' ? 'Doğrudan İletişim Formu' : 'Direct Inquiry Form'}
                             </h3>
-                            <p className="text-[10px] text-white/60">
+                            <p className="text-[9.5px] text-white/60">
                               {lang === 'tr' ? 'Site içinden ayrılmadan anında mesajınızı iletin' : 'Submit your message on-site without page reloads'}
                             </p>
                           </div>
                         </div>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/30 truncate max-w-[150px]">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/30 truncate max-w-[140px]">
                           {profile.email || 'emirhan0008@gmail.com'}
                         </span>
                       </div>
@@ -4318,12 +4268,12 @@ export default function App() {
                           </div>
                         </motion.div>
                       ) : (
-                        <form onSubmit={handleDirectInAppSubmit} className="flex flex-col gap-3">
-                          {/* Row 1: Name & Company */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <form onSubmit={handleDirectInAppSubmit} className="flex flex-col gap-2.5">
+                          {/* Row 1: Name & Company - Responsive un-cramped fields */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                             <div className="space-y-1">
-                              <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1 flex items-center justify-between">
-                                <span>{t.contact.nameLabel} *</span>
+                              <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1 block truncate">
+                                {t.contact.nameLabel} *
                               </label>
                               <input 
                                 type="text" 
@@ -4332,29 +4282,29 @@ export default function App() {
                                 placeholder={t.contact.namePlaceholder}
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                className="w-full py-2 px-3 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 font-medium"
+                                className="w-full py-2 px-3 rounded-xl bg-black/60 border border-white/15 focus:outline-hidden focus:border-emerald-400/80 focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 font-medium"
                               />
                             </div>
 
                             <div className="space-y-1">
-                              <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">
-                                {lang === 'tr' ? 'Şirket / Kurum Adı' : 'Company / Organization'}
+                              <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1 block truncate">
+                                {lang === 'tr' ? 'Şirket / Kurum (Opsiyonel)' : 'Company / Organization'}
                               </label>
                               <input 
                                 type="text" 
                                 maxLength={100}
-                                placeholder={lang === 'tr' ? 'Örn: TechCorp, Enstitü, Freelance...' : 'e.g. Acme Corp, Institute, Startup...'}
+                                placeholder={lang === 'tr' ? 'Örn: TechCorp, Freelance...' : 'e.g. Acme Corp, Startup...'}
                                 value={formData.company}
                                 onChange={e => setFormData({ ...formData, company: e.target.value })}
-                                className="w-full py-2 px-3 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 font-medium"
+                                className="w-full py-2 px-3 rounded-xl bg-black/60 border border-white/15 focus:outline-hidden focus:border-emerald-400/80 focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 font-medium"
                               />
                             </div>
                           </div>
 
-                          {/* Row 2: Email & Intent Select Box */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {/* Row 2: Email & Intent Select */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                             <div className="space-y-1">
-                              <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">
+                              <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1 block truncate">
                                 {lang === 'tr' ? 'E-Posta Adresi *' : 'Email Address *'}
                               </label>
                               <input 
@@ -4364,23 +4314,23 @@ export default function App() {
                                 placeholder="adiniz@sirket.com"
                                 value={formData.email}
                                 onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                className="w-full py-2 px-3 rounded-xl liquid-glass border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 font-medium"
+                                className="w-full py-2 px-3 rounded-xl bg-black/60 border border-white/15 focus:outline-hidden focus:border-emerald-400/80 focus:ring-1 focus:ring-emerald-400/50 text-xs text-white placeholder-white/40 font-medium"
                               />
                             </div>
 
                             <div className="space-y-1">
-                              <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1">
-                                {lang === 'tr' ? 'Niyet Türü (Select Box) *' : 'Inquiry Intent *'}
+                              <label className="text-[10px] uppercase tracking-wider text-white/90 font-bold px-1 block truncate">
+                                {lang === 'tr' ? 'İletişim Konusu *' : 'Inquiry Subject *'}
                               </label>
                               <select
                                 value={contactIntent}
                                 onChange={e => applyContactPersona(e.target.value as any)}
-                                className="w-full py-2 px-3 rounded-xl bg-black/70 border border-white/15 focus:outline-hidden focus:ring-1 focus:ring-emerald-400/50 text-xs text-white font-medium cursor-pointer"
+                                className="w-full py-2 px-3 rounded-xl bg-black/80 border border-white/15 focus:outline-hidden focus:border-emerald-400/80 focus:ring-1 focus:ring-emerald-400/50 text-xs text-white font-medium cursor-pointer truncate"
                               >
-                                <option value="job" className="bg-zinc-900 text-white">💼 {lang === 'tr' ? 'İş Fırsatı (Kariyer / Pozisyon Teklifi)' : 'Job Opportunity / Career Role'}</option>
-                                <option value="freelance" className="bg-zinc-900 text-white">🚀 {lang === 'tr' ? 'Freelance Proje Talebi (Hızlı MVP / Web / Mobil)' : 'Freelance Project Request (MVP / Web)'}</option>
-                                <option value="speaking" className="bg-zinc-900 text-white">🎤 {lang === 'tr' ? 'Konuşma Daveti (Seminer / Konferans / Atölye)' : 'Speaking Invitation (Keynote / Workshop)'}</option>
-                                <option value="collaboration" className="bg-zinc-900 text-white">🤝 {lang === 'tr' ? 'Marka ve İş Birliği (Sponsorluk / Medya)' : 'Brand & Partnership (Media Kit)'}</option>
+                                <option value="job" className="bg-zinc-900 text-white">💼 {lang === 'tr' ? 'İş Fırsatı / Pozisyon' : 'Job Opportunity'}</option>
+                                <option value="freelance" className="bg-zinc-900 text-white">🚀 {lang === 'tr' ? 'Freelance MVP Projesi' : 'Freelance MVP Build'}</option>
+                                <option value="speaking" className="bg-zinc-900 text-white">🎤 {lang === 'tr' ? 'Konuşma Daveti / Seminer' : 'Speaking Invitation'}</option>
+                                <option value="collaboration" className="bg-zinc-900 text-white">🤝 {lang === 'tr' ? 'Marka & İş Birliği' : 'Brand & Partnership'}</option>
                               </select>
                             </div>
                           </div>
@@ -4401,87 +4351,94 @@ export default function App() {
                                 </button>
                               )}
                             </div>
-                            <div className="relative w-full rounded-xl bg-black/60 border border-white/15 focus-within:border-emerald-400/80 focus-within:ring-1 focus-within:ring-emerald-400/50 transition-all p-2.5">
+                            <div className="relative w-full rounded-xl bg-black/60 border border-white/15 focus-within:border-emerald-400/80 focus-within:ring-1 focus-within:ring-emerald-400/50 transition-all p-2">
                               <textarea 
                                 required
-                                rows={4}
+                                rows={3}
                                 maxLength={3500}
                                 placeholder={t.contact.messagePlaceholder}
                                 value={formData.message}
                                 onChange={e => setFormData({ ...formData, message: e.target.value })}
-                                className="w-full h-28 max-h-48 min-h-[70px] bg-transparent text-xs text-white placeholder-white/40 resize-y font-sans overflow-y-scroll leading-relaxed focus:outline-hidden"
+                                className="w-full h-20 min-h-[56px] max-h-36 bg-transparent text-xs text-white placeholder-white/40 resize-y font-sans overflow-y-scroll leading-relaxed focus:outline-hidden"
                               />
                             </div>
                           </div>
 
-                          {/* Action Buttons */}
-                          <div className="flex flex-col sm:flex-row gap-2 pt-1">
-                            <button 
-                              type="submit"
-                              disabled={isSubmittingContact}
-                              className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md shadow-emerald-500/20 disabled:opacity-50"
-                            >
-                              <Send size={14} />
-                              <span>{isSubmittingContact ? (lang === 'tr' ? 'İletiliyor...' : 'Submitting...') : (lang === 'tr' ? 'Site Üzerinden Mesajı Gönder' : 'Submit Inquiry Directly')}</span>
-                            </button>
+                          {/* Action Buttons - 2 Clean, Unbreakable Rows that NEVER Overflow */}
+                          <div className="flex flex-col gap-2 pt-1">
+                            {/* Tier 1: Primary Send Actions */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <button 
+                                type="submit"
+                                disabled={isSubmittingContact}
+                                className="py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md shadow-emerald-500/20 disabled:opacity-50"
+                              >
+                                <Send size={14} />
+                                <span className="truncate">{isSubmittingContact ? (lang === 'tr' ? 'İletiliyor...' : 'Submitting...') : (lang === 'tr' ? 'Site Üzerinden Gönder' : 'Submit Directly')}</span>
+                              </button>
 
-                            <button 
-                              type="button"
-                              onClick={() => {
-                                soundEngine.playGlassClick();
-                                setShowGmailModal(true);
-                              }}
-                              className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-red-600/30 to-amber-600/20 hover:from-red-600/40 hover:to-amber-600/30 border border-red-500/40 text-red-200 hover:text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md"
-                              title={lang === 'tr' ? "Resmi Gmail API veya Gmail Web ile doğrudan gönderin" : "Send with official Gmail API or Web Gmail"}
-                            >
-                              <Mail size={14} className="text-red-400" />
-                              <span>{lang === 'tr' ? 'Gmail ile Gönder' : 'Send via Gmail'}</span>
-                            </button>
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  soundEngine.playGlassClick();
+                                  setShowGmailModal(true);
+                                }}
+                                className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-red-600/30 to-amber-600/20 hover:from-red-600/40 hover:to-amber-600/30 border border-red-500/40 text-red-200 hover:text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md"
+                                title={lang === 'tr' ? "Resmi Gmail API veya Gmail Web ile doğrudan gönderin" : "Send with official Gmail API or Web Gmail"}
+                              >
+                                <Mail size={14} className="text-red-400 shrink-0" />
+                                <span className="truncate">{lang === 'tr' ? 'Gmail ile Gönder' : 'Send via Gmail'}</span>
+                              </button>
+                            </div>
 
-                            <button 
-                              type="button"
-                              onClick={handleWhatsAppOpen}
-                              className="py-2.5 px-3 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md shadow-emerald-950/40"
-                              title={lang === 'tr' ? "Mesajı WhatsApp üzerinden de açar" : "Opens prepared message in WhatsApp"}
-                            >
-                              <Phone size={14} className="text-emerald-400" />
-                              <span>WhatsApp</span>
-                            </button>
+                            {/* Tier 2: Quick Alternatives Row */}
+                            <div className="grid grid-cols-3 gap-2">
+                              <button 
+                                type="button"
+                                onClick={handleWhatsAppOpen}
+                                className="py-2 px-2.5 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-sm truncate"
+                                title={lang === 'tr' ? "Mesajı WhatsApp üzerinden açar" : "Opens prepared message in WhatsApp"}
+                              >
+                                <Phone size={13} className="text-emerald-400 shrink-0" />
+                                <span className="truncate">WhatsApp</span>
+                              </button>
 
-                            <button
-                              type="button"
-                              onClick={handleDirectEmailOpen}
-                              className="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-                              title={lang === 'tr' ? "E-Posta uygulamanızla açar" : "Opens your default email client"}
-                            >
-                              <Mail size={13} className="text-white/80" />
-                              <span>{lang === 'tr' ? 'E-Posta Aç' : 'Email Client'}</span>
-                            </button>
+                              <button
+                                type="button"
+                                onClick={handleDirectEmailOpen}
+                                className="py-2 px-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer truncate"
+                                title={lang === 'tr' ? "E-Posta uygulamanızla açar" : "Opens your default email client"}
+                              >
+                                <Mail size={13} className="text-white/80 shrink-0" />
+                                <span className="truncate">{lang === 'tr' ? 'E-Posta Aç' : 'Email App'}</span>
+                              </button>
 
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigator.clipboard.writeText(profile.email || 'emirhan0008@gmail.com');
-                                setCopiedEmail(true);
-                                setTimeout(() => setCopiedEmail(false), 2500);
-                              }}
-                              className="py-2.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
-                            >
-                              <Copy size={12} className="text-white/70" />
-                              <span>{copiedEmail ? t.hero.copied : t.hero.copyEmail}</span>
-                            </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(profile.email || 'emirhan0008@gmail.com');
+                                  setCopiedEmail(true);
+                                  setTimeout(() => setCopiedEmail(false), 2500);
+                                }}
+                                className="py-2 px-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer truncate"
+                                title="E-Posta Adresini Kopyala"
+                              >
+                                <Copy size={12} className="text-white/70 shrink-0" />
+                                <span className="truncate">{copiedEmail ? (lang === 'tr' ? 'Kopyalandı!' : 'Copied!') : (lang === 'tr' ? 'Kopyala' : 'Copy')}</span>
+                              </button>
+                            </div>
                           </div>
                         </form>
                       )}
                     </div>
 
-                    {/* Quick Access Channel Pills */}
-                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1">
+                    {/* Quick Access Channel Pills - Clean Grid with no squeezing */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-2 pt-0.5">
                       <a
                         href={profile.github || "https://github.com/Emirhan0008"}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer group"
+                        className="p-2 sm:p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer group"
                         title={`GitHub: ${profile.github}`}
                       >
                         <Github size={13} className="text-white/70 group-hover:text-emerald-400 shrink-0 transition-colors" />
@@ -4495,7 +4452,7 @@ export default function App() {
                           soundEngine.playGlassClick();
                           setShowGmailModal(true);
                         }}
-                        className="p-2.5 rounded-xl bg-red-950/40 hover:bg-red-900/40 border border-red-500/30 flex items-center gap-2 text-xs text-red-200 hover:text-white font-bold transition-all hover:scale-102 cursor-pointer group"
+                        className="p-2 sm:p-2.5 rounded-xl bg-red-950/40 hover:bg-red-900/40 border border-red-500/30 flex items-center gap-2 text-xs text-red-200 hover:text-white font-bold transition-all hover:scale-102 cursor-pointer group"
                         title="Gmail ile Doğrudan İletişim"
                       >
                         <Mail size={13} className="text-red-400 shrink-0" />
@@ -4508,7 +4465,7 @@ export default function App() {
                           soundEngine.playGlassClick();
                           setShowMediaKitModal(true);
                         }}
-                        className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2 text-xs text-emerald-300 font-bold transition-all hover:scale-102 cursor-pointer"
+                        className="p-2 sm:p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2 text-xs text-emerald-300 font-bold transition-all hover:scale-102 cursor-pointer"
                       >
                         <Award size={13} className="text-emerald-400 shrink-0" />
                         <span className="truncate">{lang === 'tr' ? 'Medya Kiti' : 'Media Kit'}</span>
@@ -4521,16 +4478,17 @@ export default function App() {
                           setCopiedEmail(true);
                           setTimeout(() => setCopiedEmail(false), 2500);
                         }}
-                        className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer"
+                        className="p-2 sm:p-2.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 flex items-center gap-2 text-xs text-white font-bold transition-all hover:scale-102 cursor-pointer"
+                        title="E-Posta Adresini Kopyala"
                       >
                         <Copy size={13} className="text-white/70 shrink-0" />
-                        <span className="truncate">{copiedEmail ? (lang === 'tr' ? 'Kopyalandı!' : 'Copied!') : (profile.email || 'emirhan0008@gmail.com')}</span>
+                        <span className="truncate">{copiedEmail ? (lang === 'tr' ? 'Kopyalandı!' : 'Copied!') : 'E-Posta'}</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={handleWhatsAppOpen}
-                        className="p-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-500/20 flex items-center gap-2 text-xs text-emerald-300 font-bold transition-all hover:scale-102 cursor-pointer col-span-2 sm:col-span-1"
+                        className="p-2 sm:p-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-500/20 flex items-center gap-2 text-xs text-emerald-300 font-bold transition-all hover:scale-102 cursor-pointer col-span-2 sm:col-span-1"
                         title={lang === 'tr' ? "Hazırlanan mesajla WhatsApp uygulamasını açar" : "Opens WhatsApp with drafted message"}
                       >
                         <Phone size={13} className="text-emerald-400 shrink-0" />
