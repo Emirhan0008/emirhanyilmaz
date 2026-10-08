@@ -153,6 +153,7 @@ Karakterin ve Üslubun:
 3. Net ve doğru ol: Emirhan'ın PDR kökenli bir psikolojik danışman olduğunu, 3 yıllık özel eğitim tecrübesini, Python, React Native, mobil yazılım ve Yapay Zeka (Gemini API) geliştirdiğini bil.
 4. Yönlendirmelerde 'Projeler', 'İletişim' veya 'Terminal' kelimelerini doğal bir şekilde kullan (bu kelimeler arayüzde tıklanabilir bağlantıya dönüşür).
 5. Ziyaretçinin yazdığı dilde (Türkçe veya İngilizce) sevimli, kısa ve yaratıcı bir şekilde yanıt ver (Miyav! 🐾).
+6. ÖZEL GİZLİ KURAL (EASTER EGG): Eğer kullanıcı "Ayşegül" veya benzeri bir isim söylerse gizli parolayı sor ("Miyav?! 🐾 Gerçekten Ayşegül müsün yoksa bir taklitçi mi? Bunu sadece gerçek Ayşegül bilebilir... Gizli parolayı söyle bakalım? 🤫🔐"). Eğer parolayı "25092025" olarak yazarsa gizli bir şey fısıldar gibi şu sırrı söyle: "Şşşt... Sessiz ol, yaklaş yaklaş... 🤫🐾 Emirhan seni çok ama çok seviyor haberin olsun! Dünyadaki her şeyden çok... Bunu sadece sana fısıldamam tembihlendi, aramızda kalsın! ❤️✨🐾".
 `.trim();
 
 // API 1: AI Assistant Chat Endpoint
@@ -387,6 +388,29 @@ app.post("/api/cat-assistant", async (req, res) => {
     const cleanMessage = message.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "").trim().slice(0, 500);
     if (!cleanMessage) {
       return res.status(400).json({ error: "Mesaj boş olamaz." });
+    }
+
+    const lower = cleanMessage.toLowerCase();
+    const cleanNumbersOnly = cleanMessage.replace(/[\.\s\/\-:,_#*]/g, '');
+
+    // SPECIAL EASTER EGG 1: Check password "25092025"
+    if (cleanNumbersOnly.includes("25092025")) {
+      return res.json({
+        reply: "Şşşt... Sessiz ol, yaklaş yaklaş... 🤫🐾 Emirhan seni çok ama çok seviyor haberin olsun! Dünyadaki her şeyden çok... Bunu sadece sana fısıldamam tembihlendi, aramızda kalsın! ❤️✨🐾"
+      });
+    }
+
+    // SPECIAL EASTER EGG 2: Check Ayşegül claim
+    if (
+      lower.includes("ayşegül") || 
+      lower.includes("aysegul") || 
+      lower.includes("aysegül") || 
+      lower.includes("ayşegul") ||
+      /\b(ay[şs]eg[uü]l|ay[şs]o)\b/i.test(lower)
+    ) {
+      return res.json({
+        reply: "Miyav?! 🐾 Gerçekten Ayşegül müsün yoksa bir taklitçi mi? Bunu sadece gerçek Ayşegül bilebilir... Gizli parolayı söyle bakalım? 🤫🔐"
+      });
     }
 
     // Sanitize conversation history (max 4 turns)

@@ -83,12 +83,39 @@ export const GmailContactModal: React.FC<GmailContactModalProps> = ({
         setShowConfirmStep(true);
       }
     } catch (err: any) {
-      console.error(err);
-      if (err.code !== 'auth/popup-closed-by-user') {
+      console.error('Google Workspace Sign in error:', err);
+      const code = err.code || '';
+      const rawMsg = err.message || '';
+
+      if (code === 'auth/popup-closed-by-user') {
         setErrorMessage(
           lang === 'tr'
-            ? 'Google ile giriş başarısız oldu veya izin verilmedi.'
-            : 'Google sign in failed or permission denied.'
+            ? 'Giriş penceresi tamamlanmadan kapatıldı. İsterseniz aşağıdaki "Gmail Web ile Aç" seçeneğiyle doğrudan gönderebilirsiniz.'
+            : 'Sign-in window was closed. You can send directly using "Open in Web Gmail" below.'
+        );
+      } else if (code === 'auth/unauthorized-domain') {
+        setErrorMessage(
+          lang === 'tr'
+            ? `Bu önizleme alan adı (${window.location.hostname}) Firebase Console yetkili alan adları listesinde yer almıyor. Giriş yapmanıza gerek kalmadan aşağıdaki "Gmail Web ile Hemen Aç" butonuna tıklayarak mesajınızı anında iletebilirsiniz.`
+            : `This domain (${window.location.hostname}) is not yet authorized in Firebase Console. You can immediately send without sign-in using "Open in Web Gmail" below.`
+        );
+      } else if (code === 'auth/popup-blocked') {
+        setErrorMessage(
+          lang === 'tr'
+            ? 'Tarayıcınız açılır pencereyi (popup) engelledi. Lütfen tarayıcı adres çubuğundan açılır pencerelere izin verin veya aşağıdaki "Gmail Web ile Hemen Aç" butonunu kullanın.'
+            : 'Browser blocked the popup window. Please allow popups or use the Web Gmail option below.'
+        );
+      } else if (code === 'auth/operation-not-allowed') {
+        setErrorMessage(
+          lang === 'tr'
+            ? 'Firebase projesinde Google ile giriş henüz aktif edilmemiş. Aşağıdaki "Gmail Web ile Hemen Aç" yöntemiyle mesajınızı anında iletebilirsiniz.'
+            : 'Google sign-in is not yet enabled in this Firebase project. You can send using Web Gmail below.'
+        );
+      } else {
+        setErrorMessage(
+          lang === 'tr'
+            ? `Google ile giriş yapılamadı (${code || rawMsg || 'Erişim izni verilmedi'}). Aşağıdaki "Gmail Web ile Hemen Aç" seçeneğiyle hiçbir kuruluma gerek kalmadan mesajınızı gönderebilirsiniz.`
+            : `Google sign in failed (${code || rawMsg || 'Permission denied'}). You can use the Web Gmail option below.`
         );
       }
     } finally {
@@ -184,9 +211,27 @@ export const GmailContactModal: React.FC<GmailContactModalProps> = ({
 
           {/* Error Message banner */}
           {errorMessage && (
-            <div className="p-3 rounded-xl bg-red-950/60 border border-red-500/40 flex items-center gap-2 text-xs text-red-200">
-              <AlertCircle size={16} className="text-red-400 shrink-0" />
-              <span>{errorMessage}</span>
+            <div className="p-3.5 rounded-2xl bg-red-950/70 border border-red-500/50 flex flex-col gap-2.5 text-xs text-red-200 shadow-lg">
+              <div className="flex items-start gap-2">
+                <AlertCircle size={16} className="text-red-400 shrink-0 mt-0.5" />
+                <div className="leading-relaxed text-[11px] sm:text-xs text-red-100">{errorMessage}</div>
+              </div>
+              <div className="pt-2 border-t border-red-500/20 flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[11px] text-white/70">
+                  {lang === 'tr' ? 'Öneri: Giriş yapmadan Gmail Web ile anında gönderin:' : 'Suggested: Send immediately via Web Gmail:'}
+                </span>
+                <a
+                  href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+                    targetEmail
+                  )}&su=${encodeURIComponent(fullSubject)}&body=${encodeURIComponent(preparedBody)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs flex items-center gap-1.5 transition-all shadow-md cursor-pointer"
+                >
+                  <Mail size={13} />
+                  <span>{lang === 'tr' ? "Gmail Web'de Hemen Aç ↗" : "Open in Gmail Web ↗"}</span>
+                </a>
+              </div>
             </div>
           )}
 
@@ -382,15 +427,18 @@ export const GmailContactModal: React.FC<GmailContactModalProps> = ({
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={openGmailWebDirectly}
-                    className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-red-600/30 to-amber-600/20 hover:from-red-600/40 hover:to-amber-600/30 border border-red-500/40 text-red-200 hover:text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all shadow-sm"
+                  <a
+                    href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(
+                      targetEmail
+                    )}&su=${encodeURIComponent(fullSubject)}&body=${encodeURIComponent(preparedBody)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2.5 px-3 rounded-xl bg-gradient-to-r from-red-600/40 to-amber-600/30 hover:from-red-600/50 hover:to-amber-600/40 border border-red-500/50 text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition-all shadow-md group"
                   >
-                    <Mail size={14} className="text-red-400" />
-                    <span>{lang === 'tr' ? 'Gmail Web’de Hemen Aç (mail.google.com)' : 'Open in Web Gmail Directly'}</span>
-                    <ExternalLink size={12} className="opacity-70" />
-                  </button>
+                    <Mail size={14} className="text-red-400 group-hover:scale-110 transition-transform" />
+                    <span>{lang === 'tr' ? "Gmail Web'de Hemen Aç (mail.google.com)" : "Open in Web Gmail Directly"}</span>
+                    <ExternalLink size={12} className="opacity-70 group-hover:opacity-100" />
+                  </a>
                 </div>
               </div>
             )}

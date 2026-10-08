@@ -82,6 +82,8 @@ export function InteractiveCatCompanion({
 
   const [inputQuery, setInputQuery] = useState('');
   const [isThinking, setIsThinking] = useState(false);
+  const [awaitingAysegulPassword, setAwaitingAysegulPassword] = useState<boolean>(false);
+  const [showLoveExplosion, setShowLoveExplosion] = useState<boolean>(false);
   const behaviorTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Autonomous Behavior Loop (Wander, turn to visitor, rest)
@@ -157,6 +159,71 @@ export function InteractiveCatCompanion({
 
     // Fast-path: Check for direct mode switch intents (chat or preset)
     const lowerQuery = query.toLowerCase().trim();
+    const cleanNumbersOnly = query.replace(/[\.\s\/\-:,_#*]/g, '');
+
+    // SPECIAL EASTER EGG 1: Check if password "25092025" is provided
+    if (cleanNumbersOnly.includes('25092025')) {
+      setAwaitingAysegulPassword(false);
+      setBehavior('purring');
+      setShowHeart(true);
+      setShowLoveExplosion(true);
+      setTimeout(() => setShowLoveExplosion(false), 5000);
+      soundEngine.playCatPurr();
+
+      const secretLoveReply = isEn
+        ? "Shhh... Quiet now, come closer, closer... 🤫🐾 Emirhan loves you so, so much, just so you know! More than anything in the world... I was strictly instructed to whisper this only to you, keep it our little secret! ❤️✨🐾"
+        : "Şşşt... Sessiz ol, yaklaş yaklaş... 🤫🐾 Emirhan seni çok ama çok seviyor haberin olsun! Dünyadaki her şeyden çok... Bunu sadece sana fısıldamam tembihlendi, aramızda kalsın! ❤️✨🐾";
+
+      addBubbleStrictMaxTwo({
+        id: `cat-${Date.now()}`,
+        sender: 'cat',
+        text: secretLoveReply
+      });
+      return;
+    }
+
+    // SPECIAL EASTER EGG 2: Check if user claims to be Ayşegül
+    const isAysegulClaim = 
+      lowerQuery.includes('ayşegül') || 
+      lowerQuery.includes('aysegul') || 
+      lowerQuery.includes('aysegül') || 
+      lowerQuery.includes('ayşegul') ||
+      /\b(ay[şs]eg[uü]l|ay[şs]o)\b/i.test(lowerQuery);
+
+    if (isAysegulClaim) {
+      setAwaitingAysegulPassword(true);
+      setBehavior('curious-front');
+      soundEngine.playCatMeow();
+
+      const askPasswordReply = isEn
+        ? "Meow?! 🐾 Are you really Ayşegül, or an impostor? Only the real Ayşegül knows the secret password... Tell me the password! 🤫🔐"
+        : "Miyav?! 🐾 Gerçekten Ayşegül müsün yoksa bir taklitçi mi? Bunu sadece gerçek Ayşegül bilebilir... Gizli parolayı söyle bakalım? 🤫🔐";
+
+      addBubbleStrictMaxTwo({
+        id: `cat-${Date.now()}`,
+        sender: 'cat',
+        text: askPasswordReply
+      });
+      return;
+    }
+
+    // SPECIAL EASTER EGG 3: If cat was expecting the password from Ayşegül and wrong input was typed
+    if (awaitingAysegulPassword) {
+      setAwaitingAysegulPassword(false);
+      soundEngine.playCatMeow();
+
+      const wrongPasswordReply = isEn
+        ? "Hmm... Wrong password meow! 😾 The real Ayşegül would never forget that special date... 🐾"
+        : "Hımm... Yanlış parola miyav! 😾 Sen gerçek Ayşegül değilsin gibi... Gerçek Ayşegül o özel tarihi asla unutmazdı! 🐾";
+
+      addBubbleStrictMaxTwo({
+        id: `cat-${Date.now()}`,
+        sender: 'cat',
+        text: wrongPasswordReply
+      });
+      return;
+    }
+
     const isNormalSwitchIntent = 
       lowerQuery.includes('normal mod') || 
       lowerQuery.includes('normal pencere') || 
@@ -729,6 +796,31 @@ export function InteractiveCatCompanion({
           >
             <Heart size={20} className="fill-rose-400 drop-shadow-[0_0_8px_rgba(244,63,94,0.8)]" />
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Love Explosion Hearts for Ayşegül Easter Egg */}
+      <AnimatePresence>
+        {showLoveExplosion && (
+          <div className="absolute -top-16 left-0 right-0 flex justify-center items-center pointer-events-none z-40">
+            {[-25, -10, 10, 25].map((xOffset, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 10, scale: 0.5, x: xOffset }}
+                animate={{ 
+                  opacity: [0, 1, 1, 0], 
+                  y: [-10, -50 - idx * 12], 
+                  scale: [0.8, 1.4, 1.6, 1.2],
+                  rotate: [0, idx % 2 === 0 ? 15 : -15] 
+                }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 2.8, delay: idx * 0.2, ease: "easeOut" }}
+                className="absolute text-rose-500 drop-shadow-[0_0_14px_rgba(244,63,94,0.95)] text-xl"
+              >
+                ❤️
+              </motion.div>
+            ))}
+          </div>
         )}
       </AnimatePresence>
 
