@@ -13,11 +13,12 @@ import {
   Zap, 
   Copy, 
   Check, 
-  Share2, 
-  Globe,
-  HelpCircle,
-  Clock,
-  Key
+  Globe, 
+  Clock, 
+  ShieldCheck, 
+  UploadCloud, 
+  Code2, 
+  Layers
 } from 'lucide-react';
 
 interface VisibilityDiagnosticModalProps {
@@ -32,7 +33,9 @@ export const VisibilityDiagnosticModal: React.FC<VisibilityDiagnosticModalProps>
   lang = 'tr'
 }) => {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'diagnosis' | 'guide' | 'aiPreview'>('diagnosis');
+  const [activeTab, setActiveTab] = useState<'diagnosis' | 'verification' | 'guide' | 'aiPreview'>('diagnosis');
+  const [customVerificationCode, setCustomVerificationCode] = useState('');
+  const [verifyTestResult, setVerifyTestResult] = useState<string | null>(null);
 
   const copyToClipboard = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
@@ -40,11 +43,21 @@ export const VisibilityDiagnosticModal: React.FC<VisibilityDiagnosticModalProps>
     setTimeout(() => setCopiedKey(null), 2000);
   };
 
+  const handleTestFileUrl = () => {
+    if (!customVerificationCode.trim()) {
+      setVerifyTestResult('Lütfen bir dosya adı veya kod girin (Örn: google123456789.html)');
+      return;
+    }
+    const cleanName = customVerificationCode.trim().replace(/^\//, '');
+    const fullUrl = `https://emirhanyilmaz.vercel.app/${cleanName}`;
+    setVerifyTestResult(`Doğrulama URL'si: ${fullUrl} — Gizli sekmede ziyaret edip "google-site-verification: ..." kodunun göründüğünü kontrol edebilirsiniz.`);
+  };
+
   if (!isOpen) return null;
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/80 backdrop-blur-md">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -61,70 +74,81 @@ export const VisibilityDiagnosticModal: React.FC<VisibilityDiagnosticModalProps>
               <div>
                 <div className="flex items-center gap-2">
                   <h2 className="text-base sm:text-lg font-bold text-white tracking-wide">
-                    {lang === 'tr' ? 'Arama Motoru & Yapay Zeka Görünürlük Teşhisi' : 'Search & Generative AI Visibility Diagnostic'}
+                    {lang === 'tr' ? 'Yönetici: Arama Motoru & İndeksleme Teşhis Paneli' : 'Admin: Search Engine & Indexing Diagnostics'}
                   </h2>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    SEO & GEO v2.5
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
+                    ÖZEL YÖNETİCİ GÖRÜNÜMÜ
                   </span>
                 </div>
                 <p className="text-xs text-neutral-400">
                   {lang === 'tr' 
-                    ? "Sitenizin Google dizinindeki konumu ve LLM özetleyicilerindeki (Perplexity, Gemini, ChatGPT) temsiliyet analizi" 
-                    : "Comprehensive indexing diagnostic for Google Search and Generative AI engines"}
+                    ? "Google Search Console sahiplik doğrulaması, sitemap kontrolü ve LLM görünürlüğü" 
+                    : "Google Search Console ownership verification, sitemap, and LLM visibility"}
                 </p>
               </div>
             </div>
 
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Navigation Tabs */}
-          <div className="flex items-center gap-2 px-6 pt-3 border-b border-white/5 bg-black/40 text-xs">
+          <div className="flex items-center gap-2 px-6 pt-3 border-b border-white/5 bg-black/40 text-xs overflow-x-auto">
             <button
               onClick={() => setActiveTab('diagnosis')}
-              className={`pb-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 ${
+              className={`pb-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 activeTab === 'diagnosis'
                   ? 'border-cyan-400 text-cyan-300'
                   : 'border-transparent text-neutral-400 hover:text-neutral-200'
               }`}
             >
               <Compass className="w-3.5 h-3.5" />
-              {lang === 'tr' ? 'Neden Henüz Görünmüyor? (Kök Nedenler)' : 'Why Is It Not Showing Yet?'}
+              {lang === 'tr' ? '1. Neden Görünmüyor? (Teşhis)' : '1. Root Cause Diagnosis'}
+            </button>
+            <button
+              onClick={() => setActiveTab('verification')}
+              className={`pb-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+                activeTab === 'verification'
+                  ? 'border-emerald-400 text-emerald-300 font-bold'
+                  : 'border-transparent text-neutral-400 hover:text-neutral-200'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              {lang === 'tr' ? '2. Search Console Sahiplik Doğrulama' : '2. Ownership Verification'}
             </button>
             <button
               onClick={() => setActiveTab('guide')}
-              className={`pb-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 ${
+              className={`pb-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 activeTab === 'guide'
                   ? 'border-cyan-400 text-cyan-300'
                   : 'border-transparent text-neutral-400 hover:text-neutral-200'
               }`}
             >
               <Zap className="w-3.5 h-3.5" />
-              {lang === 'tr' ? '3 Adımlı Hızlı İndeksleme Rehberi' : '3-Step Rapid Indexing Action Plan'}
+              {lang === 'tr' ? '3. Hızlı İndeksleme Adımları' : '3. Rapid Indexing Steps'}
             </button>
             <button
               onClick={() => setActiveTab('aiPreview')}
-              className={`pb-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 ${
+              className={`pb-3 px-3 font-medium transition-colors border-b-2 flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 activeTab === 'aiPreview'
-                  ? 'border-cyan-400 text-cyan-300'
+                  ? 'border-purple-400 text-purple-300'
                   : 'border-transparent text-neutral-400 hover:text-neutral-200'
               }`}
             >
               <Bot className="w-3.5 h-3.5" />
-              {lang === 'tr' ? 'Yapay Zeka (LLM) Nasıl Okuyor?' : 'How AI Engines Read You'}
+              {lang === 'tr' ? '4. LLM & Yapay Zeka Temsili (GEO)' : '4. AI Engine Readout'}
             </button>
           </div>
 
           {/* Body Content */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            {/* TAB 1: DIAGNOSIS */}
             {activeTab === 'diagnosis' && (
               <div className="space-y-6">
-                {/* Status Hero Card */}
                 <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-950/40 via-cyan-950/20 to-neutral-900 border border-cyan-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
@@ -135,7 +159,7 @@ export const VisibilityDiagnosticModal: React.FC<VisibilityDiagnosticModalProps>
                       Kod Tabanı SEO ve Yapay Zeka (GEO) İçin Tam Donanımlı
                     </h3>
                     <p className="text-xs text-neutral-300 leading-relaxed max-w-xl">
-                      Arama motorlarının ve yapay zeka modellerinin ihtiyaç duyduğu tüm teknik standartlar (Sitemap, Robots.txt, JSON-LD Schema Graph, LLMs.txt ve SSR Fallback) projeye entegre edildi. Görünürlüğün başlaması için sadece Google Search Console kaydı ve ilk tarama döngüsü gerekiyor.
+                      Arama motorlarının ve yapay zeka modellerinin ihtiyaç duyduğu tüm teknik standartlar (Sitemap, Robots.txt, JSON-LD Schema Graph, LLMs.txt ve Vercel SPA Yönlendirmeleri) projeye entegre edildi. Görünürlüğün başlaması için sadece Google Search Console sahiplik doğrulaması ve ilk tarama döngüsü gerekiyor.
                     </p>
                   </div>
                   <div className="flex sm:flex-col gap-2 shrink-0 w-full sm:w-auto">
@@ -162,23 +186,20 @@ export const VisibilityDiagnosticModal: React.FC<VisibilityDiagnosticModalProps>
                   </div>
                 </div>
 
-                {/* 4 Core Pillars of Non-Appearance */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Item 1 */}
-                  <div className="p-4 rounded-2xl bg-neutral-900/60 border border-white/5 hover:border-white/10 transition-all space-y-2">
+                  <div className="p-4 rounded-2xl bg-neutral-900/60 border border-white/5 space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
                         <Clock className="w-4 h-4" />
                       </div>
-                      <h4 className="text-sm font-semibold text-white">1. Google İndeksleme Süresi (Crawl Queue)</h4>
+                      <h4 className="text-sm font-semibold text-white">1. Google İndeksleme Sırası (Crawl Queue)</h4>
                     </div>
                     <p className="text-xs text-neutral-400 leading-relaxed">
-                      Yeni yayına alınan web siteleri Googlebot tarafından kendiliğinden hemen keşfedilmez. Google dizine ekleme süresi manuel talep edilmediğinde ortalama <strong className="text-neutral-200">2 ila 4 hafta</strong> sürebilir. Google Search Console ile bu süre <strong className="text-emerald-400">24-48 saate</strong> indirilebilir.
+                      Yeni yayına alınan siteler Googlebot tarafından kendiliğinden hemen dizine eklenmez. Manuel talep edilmediğinde ortalama 2 ila 4 hafta sürebilir. Search Console üzerinden mülk doğrulandığında bu süre 24-48 saate iner.
                     </p>
                   </div>
 
-                  {/* Item 2 */}
-                  <div className="p-4 rounded-2xl bg-neutral-900/60 border border-white/5 hover:border-white/10 transition-all space-y-2">
+                  <div className="p-4 rounded-2xl bg-neutral-900/60 border border-white/5 space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
                         <CheckCircle2 className="w-4 h-4" />
@@ -186,12 +207,11 @@ export const VisibilityDiagnosticModal: React.FC<VisibilityDiagnosticModalProps>
                       <h4 className="text-sm font-semibold text-white">2. SPA İstemci Taraflı Render Engeli Çözüldü</h4>
                     </div>
                     <p className="text-xs text-neutral-400 leading-relaxed">
-                      React siteleri ilk yüklemede boş HTML (<code className="text-cyan-300">&lt;div id=&quot;root&quot;&gt;</code>) verir. Arama botlarının JavaScript çalıştırmasını beklemeden tüm biyografi, uzmanlık ve projeleri okuyabilmesi için <strong className="text-neutral-200">semantik &lt;noscript&gt; ve JSON-LD grafiği</strong> eklendi.
+                      React SPA siteler ilk HTML yüklemesinde boş div verir. Botların beklemeden projeleri ve biyografiyi okuyabilmesi için noscript, OpenGraph kartları ve JSON-LD grafiği entegre edilmiştir.
                     </p>
                   </div>
 
-                  {/* Item 3 */}
-                  <div className="p-4 rounded-2xl bg-neutral-900/60 border border-white/5 hover:border-white/10 transition-all space-y-2">
+                  <div className="p-4 rounded-2xl bg-neutral-900/60 border border-white/5 space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
                         <Sparkles className="w-4 h-4" />
@@ -199,52 +219,153 @@ export const VisibilityDiagnosticModal: React.FC<VisibilityDiagnosticModalProps>
                       <h4 className="text-sm font-semibold text-white">3. Yapay Zeka Özetleri (GEO Standartları)</h4>
                     </div>
                     <p className="text-xs text-neutral-400 leading-relaxed">
-                      Google AI Overviews ve Perplexity, klasik anahtar kelimeler yerine <strong className="text-neutral-200">Varlık Otoritesi (Entity Authority)</strong> ve <code className="text-purple-300">llms.txt</code> protokolünü arar. Kimliğiniz, PDR ve Yapay Zeka entegrasyonu doğrudan yanıtlanabilir soru-cevap bloklarına dönüştürüldü.
+                      Google AI Overviews ve Perplexity, llms.txt ve varlık ilişkilerini (Entity Graph) okur. Aksaray PDR mezuniyeti, yapay zeka mühendisliği ve geliştirdiğiniz gerçek projeler llms.txt'de yapılandırılmıştır.
                     </p>
                   </div>
 
-                  {/* Item 4 */}
-                  <div className="p-4 rounded-2xl bg-neutral-900/60 border border-white/5 hover:border-white/10 transition-all space-y-2">
+                  <div className="p-4 rounded-2xl bg-neutral-900/60 border border-white/5 space-y-2">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
                         <Globe className="w-4 h-4" />
                       </div>
-                      <h4 className="text-sm font-semibold text-white">4. Alan Adı Otoritesi &amp; Geri Bağlantı (Backlink)</h4>
+                      <h4 className="text-sm font-semibold text-white">4. Alan Adı Otoritesi & Backlink</h4>
                     </div>
                     <p className="text-xs text-neutral-400 leading-relaxed">
-                      Google, bir sitenin spam olmadığını doğrulamak için dış referanslara bakar. GitHub profiliniz, LinkedIn profiliniz ve Medium gibi platformlarda web sitenizin linki yer aldığında indeks hızı ve arama sırası katlanarak yükselir.
+                      GitHub profiliniz (github.com/Emirhan0008) ve LinkedIn profilinizde web sitenizin linki (emirhanyilmaz.vercel.app) yer aldığında Googlebot güven puanını hemen artırır.
                     </p>
-                  </div>
-                </div>
-
-                {/* Quick Diagnostics Checklist */}
-                <div className="p-4 rounded-2xl bg-black/40 border border-white/5 space-y-3">
-                  <h4 className="text-xs font-semibold text-neutral-300 uppercase tracking-wider flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    Teknik Yapılandırma Kontrol Listesi (Tamamlandı)
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                    <div className="flex items-center gap-2 text-neutral-300">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      <span><strong>robots.txt:</strong> Googlebot & AI bot izinleri tam</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-neutral-300">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      <span><strong>sitemap.xml:</strong> 30 proje ve rotalar tanımlı</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-neutral-300">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      <span><strong>JSON-LD:</strong> Person, ProfilePage & FAQPage hazır</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-neutral-300">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                      <span><strong>llms.txt:</strong> Perplexity & Gemini kaynak dosyası hazır</span>
-                    </div>
                   </div>
                 </div>
               </div>
             )}
 
+            {/* TAB 2: OWNERSHIP VERIFICATION WIZARD */}
+            {activeTab === 'verification' && (
+              <div className="space-y-6">
+                <div className="space-y-1">
+                  <h3 className="text-sm sm:text-base font-semibold text-white flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    Google Search Console Sahiplik Doğrulaması Nedir?
+                  </h3>
+                  <p className="text-xs text-neutral-300 leading-relaxed">
+                    Sahiplik doğrulaması, <code className="text-emerald-300">https://emirhanyilmaz.vercel.app</code> sitesinin gerçek sahibi olduğunuzu Google'a kanıtlamaktır. Doğrulanmış sahip, Google Arama verilerini görüntüleyebilir, sayfa dizine ekleme talebi gönderebilir ve sitenin Google Search performansını yönetir.
+                  </p>
+                </div>
+
+                {/* Methods Comparison Table */}
+                <div className="p-4 rounded-2xl bg-neutral-900/70 border border-white/10 space-y-3">
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                    Önerilen Doğrulama Yöntemleri
+                  </h4>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="border-b border-white/10 text-neutral-400">
+                          <th className="py-2 px-3 font-semibold">Yöntem</th>
+                          <th className="py-2 px-3 font-semibold">Zorluk</th>
+                          <th className="py-2 px-3 font-semibold">Açıklama & Durum</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 text-neutral-300">
+                        <tr>
+                          <td className="py-2 px-3 font-bold text-emerald-300 flex items-center gap-1.5">
+                            <UploadCloud size={14} /> HTML Dosyası Yükleme
+                          </td>
+                          <td className="py-2 px-3 font-mono text-[11px] text-emerald-400">En Kolay</td>
+                          <td className="py-2 px-3">
+                            Search Console'dan indirilen <code className="text-white">google[kod].html</code> dosyasını sitenin kök dizinine (public klasörüne) ekleyip doğrulamak.
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 px-3 font-bold text-cyan-300 flex items-center gap-1.5">
+                            <Code2 size={14} /> HTML Meta Etiketi
+                          </td>
+                          <td className="py-2 px-3 font-mono text-[11px] text-cyan-400">Hızlı</td>
+                          <td className="py-2 px-3">
+                            <code className="text-white">&lt;meta name=&quot;google-site-verification&quot; content=&quot;...&quot;&gt;</code> etiketini index.html içine eklemek.
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="py-2 px-3 font-bold text-amber-300 flex items-center gap-1.5">
+                            <Globe size={14} /> Alan Adı Sağlayıcı (DNS)
+                          </td>
+                          <td className="py-2 px-3 font-mono text-[11px] text-amber-400">Orta</td>
+                          <td className="py-2 px-3">
+                            Özel alan adınız varsa (emirhanyilmaz.com vb.) DNS TXT kaydı ekleyerek tüm alt alan adlarını doğrulamak.
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Step-by-step HTML File Upload Guide */}
+                <div className="p-4 rounded-2xl bg-emerald-950/20 border border-emerald-500/30 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs sm:text-sm font-bold text-emerald-300 flex items-center gap-2">
+                      <UploadCloud size={16} /> 1. Adım: HTML Dosyası Yöntemi ile Doğrulama Adımları
+                    </h4>
+                    <a
+                      href="https://search.google.com/search-console"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-xs font-semibold flex items-center gap-1 cursor-pointer"
+                    >
+                      Search Console Aç <ExternalLink size={11} />
+                    </a>
+                  </div>
+
+                  <ol className="list-decimal list-inside space-y-2 text-xs text-neutral-300 leading-relaxed">
+                    <li>Google Search Console'a girin ve <strong>URL Ön Eki</strong> mülkü olarak <code className="text-white">https://emirhanyilmaz.vercel.app/</code> adresini yazın.</li>
+                    <li>Doğrulama seçeneklerinden <strong>HTML Dosyası</strong>'nı seçin ve Google'ın size özel oluşturduğu dosyayı (Örn: <code className="text-emerald-300">google1a2b3c4d5e6f.html</code>) indirin.</li>
+                    <li>Bu dosya projenin <code className="text-white">/public</code> klasörüne atıldığında Vercel üzerinden otomatik olarak <code className="text-emerald-300">https://emirhanyilmaz.vercel.app/google1a2b3c4d5e6f.html</code> URL'sinde yayına girer.</li>
+                    <li>Aşağıdaki test kutusuna dosya adınızı yazarak URL'nin hazır olup olmadığını kontrol edebilirsiniz.</li>
+                    <li>Search Console'a dönüp <strong>Doğrula</strong> butonuna tıklayın. Doğrulama anında yeşil onay alır!</li>
+                  </ol>
+
+                  {/* Interactive Verification URL Checker */}
+                  <div className="p-3 rounded-xl bg-black/60 border border-white/10 space-y-2 mt-3">
+                    <span className="text-[11px] font-bold text-neutral-300">
+                      Doğrulama Dosyası URL Test Edici:
+                    </span>
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <input
+                        type="text"
+                        placeholder="Örn: google4a872689c9fd64.html"
+                        value={customVerificationCode}
+                        onChange={(e) => setCustomVerificationCode(e.target.value)}
+                        className="flex-1 py-1.5 px-3 rounded-lg bg-white/5 border border-white/10 text-xs text-white placeholder-neutral-500 font-mono focus:outline-hidden focus:border-emerald-400"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleTestFileUrl}
+                        className="px-4 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs cursor-pointer transition-all"
+                      >
+                        URL Oluştur & Test Et
+                      </button>
+                    </div>
+
+                    {verifyTestResult && (
+                      <div className="p-2.5 rounded-lg bg-white/5 border border-emerald-500/30 text-xs text-emerald-300 font-mono break-all">
+                        {verifyTestResult}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Important Rules from Search Console Docs */}
+                <div className="p-3.5 rounded-xl bg-black/40 border border-white/5 space-y-1.5 text-xs text-neutral-400">
+                  <div className="font-semibold text-neutral-200">⚠️ Google Search Console Önemli Kurallar:</div>
+                  <ul className="list-disc list-inside space-y-1">
+                    <li>Doğrulama dosyasının yayında kalması gerekir. Kaldırılırsa sahiplik izinleri iptal edilir.</li>
+                    <li>Google Site Doğrulayıcı (Google-Site-Verification user agent) dosyayı doğrudan okur; yönlendirme (redirect) olmamalıdır.</li>
+                    <li>Verilerin Search Console panelinde görünmeye başlaması doğrulandıktan sonra 1-3 gün sürebilir.</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 3: RAPID INDEXING ACTION PLAN */}
             {activeTab === 'guide' && (
               <div className="space-y-5">
                 <div className="space-y-1">
@@ -280,7 +401,7 @@ export const VisibilityDiagnosticModal: React.FC<VisibilityDiagnosticModalProps>
                       <span className="flex-1 truncate">https://emirhanyilmaz.vercel.app/</span>
                       <button
                         onClick={() => copyToClipboard('https://emirhanyilmaz.vercel.app/', 'site_url')}
-                        className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-neutral-200 flex items-center gap-1 transition-colors"
+                        className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-neutral-200 flex items-center gap-1 transition-colors cursor-pointer"
                       >
                         {copiedKey === 'site_url' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                         {copiedKey === 'site_url' ? 'Kopyalandı' : 'Kopyala'}
@@ -304,7 +425,7 @@ export const VisibilityDiagnosticModal: React.FC<VisibilityDiagnosticModalProps>
                       <span className="flex-1 truncate">https://emirhanyilmaz.vercel.app/sitemap.xml</span>
                       <button
                         onClick={() => copyToClipboard('https://emirhanyilmaz.vercel.app/sitemap.xml', 'sitemap_url')}
-                        className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-neutral-200 flex items-center gap-1 transition-colors"
+                        className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs text-neutral-200 flex items-center gap-1 transition-colors cursor-pointer"
                       >
                         {copiedKey === 'sitemap_url' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                         {copiedKey === 'sitemap_url' ? 'Kopyalandı' : 'Kopyala'}
@@ -339,6 +460,7 @@ export const VisibilityDiagnosticModal: React.FC<VisibilityDiagnosticModalProps>
               </div>
             )}
 
+            {/* TAB 4: AI & LLM READOUT */}
             {activeTab === 'aiPreview' && (
               <div className="space-y-5">
                 <div className="space-y-1">
@@ -347,11 +469,10 @@ export const VisibilityDiagnosticModal: React.FC<VisibilityDiagnosticModalProps>
                     Yapay Zeka (Perplexity, ChatGPT, Gemini) Canlı Simülasyonu
                   </h3>
                   <p className="text-xs text-neutral-400">
-                    Sitenizin yeni <code className="text-purple-300">/llms.txt</code> ve <code className="text-cyan-300">FAQPage JSON-LD</code> yapısı sayesinde, yapay zekaya "Emirhan Yılmaz kimdir?" sorulduğunda üretilecek olan ideal özet:
+                    Sitenizin yeni <code className="text-purple-300">/llms.txt</code> ve semantik JSON-LD yapısı sayesinde, yapay zekaya &quot;Emirhan Yılmaz kimdir ve hangi projeleri yapmıştır?&quot; sorulduğunda üretilecek olan ideal özet:
                   </p>
                 </div>
 
-                {/* AI Mock Response Bubble */}
                 <div className="p-5 rounded-2xl bg-neutral-900/90 border border-purple-500/30 shadow-lg shadow-purple-500/5 space-y-3">
                   <div className="flex items-center justify-between pb-3 border-b border-white/10">
                     <div className="flex items-center gap-2">
@@ -367,30 +488,31 @@ export const VisibilityDiagnosticModal: React.FC<VisibilityDiagnosticModalProps>
 
                   <div className="text-xs text-neutral-200 leading-relaxed space-y-2">
                     <p>
-                      <strong>Emirhan Yılmaz</strong>, Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık (PDR) mezunu bir psikolojik danışman ve aynı zamanda yapay zeka & yazılım mimarıdır. 3 yıllık özel eğitim saha tecrübesine sahip olup; insan psikolojisini modern LLM teknolojileri, multimodal görüntü analizi ve Python otomasyonlarıyla birleştirmektedir.
+                      <strong>Emirhan Yılmaz</strong>, Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık (PDR) mezunu bir psikolojik danışman ve aynı zamanda yapay zeka & tam yığın web geliştiricisidir. Çok disiplinli projelerinde insan odaklı yaklaşımları modern LLM teknolojileri, multimodal görüntü analizi, 3D web grafik motorları ve Python otomasyonlarıyla birleştirmektedir.
                     </p>
                     <p>
-                      <strong>Öne Çıkan Çalışmaları:</strong>
+                      <strong>Gerçek ve Doğrulanmış Projeleri:</strong>
                     </p>
                     <ul className="list-disc list-inside space-y-1 text-neutral-300 pl-1">
-                      <li><strong>MindFlow & PsyBot:</strong> Terapötik bilişsel davranışçı destek ve duygu regülasyonu sağlayan yapay zeka asistanları.</li>
-                      <li><strong>Empathy Canvas (AAC):</strong> Otizmli ve konuşma zorluğu çeken bireyler için alternatif iletişim panoları.</li>
-                      <li><strong>AbleUp:</strong> Nöroçeşitli bireyler için geliştirilmiş kapsayıcı istihdam ağı.</li>
+                      <li><strong>3DCoğrafya:</strong> Three.js ve WebGL ile Türkiye haritası ve coğrafi katmanları 3 boyutlu küre üzerinde görselleştiren interaktif eğitim platformu.</li>
+                      <li><strong>AbleUp:</strong> Nöroçeşitli bireyler ve dezavantajlı gruplar için geliştirilmiş erişilebilir istihdam ve staj eşleştirme sistemi.</li>
+                      <li><strong>Hece Çizme Gemini:</strong> Gemini Vision multimodal modeli ile el yazısını tanıyıp heceleme ve disleksi eğitim desteği sunan web aracı.</li>
+                      <li><strong>Ders Takip Pomodoro:</strong> PySide6 (Qt6) ile geliştirilmiş, dikkat dağınıklığını önleyen masaüstü çalışma takibi aracı.</li>
+                      <li><strong>Evrak-Kanban:</strong> Kurumsal doküman ve resmi yazıların onay akışını takip eden görsel iş yönetimi panosu.</li>
                     </ul>
                   </div>
 
                   <div className="pt-2 flex items-center gap-2 text-[11px] text-neutral-400">
                     <span className="font-semibold text-neutral-300">Alıntılanan Kaynaklar:</span>
                     <span className="px-2 py-0.5 rounded bg-white/5 border border-white/5 text-cyan-300">/llms.txt</span>
-                    <span className="px-2 py-0.5 rounded bg-white/5 border border-white/5 text-purple-300">Schema.org Person Graph</span>
+                    <span className="px-2 py-0.5 rounded bg-white/5 border border-white/5 text-purple-300">Schema.org Person & ProfilePage Graph</span>
                   </div>
                 </div>
 
-                {/* Direct Action */}
                 <div className="flex items-center justify-between p-3.5 rounded-xl bg-purple-950/20 border border-purple-500/20">
                   <div className="text-xs">
-                    <span className="font-semibold text-purple-300">llms.txt dosyasını görüntülemek ister misiniz?</span>
-                    <p className="text-[11px] text-neutral-400">Yapay zeka modellerinin okuduğu ham Markdown içeriğini doğrudan inceleyin.</p>
+                    <span className="font-semibold text-purple-300">llms.txt dosyasını görüntüleyin:</span>
+                    <p className="text-[11px] text-neutral-400">Yapay zeka botlarının siteniz hakkında okuduğu ham Markdown içeriğini inceleyin.</p>
                   </div>
                   <a
                     href="/llms.txt"
@@ -414,7 +536,7 @@ export const VisibilityDiagnosticModal: React.FC<VisibilityDiagnosticModalProps>
             </div>
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors"
+              className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors cursor-pointer"
             >
               Kapat
             </button>

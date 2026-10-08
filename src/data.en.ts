@@ -44,16 +44,17 @@ export const projectsEn: Record<string, Partial<Project>> = {
       "Dark/Light theme, celebratory confetti and responsive sidebar"
     ],
     caseStudy: {
-      challenge: "Aspirants preparing for competitive national exams experienced severe test anxiety and burnout due to scattered study records and ambiguous weak-point visibility.",
-      role: "Applying GPC counseling protocols for test anxiety, I engineered a progress visualization architecture that restored perceived control and structured spaced reviews.",
+      challenge: "Aspirants preparing for competitive national exams faced difficulties systematically analyzing exam outcomes, weak points, and revision trends across subjects.",
+      role: "Full-Stack Web Developer",
+      contribution: "Solo Developer: End-to-end implementation including Recharts analytics, Zustand state management, official syllabus tree, and offline-first localStorage architecture.",
       solution: "Built with Next.js 14, React 18, TypeScript, Recharts, and Zustand with offline-first localStorage, curriculum mastery trees, and dynamic performance curves.",
-      impact: "Cut student diagnostic time in half; tangible visible milestones yielded quantifiable improvements in study consistency and exam resilience.",
+      impact: "Cut student diagnostic time in half; tangible visible milestones yielded quantifiable improvements in study consistency.",
       metrics: ["Recharts Visual Analytics", "Full Curriculum Tree", "Offline-First Reliability"]
     }
   },
   "anti-ai-quiz": {
     title: "Anti-AI Quiz",
-    category: "AI & Psychology",
+    category: "AI & Web Security",
     description: "An exam-security quiz canvas disrupting OCR and vision models via adversarial noise, text warping, and anti-cheating heuristics.",
     longDescription: "An exploration into preventing automated AI solver abuse: letters are rendered with random slopes on HTML5 Canvas overlaid with pixel noise and hidden prompt-injection fragments. Restricts PrintScreen, DevTools, right-click, and window blur events.",
     highlights: [
@@ -62,8 +63,9 @@ export const projectsEn: Record<string, Partial<Project>> = {
       "Zero-dependency single-file architecture"
     ],
     caseStudy: {
-      challenge: "Widespread cheating via screenshots and OCR/vision LLMs compromised the integrity and validity of online psychoeducational assessments.",
-      role: "Synthesized psychometric measurement integrity with AI reverse engineering to build an adversarial visual defense that confounds automated solvers.",
+      challenge: "Widespread cheating via screenshots and OCR/vision LLMs compromised the integrity and validity of online assessments and tests.",
+      role: "AI Security & Frontend Developer",
+      contribution: "Solo Developer: Engineered adversarial font rendering, Canvas 2D jitter algorithms, and anti-tamper DevTools detection in a single zero-dependency file.",
       solution: "Questions rendered dynamically on HTML5 Canvas 2D with randomized character glyph slopes, micro-pixel jitter, and hidden prompt injections with browser event monitoring.",
       impact: "Defeated vision models and traditional OCR engines with a 94% degradation in automated text extraction without impacting human legibility.",
       metrics: ["94% OCR Disruption", "Zero External Dependencies", "Sub-millisecond Canvas Render"]

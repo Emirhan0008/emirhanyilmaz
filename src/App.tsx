@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, FormEvent, UIEvent } from 'react';
+import { useState, useEffect, useMemo, useRef, FormEvent, UIEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, 
@@ -22,6 +22,7 @@ import {
   Send,
   Upload,
   Copy,
+  Share2,
   Lock,
   Shield,
   Eye,
@@ -74,6 +75,7 @@ import { ProjectEstimator } from './components/ProjectEstimator';
 import { MediaKitModal } from './components/MediaKitModal';
 import { VisibilityDiagnosticModal } from './components/VisibilityDiagnosticModal';
 import { TechRadar } from './components/TechRadar';
+import { GmailContactModal } from './components/GmailContactModal';
 import { MeltingCanvasEffect } from './components/MeltingCanvasEffect';
 import { soundEngine, PEACEFUL_TRACKS, MusicTrack } from './utils/audioSynth';
 import { ThemeToggle, AppTheme } from './components/ThemeToggle';
@@ -151,6 +153,7 @@ export default function App() {
    const [contactSuccessMessage, setContactSuccessMessage] = useState<string | null>(null);
    const [showMediaKitModal, setShowMediaKitModal] = useState(false);
    const [showVisibilityModal, setShowVisibilityModal] = useState(false);
+   const [showGmailModal, setShowGmailModal] = useState(false);
    const [heroParallax, setHeroParallax] = useState({ x: 0, y: 0 });
    const [copiedEmail, setCopiedEmail] = useState(false);
    const [inboxMessages, setInboxMessages] = useState<ContactMessage[]>([]);
@@ -1110,6 +1113,107 @@ export default function App() {
     ? mappedArticles.find(a => a.id === selectedArticle.id) || selectedArticle
     : null;
 
+  // PushState / Popstate HTML5 Routing & Deep-Linking System
+  const isPopStateRef = useRef(false);
+
+  // 1. Initial route resolution & popstate listener for back/forward navigation
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleRouteFromLocation = () => {
+      const pathname = window.location.pathname.replace(/\/+$/, '') || '/';
+      const hash = window.location.hash.toLowerCase();
+
+      if (hash === '#admin' || hash === '#login') {
+        if (!isAdmin) setShowAdminModal(true);
+      }
+
+      if (pathname === '/projects') {
+        setActiveTab('projects');
+        setSelectedProject(null);
+        document.title = `Projeler — ${profile.name} | Portfolyo`;
+      } else if (pathname.startsWith('/projects/')) {
+        const pId = decodeURIComponent(pathname.replace('/projects/', '').trim());
+        const found = mappedProjects.find(p => p.id === pId || p.id.toLowerCase() === pId.toLowerCase());
+        setActiveTab('projects');
+        if (found) {
+          setSelectedProject(found);
+          document.title = `${found.title} — ${profile.name} | Projeler`;
+        }
+      } else if (pathname === '/articles') {
+        setActiveTab('articles');
+        setSelectedArticle(null);
+        document.title = `Makaleler & Yazılar — ${profile.name}`;
+      } else if (pathname.startsWith('/articles/')) {
+        const aId = decodeURIComponent(pathname.replace('/articles/', '').trim());
+        const found = mappedArticles.find(a => a.id === aId || a.id.toLowerCase() === aId.toLowerCase());
+        setActiveTab('articles');
+        if (found) {
+          setSelectedArticle(found);
+          document.title = `${found.title} — ${profile.name} | Makaleler`;
+        }
+      } else if (pathname === '/contact') {
+        setActiveTab('contact');
+        setSelectedProject(null);
+        setSelectedArticle(null);
+        document.title = `İletişim — ${profile.name}`;
+      } else if (pathname === '/' || pathname === '/profile') {
+        setActiveTab('profile');
+        setSelectedProject(null);
+        setSelectedArticle(null);
+        document.title = `${profile.name} — ${profile.title}`;
+      }
+    };
+
+    handleRouteFromLocation();
+
+    const onPopState = () => {
+      isPopStateRef.current = true;
+      handleRouteFromLocation();
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [mappedProjects, mappedArticles, isAdmin, profile.name, profile.title]);
+
+  // 2. Continuous URL state synchronization on tab / detail changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (isPopStateRef.current) {
+      isPopStateRef.current = false;
+      return;
+    }
+
+    let targetPath = '/';
+    let targetTitle = `${profile.name} — ${profile.title}`;
+
+    if (selectedProject) {
+      targetPath = `/projects/${selectedProject.id}`;
+      targetTitle = `${selectedProject.title} — ${profile.name} | Projeler`;
+    } else if (selectedArticle) {
+      targetPath = `/articles/${selectedArticle.id}`;
+      targetTitle = `${selectedArticle.title} — ${profile.name} | Makaleler`;
+    } else if (activeTab === 'projects') {
+      targetPath = '/projects';
+      targetTitle = `Projeler — ${profile.name} | Portfolyo`;
+    } else if (activeTab === 'articles') {
+      targetPath = '/articles';
+      targetTitle = `Makaleler — ${profile.name}`;
+    } else if (activeTab === 'contact') {
+      targetPath = '/contact';
+      targetTitle = `İletişim — ${profile.name}`;
+    } else {
+      targetPath = '/';
+      targetTitle = `${profile.name} — ${profile.title}`;
+    }
+
+    if (window.location.pathname !== targetPath) {
+      window.history.pushState(null, '', targetPath);
+    }
+    document.title = targetTitle;
+  }, [activeTab, selectedProject, selectedArticle, profile.name, profile.title]);
+
   const getPreparedMessage = () => {
     const parts: string[] = [];
     if (formData.name) parts.push(`Ad Soyad: ${formData.name}`);
@@ -1941,7 +2045,7 @@ export default function App() {
                   transition={{ duration: 0.3 }}
                   className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1.5 min-h-0 select-text"
                 >
-                  {/* Top Bar Navigation with Geri Dön button */}
+                  {/* Top Bar Navigation with Geri Dön button & Direct URL Sharing */}
                   <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/10 shrink-0 sticky top-0 bg-black/60 backdrop-blur-md z-20 py-1">
                     <button
                       onClick={() => {
@@ -1949,13 +2053,31 @@ export default function App() {
                         setSelectedProject(null);
                       }}
                       className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs transition-all border border-emerald-400/40 cursor-pointer hover:scale-105 active:scale-95 shadow-md group"
-                      title={lang === 'tr' ? "Profile Geri Dön" : "Back to Profile"}
+                      title={lang === 'tr' ? "Geri Dön" : "Back"}
                     >
                       <ArrowLeft size={14} className="text-emerald-400 group-hover:-translate-x-0.5 transition-transform" />
-                      <span>{lang === 'tr' ? 'Geri (Profile Dön)' : 'Back to Profile'}</span>
+                      <span>{lang === 'tr' ? (activeTab === 'projects' ? 'Geri (Projeler)' : 'Geri (Profil)') : 'Back'}</span>
                     </button>
 
                     <div className="flex items-center gap-2">
+                      {/* Direct Project URL Copy Button */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundEngine.playGlassClick();
+                          const shareUrl = `https://emirhanyilmaz.vercel.app/projects/${currentSelectedProject.id}`;
+                          navigator.clipboard?.writeText(shareUrl);
+                          setAdminToastMessage(lang === 'tr' ? `🔗 Proje bağlantısı kopyalandı:\n${shareUrl}` : `🔗 URL copied:\n${shareUrl}`);
+                          setShowAdminToast(true);
+                          setTimeout(() => setShowAdminToast(false), 3000);
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 font-bold text-xs transition-all cursor-pointer"
+                        title={lang === 'tr' ? "Doğrudan proje linkini kopyala" : "Copy direct project link"}
+                      >
+                        <Share2 size={12} className="text-emerald-400" />
+                        <span className="hidden sm:inline">{lang === 'tr' ? 'Bağlantıyı Kopyala' : 'Share'}</span>
+                      </button>
+
                       <div className="flex items-center gap-1 bg-black/40 p-1 rounded-full border border-white/10">
                         <button
                           onClick={handlePrevProject}
@@ -1992,7 +2114,7 @@ export default function App() {
                     <h2 className="text-2xl font-extrabold tracking-tight mt-0.5 text-white">{currentSelectedProject.title}</h2>
                   </div>
 
-                  {/* Mode Switcher: Vaka Hikayesi vs Görseller & Detaylar */}
+                  {/* Mode Switcher: Mimari Çözüm vs Görseller & Detaylar */}
                   <div className="flex items-center gap-1.5 p-1 bg-white/5 border border-white/10 rounded-xl shrink-0">
                     <button
                       type="button"
@@ -2006,11 +2128,11 @@ export default function App() {
                           : 'text-white/70 hover:text-white hover:bg-white/5'
                       }`}
                     >
-                      <BookOpen size={13} />
-                      <span>{lang === 'tr' ? 'Vaka Hikayesi & Katkı' : 'Case Study & Story'}</span>
+                      <Layers size={13} />
+                      <span>{lang === 'tr' ? 'Mimari Çözüm & Detaylar' : 'Architecture & Specs'}</span>
                       {currentSelectedProject.caseStudy && (
                         <span className={`text-[9px] px-1.5 py-0.2 rounded font-mono font-extrabold ${projectDetailTab === 'casestudy' ? 'bg-black/25 text-black' : 'bg-emerald-500/25 text-emerald-300'}`}>
-                          ★ {lang === 'tr' ? 'Hikaye' : 'Story'}
+                          ★ {lang === 'tr' ? 'Detay' : 'Specs'}
                         </span>
                       )}
                     </button>
@@ -2032,13 +2154,16 @@ export default function App() {
                   </div>
 
                   {projectDetailTab === 'casestudy' ? (
-                    /* CASE STUDY STORY VIEW */
+                    /* ARCHITECTURE & SOLUTION VIEW */
                     <div className="space-y-3.5">
                       {/* Teaser Highlight Box */}
                       <div className="p-3.5 rounded-2xl bg-gradient-to-br from-emerald-950/50 via-teal-950/30 to-black/60 border border-emerald-500/30 space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-extrabold flex items-center gap-1.5">
-                            <Sparkles size={11} /> {lang === 'tr' ? 'PDR & YAZILIM HİBRİT VAKA ANALİZİ' : 'PSYCHOLOGY & AI CASE STUDY'}
+                            <Sparkles size={11} />
+                            {currentSelectedProject.category.includes('Özel Eğitim') || currentSelectedProject.category.includes('PDR')
+                              ? (lang === 'tr' ? 'HİBRİT PEDAGOJİ & YAZILIM ÇÖZÜMÜ' : 'HYBRID PEDAGOGY & SOFTWARE')
+                              : (lang === 'tr' ? 'YAZILIM MİMARİSİ & ÇÖZÜM DETAYI' : 'TECHNICAL ARCHITECTURE & SOLUTION')}
                           </span>
                           {currentSelectedProject.demoUrl && (
                             <span className="text-[9px] text-emerald-300 font-mono font-bold flex items-center gap-1">
@@ -2071,8 +2196,8 @@ export default function App() {
                         </div>
                         <p className="text-xs text-white/95 font-semibold leading-relaxed">
                           {currentSelectedProject.caseStudy?.role || (lang === 'tr' 
-                            ? "Full-Stack Web Mimarı & Bilişsel UX Tasarımcısı" 
-                            : "Full-Stack Web Architect & Cognitive UX Designer")}
+                            ? "Full-Stack Yazılım Geliştirici" 
+                            : "Full-Stack Software Developer")}
                         </p>
                       </div>
 
@@ -2471,17 +2596,37 @@ export default function App() {
                         setSelectedArticle(null);
                       }}
                       className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white font-extrabold text-xs transition-all border border-emerald-400/40 cursor-pointer hover:scale-105 active:scale-95 shadow-md group"
-                      title={lang === 'tr' ? "Profile Geri Dön" : "Back to Profile"}
+                      title={lang === 'tr' ? "Geri Dön" : "Back"}
                     >
                       <ArrowLeft size={14} className="text-emerald-400 group-hover:-translate-x-0.5 transition-transform" />
-                      <span>{lang === 'tr' ? 'Geri (Profile Dön)' : 'Back to Profile'}</span>
+                      <span>{lang === 'tr' ? (activeTab === 'articles' ? 'Geri (Makaleler)' : 'Geri (Profil)') : 'Back'}</span>
                     </button>
-                    <button
-                      onClick={() => setSelectedArticle(null)}
-                      className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all border border-white/10 cursor-pointer"
-                    >
-                      <X size={14} />
-                    </button>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundEngine.playGlassClick();
+                          const shareUrl = `https://emirhanyilmaz.vercel.app/articles/${currentSelectedArticle.id}`;
+                          navigator.clipboard?.writeText(shareUrl);
+                          setAdminToastMessage(lang === 'tr' ? `🔗 Makale bağlantısı kopyalandı:\n${shareUrl}` : `🔗 URL copied:\n${shareUrl}`);
+                          setShowAdminToast(true);
+                          setTimeout(() => setShowAdminToast(false), 3000);
+                        }}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 font-bold text-xs transition-all cursor-pointer"
+                        title={lang === 'tr' ? "Makale linkini kopyala" : "Copy article link"}
+                      >
+                        <Share2 size={12} className="text-emerald-400" />
+                        <span className="hidden sm:inline">{lang === 'tr' ? 'Bağlantıyı Kopyala' : 'Share'}</span>
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedArticle(null)}
+                        className="w-7 h-7 rounded-full bg-white/5 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all border border-white/10 cursor-pointer"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-4">
@@ -2718,8 +2863,8 @@ export default function App() {
                         className="inline-flex items-center gap-2.5 pl-4 pr-3 py-2 bg-gradient-to-r from-emerald-600/50 via-teal-500/40 to-emerald-500/50 hover:from-emerald-500/70 hover:to-teal-400/60 border border-emerald-400/80 rounded-full text-xs sm:text-sm font-extrabold text-white transition-all group active:scale-95 cursor-pointer relative shadow-lg"
                         id="cta-explore-projects"
                       >
-                        <BookOpen size={14} className="text-emerald-300" />
-                        <span>{lang === 'tr' ? 'Vaka Hikayelerini İncele' : 'Explore Case Studies'}</span>
+                        <Code2 size={14} className="text-emerald-300" />
+                        <span>{lang === 'tr' ? 'Projeleri İncele' : 'Explore Projects'}</span>
                         <ArrowRight size={13} className="text-emerald-300 group-hover:translate-x-0.5 transition-transform" />
                       </motion.button>
 
@@ -3390,8 +3535,8 @@ export default function App() {
                               : 'text-emerald-300 border-emerald-500/40 hover:text-white hover:bg-emerald-500/20'
                           }`}
                         >
-                          <BookOpen size={10} />
-                          <span>{lang === 'tr' ? '📖 Vaka Hikayeleri' : '📖 Case Studies'}</span>
+                          <Layers size={10} />
+                          <span>{lang === 'tr' ? '💎 Mimari Detaylı' : '💎 In-Depth Specs'}</span>
                         </button>
                         {[
                           { id: 'Tümü', label: t.filter.categories.all },
@@ -3471,8 +3616,8 @@ export default function App() {
                             {lang === 'tr' ? 'Aktif Filtreler:' : 'Active Filters:'}
                           </span>
                           {caseStudyOnlyFilter && (
-                            <span className="px-2 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-[10px] font-bold text-emerald-300 flex items-center gap-1">
-                              📖 {lang === 'tr' ? 'Vaka Hikayeleri' : 'Case Studies'}
+                            <span className="px-2.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-[10px] font-bold text-emerald-300 flex items-center gap-1">
+                              💎 {lang === 'tr' ? 'Mimari Detaylı' : 'In-Depth Specs'}
                               <button onClick={() => setCaseStudyOnlyFilter(false)} className="hover:text-red-400">×</button>
                             </span>
                           )}
@@ -3634,7 +3779,7 @@ export default function App() {
                               )}
                               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3">
                                 <span className="text-[10px] text-white font-bold inline-flex items-center gap-1">
-                                  {project.caseStudy ? (lang === 'tr' ? 'Vaka Hikayesini Oku' : 'Read Case Study') : t.projectCard.details} <ChevronRight size={10} />
+                                  {lang === 'tr' ? 'Projeyi İncele' : 'View Project'} <ChevronRight size={10} />
                                 </span>
                                 {project.demoUrl && (
                                   <a
@@ -3656,8 +3801,8 @@ export default function App() {
                                   <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-extrabold truncate">{project.category}</span>
                                   {project.caseStudy ? (
                                     <span className="text-[9px] text-emerald-300 font-bold flex items-center gap-1 bg-emerald-950/80 border border-emerald-500/40 px-1.5 py-0.5 rounded shrink-0">
-                                      <BookOpen size={9} className="text-emerald-400" />
-                                      <span>{lang === 'tr' ? 'Vaka Analizi' : 'Case Study'}</span>
+                                      <Layers size={9} className="text-emerald-400" />
+                                      <span>{lang === 'tr' ? 'Mimari Detay' : 'Architecture'}</span>
                                     </span>
                                   ) : project.demoUrl ? (
                                     <span className="text-[9px] text-emerald-400 font-bold flex items-center gap-0.5 shrink-0">
@@ -3670,7 +3815,7 @@ export default function App() {
                                 </h3>
                               </div>
 
-                              {/* Low-Click: 4-Point Case Study Essence directly visible */}
+                              {/* 3-Point Technical Architecture Summary directly visible */}
                               <div className="space-y-1 p-2 rounded-xl bg-black/40 border border-white/5 text-[11px]">
                                 <div className="flex items-start gap-1.5 text-white/90 leading-tight">
                                   <span className="text-[9px] font-bold text-rose-400 uppercase tracking-wider shrink-0 mt-0.5">
@@ -3682,15 +3827,15 @@ export default function App() {
                                 </div>
                                 <div className="flex items-start gap-1.5 text-white/90 leading-tight">
                                   <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider shrink-0 mt-0.5">
-                                    {lang === 'tr' ? 'Rol & Katkı:' : 'Role & Team:'}
+                                    {lang === 'tr' ? 'Rol & Ekip:' : 'Role & Team:'}
                                   </span>
                                   <p className="line-clamp-1 text-amber-200/90 font-medium">
-                                    {project.caseStudy?.role || (lang === 'tr' ? 'Full-Stack & Bilişsel Mimari' : 'Full-Stack & AI Architecture')} {project.caseStudy?.contribution ? `(${project.caseStudy.contribution.split(':')[0]})` : `(${lang === 'tr' ? 'Bireysel Ekip' : 'Solo'})`}
+                                    {project.caseStudy?.role || (lang === 'tr' ? 'Full-Stack Geliştirici' : 'Full-Stack Developer')} {project.caseStudy?.contribution ? `(${project.caseStudy.contribution.split(':')[0]})` : `(${lang === 'tr' ? 'Bireysel' : 'Solo'})`}
                                   </p>
                                 </div>
                                 <div className="flex items-start gap-1.5 text-white/95 leading-tight">
                                   <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider shrink-0 mt-0.5">
-                                    {lang === 'tr' ? 'Sonuç:' : 'Result:'}
+                                    {lang === 'tr' ? 'Çözüm / Sonuç:' : 'Result:'}
                                   </span>
                                   <p className="line-clamp-1 text-emerald-300/90 font-medium">
                                     {project.caseStudy?.impact || project.highlights[0] || project.description}
@@ -4282,6 +4427,19 @@ export default function App() {
 
                             <button 
                               type="button"
+                              onClick={() => {
+                                soundEngine.playGlassClick();
+                                setShowGmailModal(true);
+                              }}
+                              className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-red-600/30 to-amber-600/20 hover:from-red-600/40 hover:to-amber-600/30 border border-red-500/40 text-red-200 hover:text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md"
+                              title={lang === 'tr' ? "Resmi Gmail API veya Gmail Web ile doğrudan gönderin" : "Send with official Gmail API or Web Gmail"}
+                            >
+                              <Mail size={14} className="text-red-400" />
+                              <span>{lang === 'tr' ? 'Gmail ile Gönder' : 'Send via Gmail'}</span>
+                            </button>
+
+                            <button 
+                              type="button"
                               onClick={handleWhatsAppOpen}
                               className="py-2.5 px-3 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md shadow-emerald-950/40"
                               title={lang === 'tr' ? "Mesajı WhatsApp üzerinden de açar" : "Opens prepared message in WhatsApp"}
@@ -4318,7 +4476,7 @@ export default function App() {
                     </div>
 
                     {/* Quick Access Channel Pills */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 pt-1">
                       <a
                         href={profile.github || "https://github.com/Emirhan0008"}
                         target="_blank"
@@ -4330,6 +4488,19 @@ export default function App() {
                         <span className="truncate font-mono">GitHub</span>
                         <ExternalLink size={10} className="text-white/40 ml-auto shrink-0 group-hover:text-white" />
                       </a>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundEngine.playGlassClick();
+                          setShowGmailModal(true);
+                        }}
+                        className="p-2.5 rounded-xl bg-red-950/40 hover:bg-red-900/40 border border-red-500/30 flex items-center gap-2 text-xs text-red-200 hover:text-white font-bold transition-all hover:scale-102 cursor-pointer group"
+                        title="Gmail ile Doğrudan İletişim"
+                      >
+                        <Mail size={13} className="text-red-400 shrink-0" />
+                        <span className="truncate">Gmail (API)</span>
+                      </button>
 
                       <button
                         type="button"
@@ -4359,7 +4530,7 @@ export default function App() {
                       <button
                         type="button"
                         onClick={handleWhatsAppOpen}
-                        className="p-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-500/20 flex items-center gap-2 text-xs text-emerald-300 font-bold transition-all hover:scale-102 cursor-pointer"
+                        className="p-2.5 rounded-xl bg-emerald-950/40 hover:bg-emerald-900/40 border border-emerald-500/20 flex items-center gap-2 text-xs text-emerald-300 font-bold transition-all hover:scale-102 cursor-pointer col-span-2 sm:col-span-1"
                         title={lang === 'tr' ? "Hazırlanan mesajla WhatsApp uygulamasını açar" : "Opens WhatsApp with drafted message"}
                       >
                         <Phone size={13} className="text-emerald-400 shrink-0" />
@@ -4593,6 +4764,19 @@ export default function App() {
       <VisibilityDiagnosticModal
         isOpen={showVisibilityModal}
         onClose={() => setShowVisibilityModal(false)}
+        lang={lang}
+      />
+
+      {/* Official Gmail Workspace Send Modal */}
+      <GmailContactModal
+        isOpen={showGmailModal}
+        onClose={() => setShowGmailModal(false)}
+        targetEmail={profile.email || 'emirhan0008@gmail.com'}
+        senderName={formData.name}
+        senderCompany={formData.company}
+        senderEmail={formData.email}
+        messageContent={formData.message}
+        intentSubject={contactSubject || 'İletişim Talebi'}
         lang={lang}
       />
 

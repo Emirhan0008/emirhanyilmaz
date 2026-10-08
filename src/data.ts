@@ -67,11 +67,11 @@ export const projects: Project[] = [
       "Koyu/aydınlık tema, confetti kutlama ve akıllı sidebar"
     ],
     "caseStudy": {
-      "challenge": "KPSS hazırlık sürecinde adaylar dağınık deneme notları ve konu belirsizliği yüzünden yoğun sınav kaygısı (test anxiety) ve bilişsel tükenmişlik yaşıyordu.",
-      "role": "Full-Stack Web Mimarı & PDR Danışmanı",
-      "contribution": "Bireysel Geliştirici (1 Kişilik Ekip): Sınav kaygısı azaltıcı UX akışı, Recharts görselleştirme mimarisi, Zustand durum yönetimi ve offline-first localStorage entegrasyonu uçtan uca tek başına kodlandı.",
-      "solution": "Next.js 14, React 18, TypeScript, Recharts ve Zustand ile müfredata birebir uygun konu ağacı, net analiz grafikleri ve offline-first localStorage kalıcılığı inşa edildi.",
-      "impact": "Adayların konu eksiklerini tespit süresi yarıya indi; düzenli ilerleme hissi sayesinde çalışma tutarlılığı ve motivasyonu ölçülebilir şekilde arttı.",
+      "challenge": "KPSS hazırlık sürecinde adayların deneme sonuçlarını, konu bazlı net değişimlerini ve eksiklerini tek panelden düzenli ve grafiklerle takip edememesi.",
+      "role": "Full-Stack Web Geliştirici",
+      "contribution": "Bireysel Geliştirici (Tek Kişilik Ekip): Recharts görselleştirme mimarisi, Zustand durum yönetimi, tam müfredat konu ağacı ve offline-first localStorage entegrasyonu uçtan uca kodlandı.",
+      "solution": "Next.js 14, React 18, TypeScript, Recharts ve Zustand ile müfredata birebir uygun konu ağacı, net analiz grafikleri ve hızlı lokal veri kalıcılığı inşa edildi.",
+      "impact": "Adayların konu eksiklerini tespit süresi yarıya indi; net gelişim grafikleriyle çalışma disiplini ve analitik takip sağlandı.",
       "metrics": ["Recharts Görselleştirme", "Tam Müfredat Ağacı", "Offline-First Güvenilirlik"]
     },
     "deploy": "",
@@ -83,7 +83,7 @@ export const projects: Project[] = [
   {
     "id": "anti-ai-quiz",
     "title": "Anti-AI Quiz",
-    "category": "Yapay Zeka & Psikoloji",
+    "category": "Yapay Zeka & Web Güvenliği",
     "description": "Soruları canvas üzerinde adversarial gürültüyle çizerek OCR ve vision modellerini bozan, sınav güvenliği katmanlı quiz platformu.",
     "longDescription": "Yapay zekâ çözemesin fikrinden yola çıkan tek dosyalık quiz denemesi: soru harfleri rastgele eğim/kayma ile canvas'a çizilir, piksel gürültü ve gizli prompt-injection metinleri bindirilir. PrintScreen, DevTools, sağ tık ve odak kaybı gibi davranışlar ceza mekanizmasıyla engellenir.",
     "image": "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&q=80",
@@ -99,9 +99,9 @@ export const projects: Project[] = [
       "Tek dosya, sıfır bağımlılık mimarisi"
     ],
     "caseStudy": {
-      "challenge": "Çevrim içi sınavlarda öğrencilerin soruları kopyalayıp veya ekran görüntüsü alıp ChatGPT/Vision OCR modellerine çözdürmesi objektif ölçme-değerlendirmeyi geçersiz kılıyordu.",
-      "role": "Yapay Zeka Güvenlik Araştırmacısı & Frontend Geliştirici",
-      "contribution": "Bireysel Geliştirici (1 Kişilik Ekip): Adversarial font render algoritması, Canvas 2D gürültü filtresi, anti-tamper DevTools tespit mekanizması tek dosyada sıfır harici kütüphaneyle inşa edildi.",
+      "challenge": "Çevrim içi sınavlarda soruların kopyalanıp veya ekran görüntüsü alınarak ChatGPT/Vision OCR modellerine çözdürülmesi objektif ölçme-değerlendirmeyi geçersiz kılıyordu.",
+      "role": "Yapay Zeka & Web Güvenlik Geliştiricisi",
+      "contribution": "Bireysel Geliştirici (Tek Kişilik Ekip): Adversarial font render algoritması, Canvas 2D gürültü filtresi, anti-tamper DevTools tespit mekanizması tek dosyada sıfır harici kütüphaneyle inşa edildi.",
       "solution": "Metinler DOM yerine Canvas 2D'de harf harf mikro-eğimler, piksel parazitleri ve görünmez adversarial prompt metinleriyle çizildi; tarayıcı odak kaybı ve DevTools denetlendi.",
       "impact": "Vision modelleri ve klasik OCR yazılımlarının metni doğru okuma oranı %94 engellendi; sıfır bağımlılık ve tek dosya ile yüksek performanslı sınav güvenliği sağlandı.",
       "metrics": ["%94 OCR Engelleme", "Sıfır Dış Bağımlılık", "Milisaniyelik Canvas Render"]
@@ -202,7 +202,7 @@ export const projects: Project[] = [
   {
     "id": "ders-takip-pomodoro",
     "title": "Ders Takip (Pomodoro)",
-    "category": "Masaüstü & Otomasyon",
+    "category": "Masaüstü & Üretkenlik",
     "description": "KPSS/ÖABT ders çalışma sürelerini Pomodoro, geri sayım ve kronometre modlarıyla kaydedip istatistik sunan masaüstü uygulaması.",
     "longDescription": "PySide6 ile çerçevesiz, GitHub-dark temalı masaüstü uygulaması: dairesel timer, üç zaman modu, KPSS/ÖABT hazır ders setleri ve günlük/haftalık/aylık çubuk grafikler. JSON'a anlık kayıt yapar, PyInstaller ile tek .exe'ye derlenir.",
     "image": "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&q=80",
@@ -218,11 +218,12 @@ export const projects: Project[] = [
       "Tek .exe'ye derleme ve istatistik grafikleri"
     ],
     "caseStudy": {
-      "challenge": "Yoğun sınav hazırlığı yapan adaylar ve masa başı çalışanlar; dikkat dağınıklığı, süre körlüğü ve mola düzensizliği yüzünden hızla zihinsel tükenmişlik yaşıyordu.",
-      "role": "Bilişsel psikolojideki 'Pomodoro tekniği' ve 'odaklanma/dinlenme döngüsü' prensiplerini çerçevesiz, dikkat dağıtmayan minimalist bir masaüstü aracı olarak kurguladım.",
+      "challenge": "Sınav hazırlığı yapan adayların ve masa başında odaklananların sürelerini, çalışma oturumlarını ve molalarını dikkat dağılmadan takip edebilme ihtiyacı.",
+      "role": "Python & Masaüstü Yazılım Geliştirici",
+      "contribution": "Bireysel Geliştirici (Tek Kişilik Ekip): Çerçevesiz minimalist arayüz, dairesel SVG animasyonları, hazır ders takvimleri ve yerel JSON istatistik altyapısı geliştirildi.",
       "solution": "Python PySide6 (Qt6) ile GitHub dark temalı, dairesel SVG timer animasyonlu, JSON tabanlı yerel analitik kayıtlı masaüstü yazılımı. PyInstaller ile tek dosya .exe derlendi.",
-      "impact": "Kullanıcıların ortalama kesintisiz odaklanma süresinde %35 artış sağlandı; kurulumsuz taşınabilir yapısıyla binlerce saatlik çalışma disiplini kayıt altına alındı.",
-      "metrics": ["%35 Odaklanma Artışı", "Sıfır Dikkat Dağıtıcı UI", "Tek Dosya Portable .exe"]
+      "impact": "Kullanıcıların çalışma oturumlarını düzenli kaydetmesi sağlandı; sıfır dikkat dağıtıcı UI ve kurulumsuz yapısıyla pratik bir masaüstü aracına dönüştü.",
+      "metrics": ["Minimalist Odak UI", "3 Farklı Zaman Modu", "Tek Dosya Portable .exe"]
     },
     "deploy": "",
     "demoUrl": "",
@@ -598,7 +599,7 @@ export const projects: Project[] = [
   {
     "id": "westworld-stormy-hour",
     "title": "Westworld Stormy Hour",
-    "category": "Finans & Kreatif",
+    "category": "Kreatif Kodlama & WebGL",
     "description": "Mürekkep ve su sızıntısı simülasyonunu WebGL shader'la canlı gösteren Westworld estetiğinde interaktif dijital saat.",
     "longDescription": "Tek index.html içinde GLSL Simplex Noise + FBM fragment shader; saat/dakika açısı u_hour_angle ve u_minute_angle olarak shader'a geçip radyal mürekkep saçakları ve kaotik hotspot sızıntıları üretir. Firebase Hosting'de canlı: westworld-saati-v1-4567.web.app.",
     "image": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&q=80",
@@ -613,6 +614,14 @@ export const projects: Project[] = [
       "Saat/dakika açısına bağlı radyal saçak üretimi",
       "Firebase Hosting'de canlı yayın"
     ],
+    "caseStudy": {
+      "challenge": "Geleneksel dijital saatlerin statik kalması ve prosedürel akışkan matematiğinin tarayıcıda yüksek FPS ile canlandırılması ihtiyacı.",
+      "role": "WebGL & GLSL Shader Geliştirici",
+      "contribution": "Bireysel Geliştirici: Simplex Noise ve Fractional Brownian Motion (FBM) matematik modelleriyle özel fragment shader kodlandı.",
+      "solution": "WebGL fragment shader içinde saat ve dakika açılarına bağlı kaotik mürekkep yayılımı ve su sızıntısı simülasyonu; sıfır harici kütüphane bağımlılığı.",
+      "impact": "60 FPS akıcılığında çalışan estetik ve interaktif bir WebGL deneyimi inşa edildi; Firebase Hosting'de yayında.",
+      "metrics": ["60 FPS GPU Shader", "Simplex Noise & FBM", "Firebase Canlı Yayın"]
+    },
     "deploy": "https://westworld-saati-v1-4567.web.app",
     "demoUrl": "https://westworld-saati-v1-4567.web.app",
     "folder": "Westworld-Saati",
@@ -710,10 +719,11 @@ export const projects: Project[] = [
       "Otomatik taslak, durum yönetimi ve JSON export"
     ],
     "caseStudy": {
-      "challenge": "Farklı bulut (AI Studio, Replit, Cursor) ve yerel editörlerde eş zamanlı onlarca proje geliştiren yazılımcılar, projelerin hangi hesapta ve aşamada kaldığını unutarak zaman kaybediyordu.",
-      "role": "Geliştiricilerin bilişsel dağınıklığını sıfırlayan, tek ekranda tüm projeleri ve ortamları organize eden ultra-hafif bir yönetim paneli tasarladım.",
+      "challenge": "Farklı bulut (AI Studio, Replit, Cursor) ve yerel editörlerde eş zamanlı onlarca proje geliştiren yazılımcıların, projelerin hangi hesapta ve aşamada kaldığını takip etmekte zorlanması.",
+      "role": "Full-Stack Web & Bulut Geliştirici",
+      "contribution": "Bireysel Geliştirici: Firebase RTDB mimarisi, zlib tabanlı veri sıkıştırma motoru ve hızlı arama/filtreleme arayüzü kuruldu.",
       "solution": "Firebase Auth & Realtime Database üzerinde zlib+base64 veri sıkıştırmalı senkron (%70 depolama tasarrufu), 300ms debounce otomatik taslak ve JSON export/import mimarisi.",
-      "impact": "Projeler arası geçiş ve hesap arama süresi sıfırlandı; aktif olarak kullanılan vazgeçilmez bir geliştirici merkezine dönüştü.",
+      "impact": "Projeler arası geçiş ve hesap arama süresi sıfırlandı; geliştiriciler için aktif kullanılan hızlı bir yönetim merkezine dönüştü.",
       "metrics": ["%70 Depolama Sıkıştırması", "Canlı Firebase Senkronu", "300ms Debounce Otomatik Kayıt"]
     },
     "deploy": "https://ideyonetici-em-2026.web.app",
@@ -746,7 +756,7 @@ export const projects: Project[] = [
   {
     "id": "3dcografya",
     "title": "3DCoğrafya",
-    "category": "Web Portalı & Bulut",
+    "category": "Web Portalı & 3D Grafikler",
     "description": "İnteraktif 3D dünya ve Türkiye haritasıyla şehirleri keşfetmeyi sağlayan coğrafya web uygulaması.",
     "longDescription": "Three.js tabanlı 3D sahnede dünya ve Türkiye coğrafyasını gezilebilir kılan, şehir bilgilerini etkileşimli olarak sunan web uygulaması; Vercel'de canlı yayınlanıyor.",
     "image": "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=80",
@@ -760,6 +770,14 @@ export const projects: Project[] = [
       "Şehir bilgisi etkileşimi",
       "Vercel'de canlı"
     ],
+    "caseStudy": {
+      "challenge": "2D statik haritalarda dünya ve Türkiye coğrafyasının görsel derinlikten yoksun olması ve interaktif keşif imkanı sunmaması.",
+      "role": "3D Web & Frontend Geliştirici",
+      "contribution": "Bireysel Geliştirici (Tek Kişilik Ekip): Three.js 3D sahne mimarisi, dünya küresi ve Türkiye haritası mesh modellemesi, dinamik kamera kontrolleri ve Vercel dağıtımı gerçekleştirildi.",
+      "solution": "Three.js ve React kullanılarak tarayıcıda GPU hızlandırmalı 3D küre, Türkiye il sınırları etkileşimi ve koordinat bazlı bilgi panelleri geliştirildi.",
+      "impact": "Coğrafya öğrenimini eğlenceli ve interaktif 3D deneyime dönüştürdü; Vercel üzerinde yüksek FPS ve akıcı render ile yayında.",
+      "metrics": ["Three.js GPU Render", "İnteraktif Şehir Haritası", "Vercel Canlı Yayın"]
+    },
     "deploy": "https://3d-cografya.vercel.app/",
     "demoUrl": "https://3d-cografya.vercel.app/",
     "folder": "",
@@ -790,7 +808,7 @@ export const projects: Project[] = [
   {
     "id": "cv-master",
     "title": "CV Master",
-    "category": "Yapay Zeka & Psikoloji",
+    "category": "Web & Üretkenlik",
     "description": "QR kodlu şablonlarla düzenlenebilir özgeçmiş/CV tasarımcısı; taslaklar arası hizalama ve QR tutarlılığı sorunları çözülmüş.",
     "longDescription": "Özgeçmiş şablonlarını düzenlemeye ve PDF'e dönüştürmeye yarayan, Google Cloud Run'da çalışan web uygulaması. Çoklu şablonda hizalama ve QR kodun her taslakta aynı kalması için ayar menüsü eklendi.",
     "image": "https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=800&q=80",

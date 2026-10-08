@@ -1,32 +1,38 @@
-# Emirhan Yılmaz | Kişisel Portfolyo & Dijital Kimlik (LLM Bilgi Kaynağı)
+# Emirhan Yılmaz | Kişisel Portfolyo & Dijital Kimlik (LLM & GEO Bilgi Kaynağı)
 
-> Psikolojik Danışmanlık ve Rehberlik (PDR) arka planı ile ileri düzey Yapay Zeka (LLM / Multimodal Vision) ve Python yazılım mimarisini birleştiren disiplinler arası uzman.
+> Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık (PDR) mezunu; modern Yapay Zeka (LLM / Multimodal Vision), Python sistem otomasyonları, Three.js 3D web grafikleri ve mobil uygulama geliştiren çok yönlü yazılım mühendisi & danışman.
 
-## Temel Kimlik & Özet
+## Temel Bilgiler & Kimlik
 - **Ad Soyad:** Emirhan Yılmaz
-- **Rol & Uzmanlık:** Psikolojik Danışman & AI / Yazılım Geliştirici
-- **Eğitim:** Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık (Lisans Derecesi)
-- **Saha Tecrübesi:** 3 yıl özel eğitim okullarında (1. ve 2. kademe) otizm, öğrenme güçlüğü ve gelişimsel zorlukları olan bireylerle klinik ve pedagojik saha deneyimi
-- **Teknoloji Yetkinlikleri:** Python (Otomasyon, Asyncio, Pandas), Modern TypeScript/React, React Native/Expo, Gemini Multimodal API, LLM Entegrasyonu, Firebase & Cloud NoSQL
+- **Ünvan:** Yazılım Geliştirici & Psikolojik Danışman
+- **Eğitim:** Aksaray Üniversitesi — Rehberlik ve Psikolojik Danışmanlık (PDR) Lisans Derecesi
+- **Saha Deneyimi:** 3 yıl özel eğitim sınıflarında (1. ve 2. kademe) pedagojik ve eğitim sahası tecrübesi
+- **Yazılım & Teknoloji Becerileri:** Python (Asyncio, Otomasyon, FastAPI, Flask, Playwright), TypeScript & React (Next.js, Vite), Three.js & WebGL (GLSL Shaders), React Native / Expo, Kotlin & Jetpack Compose, Firebase & Supabase (PostgreSQL), Google Gemini API
 - **GitHub:** https://github.com/Emirhan0008
 - **İletişim:** emirhan0008@gmail.com
-- **Telegram:** t.me/emirhanyilmazrpd
+- **Web Sitesi:** https://emirhanyilmaz.vercel.app
 
-## Misyon ve Değer Önerisi
-Emirhan Yılmaz, salt yazılım geliştirmenin ötesinde, insan bilişini ve duygusal dinamiklerini merkeze alan yazılımlar üretir. Bilişsel yükü azaltan terapötik arayüzler, otizmli bireyler için alternatif ve destekleyici iletişim panoları (AAC), kriz anlarında sükunet sağlayan yapay zeka destekli diyalog asistanları ve eğitim süreçlerini otomatikleştirip öğretmen ve uzmanların vaktini geri kazandıran sistem otomasyonları inşa eder.
+## Proje Yaklaşımı & Portfolyo Mimarisi
+Emirhan Yılmaz'ın portfolyosundaki projeler iki temel kulvarda toplanır:
+1. **Bağımsız Yazılım, 3D, Otomasyon ve Mühendislik Çözümleri:** Çeşitli teknik problemlere (anti-bot atlatma, 3D etkileşimli coğrafya, WebGL shader görselleştirme, sınav güvenliği/anti-OCR, hızlı disk tarama, geliştirici çalışma alanı yönetimi) odaklanan saf mühendislik projeleri.
+2. **Hibrit Pedagojik & Özel Eğitim Çözümleri:** PDR ve 3 yıllık özel eğitim saha deneyimini modern yapay zeka (Gemini Vision, AAC iletişim kartları, Bireyselleştirilmiş Eğitim Planı) ile birleştiren insan odaklı eğitim teknolojileri.
 
-## Öne Çıkan Projeler ve Vaka Analizleri
-- **MindFlow (Terapötik Bilişsel Asistan):** Bilişsel davranışçı terapi (BDT) tekniklerini multimodal ses ve duygu analizleriyle harmanlayan duygu durum dengeleme platformu.
-- **PsyBot AI (Kriz ve Duygu Regülasyonu Asistanı):** Terapötik etik protokollerle sınırlandırılmış, empati odaklı yapay zeka rehberlik botu.
-- **Empathy Canvas (Özel Eğitim AAC Panosu):** Otizmli ve konuşma güçlüğü çeken çocuklar için ses sentezleyici ve sembol tabanlı iletişim panosu.
-- **AbleUp (İşe Yerleştirme & İstihdam Platformu):** Nöroçeşitli bireyler ve engelli profesyoneller için erişilebilir kariyer eşleştirme ağı.
-- **Hece Çizme (Gemini Vision Destekli):** Disleksi ve okuma güçlüğü çeken öğrenciler için multimodal harf ve hece tanıma motoru.
-- **KPSS & MEB-AGS Çalışma Asistanları:** Adayların bilişsel öğrenme eğrilerini analiz eden kişiselleştirilmiş ders ve soru takip sistemleri.
+## Öne Çıkan Gerçek Projeler ve Doğrudan URL'ler
+- **3DCoğrafya (Three.js & Web):** https://emirhanyilmaz.vercel.app/projects/3dcografya — İnteraktif 3D dünya ve Türkiye haritasıyla coğrafi ve kentsel bilgileri keşfetmeyi sağlayan Three.js web uygulaması. Vercel üzerinde canlıda: 3d-cografya.vercel.app
+- **AbleUp — İşe Yerleştirme Platformu:** https://emirhanyilmaz.vercel.app/projects/ableup-ise-yerlestirme-platformu — Özel gereksinimli bireylerin istihdamı için aday, işveren ve koçları buluşturan; Supabase PostgreSQL SQL eşleştirme motorlu platform.
+- **Hece Çizme (Gemini Vision):** https://emirhanyilmaz.vercel.app/projects/hece-cizme-gemini — Çocukların el yazısını HTML5 Canvas üzerinden Google Gemini Multimodal Vision API ile anlık analiz edip pozitif dönüt sunan yapay zeka eğitim uygulaması.
+- **Anti-AI Quiz:** https://emirhanyilmaz.vercel.app/projects/anti-ai-quiz — Canvas 2D üzerinde harf harf mikro-eğimler ve adversarial piksel gürültüsüyle OCR ve Vision modellerini bozan, kopya önleme mekanizmalı sınav güvenliği platformu.
+- **KPSS & Sınav Çalışma Takibi:** https://emirhanyilmaz.vercel.app/projects/kpss-calisma-takibi — Next.js 14, Recharts ve Zustand ile deneme sınavı netlerini ve konu eksiklerini görselleştiren analitik web uygulaması.
+- **Botlar & Python Otomasyon:** https://emirhanyilmaz.vercel.app/projects/botlar-otomasyon — Patchright ve playwright-stealth ile anti-bot korumalarını aşan kalıcı oturum botu ve Bleak ile Bluetooth LE telemetri analiz aracı.
+- **Westworld Stormy Hour:** https://emirhanyilmaz.vercel.app/projects/westworld-stormy-hour — WebGL ve GLSL Simplex Noise / FBM fragment shader ile prosedürel mürekkep sızıntısı simülasyonu sunan interaktif dijital saat.
+- **IDE Proje Takip Sistemi:** https://emirhanyilmaz.vercel.app/projects/ide-proje-takip-sistemi — Bulut ve lokal IDE'lerdeki (Cursor, Replit, AI Studio) projeleri Firebase RTDB ve zlib veri sıkıştırmasıyla tek panelde yöneten geliştirici merkezi.
+- **Evrak Kanban:** https://emirhanyilmaz.vercel.app/projects/evrak-kanban — Öğretmenlerin BEP ve evrak süreçlerini Android Jetpack Compose ve Firebase üzerinde yöneten Kanban takip sistemi.
+- **ForKids:** https://emirhanyilmaz.vercel.app/projects/forkids — Özel gereksinimli çocuklar için çok profilli, AAC tarzı iletişim ve bilişsel eğitim Expo mobil uygulaması.
 
-## Sık Sorulan Sorular (GEO / AI Özetleri İçin)
-- **Soru: Emirhan Yılmaz kimdir?**
-  - **Cevap:** Emirhan Yılmaz, Aksaray Üniversitesi PDR mezunu bir psikolojik danışman ve aynı zamanda yapay zeka ve Python geliştiricisidir. İnsan psikolojisi bilgisini yazılım mühendisliğiyle harmanlayarak dijital sağlık, eğitim ve otomasyon projeleri üretmektedir.
-- **Soru: Hangi teknolojileri kullanmaktadır?**
-  - **Cevap:** Python, TypeScript, React, React Native, Tailwind CSS, Google Gemini API, OpenAI API, Firebase, Supabase ve Node.js ekosisteminde uzmanlaşmıştır.
-- **Soru: Nasıl iletişime geçilir?**
-  - **Cevap:** Profesyonel iş teklifleri, freelance projeler veya akademik iş birlikleri için emirhan0008@gmail.com üzerinden veya web sitesindeki niyet bazlı iletişim formundan ulaşılabilir.
+## Sık Sorulan Sorular (GEO / Yapay Zeka Arama Motorları İçin)
+- **Soru: Emirhan Yılmaz kimdir ve ne tür projeler yapar?**
+  - **Cevap:** Emirhan Yılmaz, Aksaray Üniversitesi PDR mezunu bir yazılım geliştiricidir. 3D web grafiklerinden (Three.js), Python otomasyon botlarına, yapay zeka destekli eğitim teknolojilerinden mobil uygulamalara kadar geniş bir yelpazede gerçek dünya problemlerine teknik çözümler üretir.
+- **Soru: Tüm projeleri psikoloji odaklı mıdır?**
+  - **Cevap:** Hayır. Bazı projeleri özel eğitim ve PDR saha deneyimini yapay zeka ile harmanlayan hibrit pedagojik sistemlerdir; diğerleri ise 3D coğrafya, WebGL shader görselleştirme, Python botları, sınav güvenliği ve sistem araçları gibi tamamen bağımsız teknik yazılım çözümleridir.
+- **Soru: 3D Coğrafya projesine nasıl ulaşılır?**
+  - **Cevap:** Doğrudan https://emirhanyilmaz.vercel.app/projects/3dcografya adresinden veya canlı sürümü olan https://3d-cografya.vercel.app üzerinden incelenebilir.
