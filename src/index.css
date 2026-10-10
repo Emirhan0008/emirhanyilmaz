@@ -25,7 +25,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 1.4px;
+  padding: 1px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.08) 20%, transparent 40%, transparent 60%, rgba(255, 255, 255, 0.08) 80%, rgba(255, 255, 255, 0.25) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -52,7 +52,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 1.4px;
+  padding: 1px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.08) 20%, transparent 40%, transparent 60%, rgba(255, 255, 255, 0.08) 80%, rgba(255, 255, 255, 0.25) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -78,7 +78,7 @@
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 1.4px;
+  padding: 1px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.08) 20%, transparent 40%, transparent 60%, rgba(255, 255, 255, 0.08) 80%, rgba(255, 255, 255, 0.25) 100%);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
@@ -106,13 +106,13 @@
   position: relative;
 }
 
-/* Sharp, thick, highly visible multi-color RGB laser core */
+/* Sharp, thin, elegant multi-color RGB laser core */
 .spinning-glow-border::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 2.6px; 
+  padding: 1.2px; 
   background: conic-gradient(
     from var(--border-angle),
     transparent 0%,
@@ -123,7 +123,7 @@
     transparent 95%,
     transparent 100%
   );
-  animation: spin-border 4s linear infinite;
+  animation: spin-border 12s linear infinite;
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
@@ -136,22 +136,22 @@
 .spinning-glow-border::before {
   content: "";
   position: absolute;
-  inset: -2px;
+  inset: -1px;
   border-radius: inherit;
-  padding: 6px;
+  padding: 3px;
   background: conic-gradient(
     from var(--border-angle),
     transparent 0%,
-    rgba(255, 0, 127, 0.7) 15%,
-    rgba(123, 0, 255, 0.7) 40%,
-    rgba(0, 242, 254, 0.7) 65%,
-    rgba(79, 172, 254, 0.7) 85%,
+    rgba(255, 0, 127, 0.5) 15%,
+    rgba(123, 0, 255, 0.5) 40%,
+    rgba(0, 242, 254, 0.5) 65%,
+    rgba(79, 172, 254, 0.5) 85%,
     transparent 95%,
     transparent 100%
   );
-  animation: spin-border 4s linear infinite;
-  filter: blur(12px);
-  opacity: 1;
+  animation: spin-border 12s linear infinite;
+  filter: blur(8px);
+  opacity: 0.85;
   pointer-events: none;
   z-index: -1;
 }
@@ -389,7 +389,7 @@ textarea::-webkit-scrollbar-thumb:hover {
     transparent 95%,
     transparent 100%
   ) !important;
-  filter: blur(14px) !important;
+  filter: blur(8px) !important;
 }
 
 /* ==========================================================================
