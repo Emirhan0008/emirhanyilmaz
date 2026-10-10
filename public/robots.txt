@@ -5,27 +5,49 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-# Explicit permissions for AI Search & Summary Crawlers
+# Explicit permissions for Google Search & Gemini AI Overviews
 User-agent: Googlebot
 Allow: /
 
 User-agent: Google-Extended
 Allow: /
 
+User-agent: GoogleOther
+Allow: /
+
+# OpenAI Search & ChatGPT Grounding
 User-agent: GPTBot
 Allow: /
 
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# Perplexity AI Engine
 User-agent: PerplexityBot
 Allow: /
 
+# Anthropic Claude
 User-agent: ClaudeBot
 Allow: /
 
+User-agent: anthropic-ai
+Allow: /
+
+# Apple Intelligence
 User-agent: Applebot
 Allow: /
 
+User-agent: Applebot-Extended
+Allow: /
+
+# Microsoft Bing & Copilot
 User-agent: Bingbot
 Allow: /
 
-# Sitemap and LLM context endpoints
+# Structured Data & LLM Context Endpoints
 Sitemap: https://emirhanyilmaz.vercel.app/sitemap.xml
+# LLMs.txt Context: https://emirhanyilmaz.vercel.app/llms.txt
+

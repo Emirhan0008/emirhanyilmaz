@@ -159,10 +159,11 @@ export function InteractiveCatCompanion({
 
     // Fast-path: Check for direct mode switch intents (chat or preset)
     const lowerQuery = query.toLowerCase().trim();
+    const lowerQueryTr = query.toLocaleLowerCase('tr-TR').trim();
     const cleanNumbersOnly = query.replace(/[\.\s\/\-:,_#*]/g, '');
 
     // SPECIAL EASTER EGG 1: Check if password "25092025" is provided
-    if (cleanNumbersOnly.includes('25092025')) {
+    if (cleanNumbersOnly.includes('25092025') || cleanNumbersOnly.includes('250925') || cleanNumbersOnly.includes('2592025')) {
       setAwaitingAysegulPassword(false);
       setBehavior('purring');
       setShowHeart(true);
@@ -186,9 +187,13 @@ export function InteractiveCatCompanion({
     const isAysegulClaim = 
       lowerQuery.includes('ayşegül') || 
       lowerQuery.includes('aysegul') || 
-      lowerQuery.includes('aysegül') || 
-      lowerQuery.includes('ayşegul') ||
-      /\b(ay[şs]eg[uü]l|ay[şs]o)\b/i.test(lowerQuery);
+      lowerQuery.includes('ayşegul') || 
+      lowerQueryTr.includes('ayşegül') || 
+      lowerQueryTr.includes('aysegul') || 
+      /\b(ay[şs]eg[uü]l|ay[şs]o)\b/i.test(lowerQuery) ||
+      /\b(ay[şs]eg[uü]l|ay[şs]o)\b/i.test(lowerQueryTr) ||
+      /ben\s+ay/i.test(lowerQuery) ||
+      /ben\s+ay/i.test(lowerQueryTr);
 
     if (isAysegulClaim) {
       setAwaitingAysegulPassword(true);

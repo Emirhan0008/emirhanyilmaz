@@ -382,7 +382,7 @@ export default function App() {
        .join('');
    };
 
-   const handleSuccessfulAdminLogin = () => {
+   const handleSuccessfulAdminLogin = (token?: string) => {
      setIsAdmin(true);
      localStorage.setItem('emirhan_admin_logged_in', 'true');
      setShowAdminModal(false);
@@ -392,6 +392,28 @@ export default function App() {
      localStorage.removeItem('adm_sec_lock_until');
      localStorage.removeItem('adm_failed_attempts');
      sessionStorage.removeItem('adm_lck_ut');
+
+     if (token) {
+       sessionStorage.setItem('adm_srv_tok', token);
+       // Sync server inbox messages securely
+       fetch('/api/messages', {
+         headers: { 'Authorization': `Bearer ${token}` }
+       })
+         .then(res => res.json())
+         .then(data => {
+           if (Array.isArray(data?.messages) && data.messages.length > 0) {
+             setInboxMessages(prev => {
+               const map = new Map<string, ContactMessage>();
+               data.messages.forEach((m: ContactMessage) => map.set(m.id, m));
+               prev.forEach(m => map.set(m.id, m));
+               const merged = Array.from(map.values()).sort((a, b) => b.timestamp - a.timestamp);
+               localStorage.setItem('adm_msg_store', JSON.stringify(merged));
+               return merged;
+             });
+           }
+         })
+         .catch(() => {});
+     }
      
      setAdminToastMessage("🛡️ Yönetici Modu Aktif! Tüm düzenleme yetkileri açıldı.");
      setShowAdminToast(true);
@@ -401,6 +423,7 @@ export default function App() {
    const handleAdminLogout = () => {
      setIsAdmin(false);
      localStorage.removeItem('emirhan_admin_logged_in');
+     sessionStorage.removeItem('adm_srv_tok');
      setAdminToastMessage("Yönetici modundan çıkış yapıldı (Ziyaretçi moduna dönüldü).");
      setShowAdminToast(true);
      setTimeout(() => setShowAdminToast(false), 3500);
@@ -537,29 +560,6 @@ export default function App() {
      setLastClickTime(now);
    };
 
-   // Robust zero-plain-text ASCII pattern matching
-   const matchMasterCodes = (input: string): boolean => {
-     const clean = input.trim();
-     // Master: E m i r h a n . 1 9 6 9
-     const master = [69, 109, 105, 114, 104, 97, 110, 46, 49, 57, 54, 57];
-     // Master lower: e m i r h a n . 1 9 6 9
-     const masterLower = [101, 109, 105, 114, 104, 97, 110, 46, 49, 57, 54, 57];
-     // Without dot: E m i r h a n 1 9 6 9
-     const noDot = [69, 109, 105, 114, 104, 97, 110, 49, 57, 54, 57];
-     // Lower without dot: e m i r h a n 1 9 6 9
-     const noDotLower = [101, 109, 105, 114, 104, 97, 110, 49, 57, 54, 57];
-
-     const check = (arr: number[]) => {
-       if (clean.length !== arr.length) return false;
-       for (let i = 0; i < arr.length; i++) {
-         if (clean.charCodeAt(i) !== arr[i]) return false;
-       }
-       return true;
-     };
-
-     return check(master) || check(masterLower) || check(noDot) || check(noDotLower);
-   };
-
    const handlePasscodeSubmit = async (e?: FormEvent) => {
      if (e) e.preventDefault();
 
@@ -577,37 +577,52 @@ export default function App() {
        }
 
        const cleanPasscode = (adminPasscode || '').trim();
-       const customPassHash = (localStorage.getItem('emirhan_admin_pass_hash') || '').trim();
-       const legacyPass = (localStorage.getItem('emirhan_admin_pass') || '').trim();
+       let isMatch = false;
+       let serverToken = '';
 
-       // Primary: Match Master ASCII Codes (Zero plaintext in bundle)
-       let isMatch = matchMasterCodes(cleanPasscode);
+       // 1. Primary: Server-Side Authoritative Verification with Token Issuance
+       try {
+         const res = await fetch('/api/admin-verify', {
+           method: 'POST',
+           headers: { 'Content-Type': 'application/json' },
+           body: JSON.stringify({ passcode: cleanPasscode })
+         });
+         if (res.ok) {
+           const data = await res.json();
+           if (data?.success && data?.token) {
+             isMatch = true;
+             serverToken = data.token;
+           }
+         }
+       } catch {
+         // Network offline fallback
+       }
 
-       // Secondary: Match custom user-configured SHA-256 password hash
+       // 2. Secondary: Cryptographic SHA-256 Hash Evaluation (Offline fallback)
        if (!isMatch && cleanPasscode) {
          try {
+           const customPassHash = (localStorage.getItem('emirhan_admin_pass_hash') || '').trim();
+           const legacyPass = (localStorage.getItem('emirhan_admin_pass') || '').trim();
            const inputHash = await sha256(cleanPasscode);
            const inputLowerHash = await sha256(cleanPasscode.toLowerCase());
 
            if (customPassHash && (inputHash === customPassHash || inputLowerHash === customPassHash)) {
              isMatch = true;
            } else if (legacyPass && (cleanPasscode === legacyPass || cleanPasscode.toLowerCase() === legacyPass.toLowerCase())) {
-             // Automatically migrate legacy plaintext password to secure SHA-256 hash
              isMatch = true;
              localStorage.setItem('emirhan_admin_pass_hash', inputHash);
              localStorage.removeItem('emirhan_admin_pass');
            }
 
-           // Tertiary: System Master SHA-256 Hashes
            const SYSTEM_HASHES = [
-             'a7f6ff82c7e0fb369d7e81ef26fd7dd0bb2edb2c5510503a062c429bc679d51d', // Emirhan.1969
-             '4605172b349cd31501a1b495b207d950209c18dcee9dfe8e75863fda782aefc3', // emirhan.1969
-             '8b313d1ce218029d9e76635727cd509c309f34c6c2aa2e0b5775888dbcfdcbfd', // EMIRHAN.1969
-             '2f12c6c591923b2ae9e4866b64f3c11457c42d200e92a39c0a08aeeb67d6a121', // EMİRHAN.1969
-             'f4ffccaf8d25302dd66c15607474033aa85d373bc256b50155a937b2d09cf0ea', // Emirhan1969
-             '525f2d7dbbb3e5a6ce1147afce3aef9a8970a263ec281b63ee7f38883584a803', // emirhan1969
-             '76e850744a6fe4464c76645e83df8d9d5da2ca87d8bebd4e22694824d81ea0fd', // emirhan
-             'a32dbddb40995138a80afd33007310f610ed73ffb846683d1866cb48282f162b'  // emirhan0008
+             'a7f6ff82c7e0fb369d7e81ef26fd7dd0bb2edb2c5510503a062c429bc679d51d',
+             '4605172b349cd31501a1b495b207d950209c18dcee9dfe8e75863fda782aefc3',
+             '8b313d1ce218029d9e76635727cd509c309f34c6c2aa2e0b5775888dbcfdcbfd',
+             '2f12c6c591923b2ae9e4866b64f3c11457c42d200e92a39c0a08aeeb67d6a121',
+             'f4ffccaf8d25302dd66c15607474033aa85d373bc256b50155a937b2d09cf0ea',
+             '525f2d7dbbb3e5a6ce1147afce3aef9a8970a263ec281b63ee7f38883584a803',
+             '76e850744a6fe4464c76645e83df8d9d5da2ca87d8bebd4e22694824d81ea0fd',
+             'a32dbddb40995138a80afd33007310f610ed73ffb846683d1866cb48282f162b'
            ];
 
            if (SYSTEM_HASHES.includes(inputHash) || SYSTEM_HASHES.includes(inputLowerHash)) {
@@ -619,7 +634,7 @@ export default function App() {
        }
 
        if (isMatch) {
-         handleSuccessfulAdminLogin();
+         handleSuccessfulAdminLogin(serverToken);
          return;
        }
 
@@ -1390,40 +1405,57 @@ export default function App() {
       </a>
       
       {/* IMMERSIVE THEME BACKGROUNDS & CRT SCANLINE EFFECTS */}
-      <div className="fixed inset-0 w-full h-full z-0 overflow-hidden select-none pointer-events-none bg-[#030408]">
-        {/* Normal Mode Background (Clean, high-res visual aura) */}
-        <img
-          src="/bg-normal.jpg"
-          alt="Normal Mode Background"
-          className={`absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none transition-opacity duration-700 ease-in-out ${
-            theme === 'normal' ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-          }`}
-          style={{ transitionProperty: 'opacity, transform' }}
-          loading="eager"
-        />
+      <div className="fixed inset-0 w-full h-full z-0 overflow-hidden select-none pointer-events-none bg-[#020408]">
+        {/* Normal Mode Background (Premium Airy Glass Aura) */}
+        <div className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${
+          theme === 'normal' ? 'opacity-100' : 'opacity-0'
+        }`}>
+          <img
+            src="/bg-normal.jpg"
+            alt="Glass UI Luxury Background"
+            className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
+            loading="eager"
+          />
 
-        {/* Terminal Mode Background (Cyberpunk / Terminal Visual) */}
-        <img
-          src="/bg-terminal.png"
-          alt="Terminal Mode Background"
-          className={`absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none transition-opacity duration-700 ease-in-out ${
-            theme === 'terminal' ? 'opacity-100 scale-100' : 'opacity-0 scale-105'
-          }`}
-          style={{ transitionProperty: 'opacity, transform' }}
-          loading="eager"
-        />
+          {/* Airy Luminous Floats: Ethereal radiant light blobs for spacious, fresh depth */}
+          <div className="absolute -top-[10%] left-[15%] w-[45vw] h-[45vw] rounded-full cam-ambient-light blur-3xl opacity-60 animate-drift-slow pointer-events-none" />
+          <div className="absolute top-[35%] right-[5%] w-[40vw] h-[40vw] rounded-full cam-airy-aura blur-3xl opacity-50 animate-drift-slower pointer-events-none" />
+          <div className="absolute -bottom-[10%] left-[30%] w-[35vw] h-[35vw] rounded-full cam-crystal-sparkle blur-2xl opacity-40 animate-drift-slow pointer-events-none" />
 
-        {/* Subtle vignette to preserve soft depth and text clarity, without stripping image colors */}
-        <div className="absolute inset-0 bg-radial from-transparent via-black/15 to-black/70 z-1" />
-        <div className="absolute inset-0 bg-black/20 backdrop-blur-[0.5px] z-2" />
+          {/* Crisp, airy lens vignette - softly preserves text readability while keeping background bright & luminous */}
+          <div className="absolute inset-0 bg-radial from-transparent via-transparent to-black/40 z-1 pointer-events-none" />
+          <div className="absolute inset-0 bg-black/10 backdrop-blur-[0.3px] z-2 pointer-events-none" />
+        </div>
 
-        {/* Terminal CRT Scanlines Overlay when Terminal Mode is active */}
-        {theme === 'terminal' && (
-          <>
-            <div className="absolute inset-0 bg-emerald-950/20 mix-blend-screen z-3" />
-            <div className="absolute inset-0 terminal-scanlines opacity-75 z-4" />
-          </>
-        )}
+        {/* Terminal Mode Background (Elite Cyberpunk Hacker Telemetry) */}
+        <div className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${
+          theme === 'terminal' ? 'opacity-100' : 'opacity-0'
+        }`}>
+          <img
+            src="/bg-terminal.png"
+            alt="Hacker Terminal Mainframe Background"
+            className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
+            loading="eager"
+          />
+
+          {/* Tactical Cyber Grid Overlay */}
+          <div className="absolute inset-0 terminal-cyber-grid opacity-60 z-1 pointer-events-none" />
+
+          {/* Central Processor Chip Phosphor Pulse */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-emerald-500/10 blur-3xl animate-pulse z-1 pointer-events-none" />
+
+          {/* Radar Telemetry Sweep Line */}
+          <div className="absolute inset-0 overflow-hidden z-2 pointer-events-none">
+            <div className="terminal-sweep-line" />
+          </div>
+
+          {/* CRT Phosphor Screen Glow & Scanlines */}
+          <div className="absolute inset-0 bg-emerald-950/25 mix-blend-screen z-3 pointer-events-none" />
+          <div className="absolute inset-0 terminal-scanlines opacity-80 z-4 pointer-events-none" />
+
+          {/* Deep cyber contrast vignette */}
+          <div className="absolute inset-0 bg-radial from-transparent via-black/20 to-black/80 z-5 pointer-events-none" />
+        </div>
       </div>
 
       {/* Floating Admin Mode Notification Toast */}
@@ -4384,7 +4416,7 @@ export default function App() {
                                   setShowGmailModal(true);
                                 }}
                                 className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-red-600/30 to-amber-600/20 hover:from-red-600/40 hover:to-amber-600/30 border border-red-500/40 text-red-200 hover:text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-md"
-                                title={lang === 'tr' ? "Resmi Gmail API veya Gmail Web ile doğrudan gönderin" : "Send with official Gmail API or Web Gmail"}
+                                title={lang === 'tr' ? "Gmail Web veya e-posta uygulamanızla doğrudan gönderin" : "Send via Gmail Web or mail app"}
                               >
                                 <Mail size={14} className="text-red-400 shrink-0" />
                                 <span className="truncate">{lang === 'tr' ? 'Gmail ile Gönder' : 'Send via Gmail'}</span>
@@ -4453,10 +4485,10 @@ export default function App() {
                           setShowGmailModal(true);
                         }}
                         className="p-2 sm:p-2.5 rounded-xl bg-red-950/40 hover:bg-red-900/40 border border-red-500/30 flex items-center gap-2 text-xs text-red-200 hover:text-white font-bold transition-all hover:scale-102 cursor-pointer group"
-                        title="Gmail ile Doğrudan İletişim"
+                        title={lang === 'tr' ? "Gmail ile İletişim" : "Contact via Gmail"}
                       >
                         <Mail size={13} className="text-red-400 shrink-0" />
-                        <span className="truncate">Gmail (API)</span>
+                        <span className="truncate">Gmail</span>
                       </button>
 
                       <button
@@ -4542,7 +4574,11 @@ export default function App() {
                             onConfirm: () => {
                               setInboxMessages([]);
                               localStorage.removeItem('adm_msg_store');
-                              fetch('/api/messages', { method: 'DELETE' }).catch(() => {});
+                              const token = sessionStorage.getItem('adm_srv_tok') || '';
+                              fetch('/api/messages', {
+                                method: 'DELETE',
+                                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                              }).catch(() => {});
                               setAdminToastMessage("Gelen kutusu temizlendi.");
                               setShowAdminToast(true);
                               setTimeout(() => setShowAdminToast(false), 2500);

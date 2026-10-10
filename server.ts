@@ -19,10 +19,12 @@ app.use((_req, res, next) => {
   res.setHeader("X-XSS-Protection", "1; mode=block");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
-  // CSP allows local resources, safe data images, Google Fonts, and AI API endpoints
+  res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  // Comprehensive CSP aligned with Firebase Auth and Google Workspace OAuth
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob:; connect-src 'self' https://api.groq.com https://generativelanguage.googleapis.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors *;"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; frame-src 'self' https://commanding-spanner-567s8.firebaseapp.com https://accounts.google.com https://*.firebaseapp.com; connect-src 'self' https: ws: wss:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors *;"
   );
   next();
 });
@@ -30,7 +32,30 @@ app.use((_req, res, next) => {
 // Security: Enforce strict JSON payload size limit to prevent memory exhaustion DoS
 app.use(express.json({ limit: "100kb" }));
 
-// Security: In-Memory IP Rate Limiter with Max Entries Cap to prevent HashDoS / Memory Exhaustion
+import crypto from "crypto";
+
+// Security: In-Memory Admin Sessions
+const activeAdminTokens = new Set<string>();
+
+const SYSTEM_ADMIN_HASHES = new Set([
+  'a7f6ff82c7e0fb369d7e81ef26fd7dd0bb2edb2c5510503a062c429bc679d51d',
+  '4605172b349cd31501a1b495b207d950209c18dcee9dfe8e75863fda782aefc3',
+  '8b313d1ce218029d9e76635727cd509c309f34c6c2aa2e0b5775888dbcfdcbfd',
+  '2f12c6c591923b2ae9e4866b64f3c11457c42d200e92a39c0a08aeeb67d6a121',
+  'f4ffccaf8d25302dd66c15607474033aa85d373bc256b50155a937b2d09cf0ea',
+  '525f2d7dbbb3e5a6ce1147afce3aef9a8970a263ec281b63ee7f38883584a803',
+  '76e850744a6fe4464c76645e83df8d9d5da2ca87d8bebd4e22694824d81ea0fd',
+  'a32dbddb40995138a80afd33007310f610ed73ffb846683d1866cb48282f162b'
+]);
+
+function adminAuthGuard(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!token || !activeAdminTokens.has(token)) {
+    return res.status(401).json({ error: "Yetkisiz işlem. Yönetici doğrulaması gerekli." });
+  }
+  next();
+}
 const MAX_RATE_LIMIT_ENTRIES = 5000;
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
@@ -72,11 +97,12 @@ function apiRateLimiter(req: express.Request, res: express.Response, next: expre
   next();
 }
 
-// Security: Strict Content-Type and CSRF validation on API routes
+// Security: Strict Content-Type and CSRF/Origin validation on API routes
 function apiSecurityGuard(req: express.Request, res: express.Response, next: express.NextFunction) {
-  if (req.method === "POST") {
+  const method = req.method.toUpperCase();
+  if (["POST", "PUT", "DELETE", "PATCH"].includes(method)) {
     const contentType = req.headers["content-type"] || "";
-    if (!contentType.includes("application/json")) {
+    if (["POST", "PUT", "PATCH"].includes(method) && !contentType.includes("application/json")) {
       return res.status(415).json({ error: "Geçersiz içerik tipi. Sadece application/json kabul edilir." });
     }
 
@@ -187,9 +213,10 @@ app.post("/api/ai-assistant", async (req, res) => {
         const response = await ai.models.generateContent({
           model,
           contents: [
-            { role: "user", parts: [{ text: EMIRHAN_SYSTEM_INSTRUCTION + "\n\nKullanıcı Sorduğu Soru: " + trimmedPrompt }] }
+            { role: "user", parts: [{ text: trimmedPrompt }] }
           ],
           config: {
+            systemInstruction: EMIRHAN_SYSTEM_INSTRUCTION,
             temperature: 0.7,
             maxOutputTokens: 600,
           }
@@ -391,23 +418,30 @@ app.post("/api/cat-assistant", async (req, res) => {
     }
 
     const lower = cleanMessage.toLowerCase();
+    const lowerTr = cleanMessage.toLocaleLowerCase('tr-TR');
     const cleanNumbersOnly = cleanMessage.replace(/[\.\s\/\-:,_#*]/g, '');
 
     // SPECIAL EASTER EGG 1: Check password "25092025"
-    if (cleanNumbersOnly.includes("25092025")) {
+    if (cleanNumbersOnly.includes("25092025") || cleanNumbersOnly.includes("250925") || cleanNumbersOnly.includes("2592025")) {
       return res.json({
         reply: "Şşşt... Sessiz ol, yaklaş yaklaş... 🤫🐾 Emirhan seni çok ama çok seviyor haberin olsun! Dünyadaki her şeyden çok... Bunu sadece sana fısıldamam tembihlendi, aramızda kalsın! ❤️✨🐾"
       });
     }
 
-    // SPECIAL EASTER EGG 2: Check Ayşegül claim
-    if (
-      lower.includes("ayşegül") || 
-      lower.includes("aysegul") || 
-      lower.includes("aysegül") || 
+    // SPECIAL EASTER EGG 2: Check Ayşegül claim (supports "ben Ayşegül", "ben ayşegül ve benzeri", "aysegul", "ayşo", etc.)
+    const isAysegulClaim =
+      lower.includes("ayşegül") ||
+      lower.includes("aysegul") ||
       lower.includes("ayşegul") ||
-      /\b(ay[şs]eg[uü]l|ay[şs]o)\b/i.test(lower)
-    ) {
+      lower.includes("aysegül") ||
+      lowerTr.includes("ayşegül") ||
+      lowerTr.includes("aysegul") ||
+      /\b(ay[şs]eg[uü]l|ay[şs]o)\b/i.test(lower) ||
+      /\b(ay[şs]eg[uü]l|ay[şs]o)\b/i.test(lowerTr) ||
+      /ben\s+ay/i.test(lower) ||
+      /ben\s+ay/i.test(lowerTr);
+
+    if (isAysegulClaim) {
       return res.json({
         reply: "Miyav?! 🐾 Gerçekten Ayşegül müsün yoksa bir taklitçi mi? Bunu sadece gerçek Ayşegül bilebilir... Gizli parolayı söyle bakalım? 🤫🔐"
       });
@@ -476,11 +510,12 @@ app.post("/api/cat-assistant", async (req, res) => {
             {
               role: "user",
               parts: [{
-                text: `${CAT_SYSTEM_INSTRUCTION}\n\nKullanıcı Sorusuna maksimum 1-2 cümlelik sevimli, zeki ve esprili kedi üslubuyla yanıt ver: "${cleanMessage}"`
+                text: `Kullanıcı Sorusuna maksimum 1-2 cümlelik sevimli, zeki ve esprili kedi üslubuyla yanıt ver: "${cleanMessage}"`
               }]
             }
           ],
           config: {
+            systemInstruction: CAT_SYSTEM_INSTRUCTION,
             temperature: 0.7,
             maxOutputTokens: 75
           }
@@ -492,11 +527,12 @@ app.post("/api/cat-assistant", async (req, res) => {
             {
               role: "user",
               parts: [{
-                text: `${CAT_SYSTEM_INSTRUCTION}\n\nKullanıcı Sorusuna maksimum 1-2 cümlelik sevimli, zeki ve esprili kedi üslubuyla yanıt ver: "${cleanMessage}"`
+                text: `Kullanıcı Sorusuna maksimum 1-2 cümlelik sevimli, zeki ve esprili kedi üslubuyla yanıt ver: "${cleanMessage}"`
               }]
             }
           ],
           config: {
+            systemInstruction: CAT_SYSTEM_INSTRUCTION,
             temperature: 0.7,
             maxOutputTokens: 75
           }
@@ -745,20 +781,81 @@ const serverInboxMessages: Array<{
   timestamp: number;
 }> = [];
 
+// Universal RFC-compliant Email Validation Pattern
+const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+
+function sanitizeString(val: unknown, maxLen = 500): string {
+  if (typeof val !== 'string') return '';
+  return val
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+    .trim()
+    .slice(0, maxLen);
+}
+
+// Admin Authentication Verification Route
+app.post("/api/admin-verify", apiRateLimiter, apiSecurityGuard, async (req, res) => {
+  try {
+    const { passcode } = req.body || {};
+    if (!passcode || typeof passcode !== "string") {
+      return res.status(400).json({ error: "Erişim anahtarı gereklidir." });
+    }
+    const cleanPass = passcode.trim();
+    if (!cleanPass || cleanPass.length > 120) {
+      return res.status(400).json({ error: "Geçersiz erişim anahtarı." });
+    }
+
+    const hash = crypto.createHash('sha256').update(cleanPass).digest('hex');
+    const lowerHash = crypto.createHash('sha256').update(cleanPass.toLowerCase()).digest('hex');
+
+    const isValid = SYSTEM_ADMIN_HASHES.has(hash) || SYSTEM_ADMIN_HASHES.has(lowerHash);
+    
+    // Constant-time defense: apply equal artificial delay to neutralize timing side-channel discovery
+    await new Promise(r => setTimeout(r, 250));
+
+    if (!isValid) {
+      return res.status(401).json({ error: "Hatalı erişim anahtarı." });
+    }
+
+    const sessionToken = "adm_" + crypto.randomBytes(32).toString("hex");
+    activeAdminTokens.add(sessionToken);
+
+    // Auto-expire token after 2 hours
+    setTimeout(() => {
+      activeAdminTokens.delete(sessionToken);
+    }, 2 * 60 * 60 * 1000);
+
+    return res.json({ success: true, token: sessionToken });
+  } catch {
+    return res.status(500).json({ error: "Doğrulama işlemi başarısız oldu." });
+  }
+});
+
 app.post("/api/messages", apiRateLimiter, apiSecurityGuard, (req, res) => {
   try {
     const { name, company, email, intent, subject, message } = req.body || {};
-    if (!name || !email || !message) {
+    const safeName = sanitizeString(name, 100);
+    const safeCompany = sanitizeString(company, 100);
+    const safeEmail = sanitizeString(email, 120).toLowerCase();
+    const safeIntent = sanitizeString(intent, 100) || "Genel İletişim";
+    const safeSubject = sanitizeString(subject, 150) || "İletişim Talebi";
+    const safeMessage = sanitizeString(message, 5000);
+
+    if (!safeName || !safeEmail || !safeMessage) {
       return res.status(400).json({ error: "İsim, e-posta ve mesaj alanları zorunludur." });
     }
+
+    if (!EMAIL_REGEX.test(safeEmail)) {
+      return res.status(400).json({ error: "Lütfen geçerli bir e-posta adresi girin." });
+    }
+
     const newMsg = {
       id: "msg-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7),
-      name: String(name).slice(0, 100),
-      company: company ? String(company).slice(0, 100) : "",
-      email: String(email).slice(0, 120),
-      intent: intent ? String(intent).slice(0, 100) : "Genel İletişim",
-      subject: subject ? String(subject).slice(0, 150) : "İletişim Talebi",
-      message: String(message).slice(0, 5000),
+      name: safeName,
+      company: safeCompany,
+      email: safeEmail,
+      intent: safeIntent,
+      subject: safeSubject,
+      message: safeMessage,
       date: new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }),
       timestamp: Date.now()
     };
@@ -770,11 +867,13 @@ app.post("/api/messages", apiRateLimiter, apiSecurityGuard, (req, res) => {
   }
 });
 
-app.get("/api/messages", (_req, res) => {
+// Protected: Only verified admin can view inbox messages
+app.get("/api/messages", adminAuthGuard, (_req, res) => {
   return res.json({ messages: serverInboxMessages });
 });
 
-app.delete("/api/messages", (_req, res) => {
+// Protected: Only verified admin can purge inbox messages
+app.delete("/api/messages", adminAuthGuard, (_req, res) => {
   serverInboxMessages.length = 0;
   return res.json({ success: true, message: "Gelen kutusu temizlendi." });
 });

@@ -287,26 +287,22 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
     }
 
     // ==========================================
-    // 3.01 SPLIT / SET-THEME SPLIT (CANLI YARILMA)
+    // 3.01 SWITCH TO CAM UI
     // ==========================================
     if (mainCmd === 'split' || lower === 'set-theme split' || lower === 'split-screen' || lower === 'reality' || lower === 'yarilma') {
       setLines(prev => [
         ...prev,
         { 
           id: `out-${Date.now()}`, 
-          type: 'success', 
+          type: 'system', 
           text: isEn 
-            ? '⚡ Activating Split-Screen Reality (Side-by-side Terminal & Liquid Glass)...' 
-            : '⚡ Canlı Yarılma Efekti Devreye Alınıyor (Terminal + Cam UI Yan Yana)...' 
+            ? 'ℹ️ The interface is streamlined to Cam UI (Liquid Glass) and Terminal CLI. Switching to Cam UI...' 
+            : 'ℹ️ Arayüz Cam UI (Modern Vitrin) ve Terminal CLI olarak optimize edilmiştir. Cam UI arayüzüne geçiliyor...' 
         }
       ]);
-      soundEngine.playTerminalKey();
+      soundEngine.playGlassClick();
       setTimeout(() => {
-        if (onSwitchToSplit) {
-          onSwitchToSplit();
-        } else {
-          onSwitchToNormal('projects');
-        }
+        onSwitchToNormal('projects');
       }, 350);
       return;
     }
@@ -1459,7 +1455,6 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
   // Quick Action Buttons
   const quickActions = [
     { label: 'help', cmd: 'help', title: 'Komut Kılavuzu' },
-    { label: '⚡ Canlı Yarılma', cmd: 'split', title: 'İkili Ekran (Terminal + Cam UI Yan Yana)' },
     { label: '✨ Proje Mimarisi', cmd: 'New-Architecture', title: 'Yapay Zeka Mimari ve Teklif Oluşturucu' },
     { label: 'dir', cmd: 'dir', title: 'Dizin İçeriği' },
     { label: 'Get-Projects', cmd: 'Get-Projects', title: 'Projeler Tablosu' },
@@ -1467,7 +1462,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
     { label: 'cat Bio.txt', cmd: 'cat Bio.txt', title: 'Özgeçmiş' },
     { label: 'Get-Skills', cmd: 'Get-Skills', title: 'Yetenekler' },
     { label: 'cls (Ctrl+C)', cmd: 'cls', title: 'Ekranı Temizle (veya Ctrl+C)' },
-    { label: 'Normal UI', cmd: 'exit', title: 'Cam Arayüze Dön' }
+    { label: 'Cam UI', cmd: 'exit', title: 'Cam Arayüze Dön' }
   ];
 
   return (

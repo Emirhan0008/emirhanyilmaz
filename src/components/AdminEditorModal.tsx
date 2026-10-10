@@ -151,13 +151,13 @@ export function AdminEditorModal({
       name: sanitizeText(profileForm.name),
       title: sanitizeText(profileForm.title),
       about: sanitizeMultilineText(profileForm.about),
-      github: sanitizeUrl(profileForm.github) || profileForm.github,
+      github: sanitizeUrl(profileForm.github) || 'https://github.com/Emirhan0008',
       email: sanitizeText(profileForm.email),
       whatsapp: sanitizeText(profileForm.whatsapp),
       telegram: sanitizeText(profileForm.telegram),
       instagram: sanitizeText(profileForm.instagram),
-      avatar: sanitizeImageSource(profileForm.avatar) || profileForm.avatar,
-      logo: sanitizeImageSource(profileForm.logo) || profileForm.logo
+      avatar: sanitizeImageSource(profileForm.avatar) || '/profile-photo.jpg',
+      logo: sanitizeImageSource(profileForm.logo) || '/logo.png'
     };
     onSaveProfile(updated);
     onToast("✅ Profil bilgileri başarıyla güncellendi.");
@@ -219,7 +219,7 @@ export function AdminEditorModal({
       category: sanitizeText(projectForm.category || 'Genel'),
       description: sanitizeMultilineText(projectForm.description || ''),
       longDescription: sanitizeMultilineText(projectForm.longDescription || projectForm.description || ''),
-      image: (projectForm.image ? (sanitizeImageSource(projectForm.image) || projectForm.image) : '') || '',
+      image: projectForm.image ? (sanitizeImageSource(projectForm.image) || '') : '',
       tech: techArray.length ? techArray : ['Yazılım'],
       highlights: highlightsArray.length ? highlightsArray : ['Gelişmiş mimari'],
       demoUrl: projectForm.demoUrl ? (sanitizeUrl(projectForm.demoUrl) || '') : (projectForm.deploy ? (sanitizeUrl(projectForm.deploy) || '') : ''),
@@ -407,13 +407,13 @@ export function AdminEditorModal({
             name: sanitizeText(data.profile.name || profileForm.name),
             title: sanitizeText(data.profile.title || profileForm.title),
             about: sanitizeMultilineText(data.profile.about || profileForm.about),
-            github: sanitizeUrl(data.profile.github) || profileForm.github,
+            github: sanitizeUrl(data.profile.github) || 'https://github.com/Emirhan0008',
             email: sanitizeText(data.profile.email || profileForm.email),
             whatsapp: sanitizeText(data.profile.whatsapp || profileForm.whatsapp),
             telegram: sanitizeText(data.profile.telegram || profileForm.telegram),
             instagram: sanitizeText(data.profile.instagram || profileForm.instagram),
-            avatar: sanitizeImageSource(data.profile.avatar) || profileForm.avatar,
-            logo: sanitizeImageSource(data.profile.logo) || profileForm.logo
+            avatar: sanitizeImageSource(data.profile.avatar) || '/profile-photo.jpg',
+            logo: sanitizeImageSource(data.profile.logo) || '/logo.png'
           };
           setProfileForm(sanitizedProfile);
           onSaveProfile(sanitizedProfile);

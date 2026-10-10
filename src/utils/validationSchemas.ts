@@ -91,8 +91,8 @@ export const profileSchema = z.object({
   bio: z.string().max(3000).transform(val => sanitizeMultilineText(val)),
   location: z.string().max(100).transform(val => sanitizeText(val)),
   email: z.string().email().transform(val => val.trim().toLowerCase()),
-  github: z.string().max(200).transform(val => sanitizeUrl(val) || val),
-  telegram: z.string().max(200).transform(val => sanitizeUrl(val) || val),
+  github: z.string().max(200).transform(val => sanitizeUrl(val) || ''),
+  telegram: z.string().max(200).transform(val => sanitizeUrl(val) || ''),
   whatsapp: z.string().max(100).transform(val => sanitizeText(val))
 });
 

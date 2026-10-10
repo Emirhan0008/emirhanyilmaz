@@ -146,6 +146,11 @@ export function sanitizeImageSource(src: unknown): string | null {
   const trimmed = src.trim();
   if (!trimmed) return null;
 
+  // Safe relative paths: /foo/bar.png or ./foo/bar.png (strictly no directory traversal or protocol injection)
+  if (/^(\/|\.\/)[a-zA-Z0-9_\-\.\/]+$/.test(trimmed) && !trimmed.includes('..') && !trimmed.includes('//')) {
+    return trimmed;
+  }
+
   // Safe base64 raster images
   if (trimmed.startsWith('data:image/')) {
     const safeDataUrlRegex = /^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i;
