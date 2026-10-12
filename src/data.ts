@@ -53,8 +53,8 @@ export const projects: Project[] = [
     "status": "client",
     "isFeatured": true,
     "isLive": true,
-    "description": "Özel gereksinimli bireylerin istihdamı için aday, işveren ve koçları buluşturan, aktif müşterisi olan canlı istihdam ve eşleştirme platformu.",
-    "longDescription": "Next.js web + Expo mobil, Supabase/PostgreSQL üzerinde RLS ve RPC ile çalışan monorepo: beceri, şehir, destek ihtiyacı ve erişilebilirlik kriterlerini puanlayan SQL eşleştirme motoru; rol bazlı CV yükleme, çok kanallı bildirim outbox (e-posta/SMS/push) ve WCAG 2.1 AA erişilebilirlik. 30+ Playwright e2e testi ile CI. Gerçek müşteriler ve kurumlar tarafından aktif olarak kullanılmaktadır.",
+    "description": "Özel gereksinimli bireylerin istihdamı için aday, işveren ve iş koçlarını buluşturan canlı istihdam ve akıllı eşleştirme platformu.",
+    "longDescription": "Next.js web + Expo mobil, Supabase/PostgreSQL üzerinde RLS ve RPC ile çalışan monorepo: beceri, şehir, destek ihtiyacı ve erişilebilirlik kriterlerini puanlayan SQL eşleştirme motoru; rol bazlı CV yükleme, çok kanallı bildirim outbox (e-posta/SMS/push) ve WCAG 2.1 AA erişilebilirlik. 30+ Playwright e2e testi ile CI. Üretim ortamında aktif olarak kullanılmaktadır.",
     "image": "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&q=80",
     "tech": [
       "Next.js 16",
@@ -66,7 +66,7 @@ export const projects: Project[] = [
       "Docker"
     ],
     "highlights": [
-      "Aktif müşteri kullanımı ve canlı SaaS mimarisi",
+      "Üretimde canlı SaaS mimarisi ve tam erişilebilirlik",
       "SQL tarafında yazılan aday↔ilan eşleştirme motoru",
       "Çok kanallı bildirim outbox ve denetim paneli",
       "WCAG 2.1 AA erişilebilirlik + 30+ e2e test"
@@ -74,10 +74,10 @@ export const projects: Project[] = [
     "caseStudy": {
       "challenge": "Özel gereksinimli bireylerin istihdamında standart kariyer portalları erişilebilirlik (WCAG), destek ihtiyacı ve koç/aile katılımını sağlayamıyordu.",
       "role": "Full-Stack & Ürün Mimarı",
-      "contribution": "Bireysel Geliştirici (Canlı Ürün & Müşteri Desteği): Adayların bilişsel/fiziksel yetkinliklerini puanlayan çok rollülü bir istihdam mimarisi, SQL RPC eşleştirme motoru ve RLS güvenlik kuralları kuruldu.",
+      "contribution": "Bireysel Geliştirici (Canlı Ürün & Mimari): Adayların bilişsel/fiziksel yetkinliklerini puanlayan çok rollülü bir istihdam mimarisi, SQL RPC eşleştirme motoru ve RLS güvenlik kuralları kuruldu.",
       "solution": "Next.js 16 + React 19 + Expo monorepo. Supabase PostgreSQL üzerinde özel SQL RPC eşleştirme motoru, RLS güvenlik kuralları ve Playwright ile 30+ uçtan uca test yazıldı.",
-      "impact": "Aktif kurumsal müşterilerle canlıda hizmet veriyor; aday-iş ilanı eşleşme doğruluğunda %85 başarı ve WCAG 2.1 AA tam erişilebilirlik sağlandı.",
-      "metrics": ["Aktif Müşterili Canlı Ürün", "%85 Eşleşme Doğruluğu", "WCAG 2.1 AA Uyumlu"]
+      "impact": "Üretim ortamında aktif olarak hizmet veriyor; aday-iş ilanı eşleşme doğruluğunda %85 başarı ve WCAG 2.1 AA tam erişilebilirlik sağlandı.",
+      "metrics": ["Üretimde Canlı Sistem", "%85 Eşleşme Doğruluğu", "WCAG 2.1 AA Uyumlu"]
     },
     "deploy": "https://herkesiste.com",
     "demoUrl": "https://herkesiste.com",
@@ -91,8 +91,8 @@ export const projects: Project[] = [
     "status": "client",
     "isFeatured": true,
     "isLive": true,
-    "description": "QR okuyucu ve turnike/kapı kiosk terminaliyle anlık yoklama alan, veli/öğretmen bildirimli ve aktif müşterisi bulunan hızlı geçiş sistemi.",
-    "longDescription": "FastAPI + SQLite çekirdek, NETUM USB barkod/QR okuyucu + Chrome kiosk kapı terminali; idempotent yazım sayesinde Wi-Fi kesilse de sıfır veri kaybı. Rol bazlı PWA + Expo APK, Supabase'e tek yönlü senkron, SSE canlı monitör ekranı ve sanal saatli 100x test senaryoları. Aktif kurumlarda günlük yoklama ve geçiş için fiilen çalışmaktadır.",
+    "description": "QR okuyucu ve turnike/kapı kiosk terminaliyle anlık yoklama alan, veli/öğretmen bildirimli kurumsal hızlı geçiş sistemi.",
+    "longDescription": "FastAPI + SQLite çekirdek, NETUM USB barkod/QR okuyucu + Chrome kiosk kapı terminali; idempotent yazım sayesinde Wi-Fi kesilse de sıfır veri kaybı. Rol bazlı PWA + Expo APK, Supabase'e tek yönlü senkron, SSE canlı monitör ekranı ve sanal saatli 100x test senaryoları. Kurumlarda günlük yoklama ve geçiş için fiilen çalışmaktadır.",
     "image": "https://images.unsplash.com/photo-1595079672139-62308635f57c?w=800&q=80",
     "tech": [
       "Python",
@@ -104,7 +104,7 @@ export const projects: Project[] = [
       "Supabase"
     ],
     "highlights": [
-      "Aktif müşteri kullanımı ve kurum içi donanım entegrasyonu",
+      "Kurumsal donanım entegrasyonu ve saha kurulumu",
       "Offline-first idempotent yoklama (sıfır veri kaybı)",
       "Kapı kiosk + rol bazlı PWA + Android APK",
       "Supabase senkron ve SSE canlı ekran"
@@ -115,7 +115,7 @@ export const projects: Project[] = [
       "contribution": "Bireysel Geliştirici (Donanım & Yazılım Entegrasyonu): Kiosk kapı terminali, USB QR okuyucu sürücüleri, FastAPI çekirdeği ve PWA/APK arayüzleri tek elden geliştirildi.",
       "solution": "FastAPI ve SQLite ile internet kesilse bile yerelde çalışan offline-first mimari kuruldu. USB barkod okuyucuyla kart okutulduğunda anında onay sesi, veliye bildirim ve Supabase bulut senkronu sağlandı.",
       "impact": "Kurumlarda aktif olarak kullanılıyor; kapıdan geçiş süresi 1.2 saniyeye indi, yoklama kaçırma oranı sıfırlandı ve veli güveni en üst düzeye çıktı.",
-      "metrics": ["Aktif Kurumsal Müşteriler", "1.2 sn Geçiş Süresi", "Sıfır Veri Kaybı"]
+      "metrics": ["Kurumsal Saha Entegrasyonu", "1.2 sn Geçiş Süresi", "Sıfır Veri Kaybı"]
     },
     "deploy": "",
     "demoUrl": "",

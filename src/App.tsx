@@ -2260,10 +2260,16 @@ export default function App() {
                               : (lang === 'tr' ? 'YAZILIM MİMARİSİ & ÇÖZÜM DETAYI' : 'TECHNICAL ARCHITECTURE & SOLUTION')}
                           </span>
                           {currentSelectedProject.demoUrl && (
-                            <span className="text-[9px] text-emerald-300 font-mono font-bold flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                              {lang === 'tr' ? 'CANLI YAYINDA' : 'LIVE'}
-                            </span>
+                            <a
+                              href={sanitizeUrl(currentSelectedProject.demoUrl) || '#'}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-emerald-300 hover:text-emerald-200 font-mono font-bold flex items-center gap-1 hover:underline"
+                              title={lang === 'tr' ? 'Siteye Git' : 'Visit Site'}
+                            >
+                              <span>{lang === 'tr' ? 'Siteye Git' : 'Visit Site'}</span>
+                              <ExternalLink size={10} className="shrink-0" />
+                            </a>
                           )}
                         </div>
                         <p className="text-xs text-white/95 font-semibold leading-relaxed">
@@ -2349,7 +2355,7 @@ export default function App() {
                               className="w-full sm:flex-1 py-2 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/20 transition-all cursor-pointer hover:scale-102"
                             >
                               <ExternalLink size={13} />
-                              <span>{lang === 'tr' ? 'Canlı Ürünü İncele' : 'View Live Product'}</span>
+                              <span>{lang === 'tr' ? 'Siteye Git' : 'Visit Site'}</span>
                             </a>
                           ) : (
                             <span className="w-full sm:flex-1 py-2 px-3 rounded-xl bg-white/5 border border-white/10 text-white/50 text-xs font-medium flex items-center justify-center gap-1.5 text-center">
@@ -3677,8 +3683,6 @@ export default function App() {
                         {[
                           { id: 'Tümü', label: t.filter.categories.all },
                           { id: 'Öne Çıkanlar', label: lang === 'tr' ? '⭐ Öne Çıkanlar' : '⭐ Highlights' },
-                          { id: 'Müşterili', label: lang === 'tr' ? '🟢 Müşterili' : '🟢 Clients' },
-                          { id: 'Prototipler', label: lang === 'tr' ? '⚪ Prototipler' : '⚪ Prototypes' },
                           { id: 'Web & Bulut', label: t.filter.categories.webCloud },
                           { id: 'Yapay Zeka', label: t.filter.categories.dataAi },
                           { id: 'Python & Otomasyon', label: t.filter.categories.automationScript },
@@ -3854,11 +3858,9 @@ export default function App() {
                             className={`project-catalog-card group cursor-pointer p-4 liquid-glass border ${
                               currentSelectedProject?.id === project.id 
                                 ? 'ring-2 ring-emerald-400 border-emerald-400 bg-white/10 shadow-lg shadow-emerald-500/10' 
-                                : project.status === 'client' 
+                                : project.isFeatured 
                                   ? 'border-emerald-500/40 bg-emerald-950/25 hover:border-emerald-400/80 hover:shadow-lg hover:shadow-emerald-500/15'
-                                  : project.status === 'personal'
-                                    ? 'border-sky-500/40 bg-sky-950/25 hover:border-sky-400/80 hover:shadow-lg hover:shadow-sky-500/15'
-                                    : 'border-white/10 bg-black/40 hover:border-white/25 hover:bg-white/5'
+                                  : 'border-white/10 bg-black/40 hover:border-white/25 hover:bg-white/5'
                             }`}
                           >
                             <div className="flex flex-col gap-3">
@@ -3876,31 +3878,29 @@ export default function App() {
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
 
-                                {/* Project Status Badge */}
+                                {/* Project Status Badge (Sadece Öne Çıkan) */}
                                 <div className="absolute top-2 left-2 z-10">
-                                  {project.status === 'client' ? (
+                                  {project.isFeatured && (
                                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-950/95 text-emerald-300 border border-emerald-400/60 backdrop-blur-md shadow-md">
                                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                      <span>{lang === 'tr' ? 'MÜŞTERİLİ ÜRÜN' : 'CLIENT PRODUCT'}</span>
-                                    </span>
-                                  ) : project.status === 'personal' ? (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-sky-950/95 text-sky-300 border border-sky-400/60 backdrop-blur-md shadow-md">
-                                      <Sparkles size={10} className="text-sky-400" />
-                                      <span>{lang === 'tr' ? 'ŞAHSİ PROJE' : 'PERSONAL'}</span>
-                                    </span>
-                                  ) : (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-black/80 text-white/70 border border-white/20 backdrop-blur-md">
-                                      <span>{lang === 'tr' ? 'PROTOTİP' : 'PROTOTYPE'}</span>
+                                      <span>{lang === 'tr' ? 'Öne Çıkan' : 'Featured'}</span>
                                     </span>
                                   )}
                                 </div>
 
-                                {/* Live Badge */}
+                                {/* Siteye Git Badge */}
                                 {project.demoUrl && !isAdmin && (
-                                  <div className="absolute top-2 right-2 bg-emerald-500 text-black text-[10px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-md z-10">
-                                    <ExternalLink size={10} />
-                                    <span>{lang === 'tr' ? 'CANLI' : 'LIVE'}</span>
-                                  </div>
+                                  <a
+                                    href={sanitizeUrl(project.demoUrl) || '#'}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="absolute top-2 right-2 bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-md z-10 transition-transform hover:scale-105 cursor-pointer"
+                                    title={lang === 'tr' ? "Siteye Git" : "Visit Site"}
+                                  >
+                                    <span>{lang === 'tr' ? 'Siteye Git' : 'Visit Site'}</span>
+                                    <ExternalLink size={10} className="shrink-0" />
+                                  </a>
                                 )}
 
                                 {/* Admin Action Buttons */}
@@ -3954,16 +3954,9 @@ export default function App() {
 
                               {/* Content Header & Title */}
                               <div className="flex flex-col gap-1">
-                                <div className="flex items-center justify-between gap-2">
-                                  <span className="text-[10px] uppercase font-mono tracking-wider text-emerald-400 font-bold truncate">
-                                    {project.category}
-                                  </span>
-                                  {project.isFeatured && (
-                                    <span className="text-[9px] text-amber-300 font-extrabold flex items-center gap-1 shrink-0 bg-amber-500/15 border border-amber-400/30 px-1.5 py-0.5 rounded-md">
-                                      ⭐ {lang === 'tr' ? 'Öne Çıkan' : 'Featured'}
-                                    </span>
-                                  )}
-                                </div>
+                                <span className="text-[10px] uppercase font-mono tracking-wider text-emerald-400 font-bold truncate">
+                                  {project.category}
+                                </span>
                                 <h3 className="text-sm font-extrabold text-white group-hover:text-emerald-300 transition-colors leading-snug truncate">
                                   <HighlightText text={project.title} query={searchQuery} />
                                 </h3>
@@ -4009,11 +4002,11 @@ export default function App() {
                                     href={sanitizeUrl(project.demoUrl) || '#'}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-extrabold flex items-center gap-1 shadow-sm transition-transform hover:scale-105 cursor-pointer"
-                                    title={lang === 'tr' ? "Canlı Demoyu Aç" : "Open Live Demo"}
+                                    className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-extrabold flex items-center gap-1.5 shadow-sm transition-transform hover:scale-105 cursor-pointer"
+                                    title={lang === 'tr' ? "Siteye Git" : "Visit Site"}
                                   >
-                                    <ExternalLink size={10} />
-                                    <span>{lang === 'tr' ? 'Canlı' : 'Live'}</span>
+                                    <span>{lang === 'tr' ? 'Siteye Git' : 'Visit Site'}</span>
+                                    <ExternalLink size={10} className="shrink-0" />
                                   </a>
                                 )}
                                 <button

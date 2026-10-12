@@ -52,8 +52,8 @@ export const projectsEn: Record<string, Partial<Project>> = {
       role: "Lead Full-Stack & Systems Architect",
       contribution: "Solo Developer (Live Product & Client Operations): Designed multi-role assessment framework, SQL RPC matching engine, and RLS security policies.",
       solution: "Next.js 16 + React 19 + Expo monorepo backed by Supabase PostgreSQL with custom SQL matching RPCs, Row Level Security, and 30+ Playwright E2E suites.",
-      impact: "Serving active institutional clients in production; achieved an 85% placement relevance score and full WCAG 2.1 AA compliance.",
-      metrics: ["Active Client Base", "85% Placement Relevance", "WCAG 2.1 AA Compliant"]
+      impact: "Serving in live production environments; achieved an 85% placement relevance score and full WCAG 2.1 AA compliance.",
+      metrics: ["Live in Production", "85% Placement Relevance", "WCAG 2.1 AA Compliant"]
     }
   },
   "fastpass": {
@@ -62,10 +62,10 @@ export const projectsEn: Record<string, Partial<Project>> = {
     status: "client",
     isFeatured: true,
     isLive: true,
-    description: "Fast entrance QR scanner and kiosk gate attendance system with real-time guardian/teacher alerts and active institutional clients.",
+    description: "Fast entrance QR scanner and kiosk gate attendance system with real-time guardian/teacher alerts and institutional integration.",
     longDescription: "FastAPI + SQLite core paired with hardware USB barcode scanners and Chrome kiosk mode; idempotent write queues prevent data loss during Wi-Fi dropouts. Role-based PWA + Android APK with real-time SSE live monitors. Actively deployed in real education and course centers.",
     highlights: [
-      "Actively deployed with institutional hardware clients",
+      "Hardware kiosk integration and field deployment",
       "Offline-first idempotent attendance queue with zero data loss",
       "Entrance kiosk terminal paired with role-based PWA and APK",
       "Real-time Server-Sent Events (SSE) live monitoring board"
@@ -75,8 +75,8 @@ export const projectsEn: Record<string, Partial<Project>> = {
       role: "Systems Architect & Full-Stack Developer",
       contribution: "Solo Developer (Hardware & Software Integration): Kiosk gate software, USB scanner drivers, FastAPI core, and PWA/APK clients built end-to-end.",
       solution: "Engineered an offline-first architecture on FastAPI and SQLite that functions flawlessly during network drops, with immediate confirmation audio, SMS dispatches, and Supabase cloud sync.",
-      impact: "In active daily use; dropped gate pass latency to 1.2s, achieved 100% record reliability, and boosted parent trust.",
-      metrics: ["Active Institutional Clients", "1.2s Gate Pass Speed", "Zero Data Loss"]
+      impact: "In active daily institutional use; dropped gate pass latency to 1.2s, achieved 100% record reliability, and boosted parent trust.",
+      metrics: ["Enterprise Integration", "1.2s Gate Pass Speed", "Zero Data Loss"]
     }
   },
   "3dcografya": {
