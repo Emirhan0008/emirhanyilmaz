@@ -218,6 +218,40 @@
   z-index: -1;
 }
 
+/* ==========================================================================
+   PROJECTS SHOWCASE GRID & CARD ENGINE (Card Collapsing Fix)
+   ========================================================================== */
+.projects-catalog-grid {
+  display: grid !important;
+  grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+  grid-auto-rows: max-content !important;
+  align-content: start !important;
+  align-items: stretch !important;
+  gap: 1rem !important;
+}
+
+@media (min-width: 640px) {
+  .projects-catalog-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+.project-catalog-card {
+  min-height: 310px !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  position: relative !important;
+  border-radius: 1rem !important;
+  overflow: hidden !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.project-catalog-card:hover {
+  transform: translateY(-2px) !important;
+}
+
 /* SLEEK CUSTOM GLOWING SCROLLBARS */
 ::-webkit-scrollbar {
   width: 6px;

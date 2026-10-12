@@ -3636,9 +3636,9 @@ export default function App() {
                     </div>
 
                     {/* Search Bar & Category Filter Pills */}
-                    <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+                    <div className="flex flex-col gap-2.5">
                       {/* Search Input Bar */}
-                      <div className="relative flex-1 max-w-md">
+                      <div className="relative w-full">
                         <Search size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/50" />
                         <input
                           type="text"
@@ -3838,32 +3838,32 @@ export default function App() {
                     ) : (
                       <div 
                         onScroll={handleProjectsScroll}
-                        className="flex-1 overflow-y-auto pr-1 grid grid-cols-1 sm:grid-cols-2 gap-3 scrollbar-thin scrollbar-thumb-white/20"
+                        className="flex-1 overflow-y-auto pr-1 projects-catalog-grid scrollbar-thin scrollbar-thumb-white/20"
                       >
                         {filteredProjects.map((project, idx) => (
                           <motion.div
                             key={project.id}
                             initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.04 }}
+                            transition={{ delay: Math.min(idx * 0.03, 0.3) }}
                             onClick={() => {
                               soundEngine.playGlassClick();
                               setSelectedProject(project);
                               setProjectDetailTab('casestudy');
                             }}
-                            className={`group cursor-pointer p-3.5 liquid-glass rounded-2xl flex flex-col justify-between hover:bg-white/5 transition-all relative overflow-hidden border ${
+                            className={`project-catalog-card group cursor-pointer p-4 liquid-glass border ${
                               currentSelectedProject?.id === project.id 
                                 ? 'ring-2 ring-emerald-400 border-emerald-400 bg-white/10 shadow-lg shadow-emerald-500/10' 
                                 : project.status === 'client' 
-                                  ? 'border-emerald-500/40 bg-emerald-950/20 hover:border-emerald-400/70 hover:shadow-md hover:shadow-emerald-500/10'
+                                  ? 'border-emerald-500/40 bg-emerald-950/25 hover:border-emerald-400/80 hover:shadow-lg hover:shadow-emerald-500/15'
                                   : project.status === 'personal'
-                                    ? 'border-sky-500/40 bg-sky-950/20 hover:border-sky-400/70 hover:shadow-md hover:shadow-sky-500/10'
-                                    : 'border-white/10 hover:border-white/25'
+                                    ? 'border-sky-500/40 bg-sky-950/25 hover:border-sky-400/80 hover:shadow-lg hover:shadow-sky-500/15'
+                                    : 'border-white/10 bg-black/40 hover:border-white/25 hover:bg-white/5'
                             }`}
                           >
-                            <div className="space-y-2.5">
-                              {/* Compact Media Header (95px) */}
-                              <div className="relative h-[95px] w-full rounded-xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0">
+                            <div className="flex flex-col gap-3">
+                              {/* Visual Media Header (h-28 sm:h-32) */}
+                              <div className="relative h-28 sm:h-32 w-full rounded-xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0">
                                 <img 
                                   src={project.image} 
                                   alt={project.title} 
@@ -3874,21 +3874,22 @@ export default function App() {
                                     if (original) e.currentTarget.src = original.image;
                                   }}
                                 />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
 
                                 {/* Project Status Badge */}
                                 <div className="absolute top-2 left-2 z-10">
                                   {project.status === 'client' ? (
-                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-950/95 text-emerald-300 border border-emerald-400/50 backdrop-blur-md shadow-md">
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-950/95 text-emerald-300 border border-emerald-400/60 backdrop-blur-md shadow-md">
                                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                                       <span>{lang === 'tr' ? 'MÜŞTERİLİ ÜRÜN' : 'CLIENT PRODUCT'}</span>
                                     </span>
                                   ) : project.status === 'personal' ? (
-                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-950/95 text-sky-300 border border-sky-400/50 backdrop-blur-md shadow-md">
-                                      <Sparkles size={9} className="text-sky-400" />
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-sky-950/95 text-sky-300 border border-sky-400/60 backdrop-blur-md shadow-md">
+                                      <Sparkles size={10} className="text-sky-400" />
                                       <span>{lang === 'tr' ? 'ŞAHSİ PROJE' : 'PERSONAL'}</span>
                                     </span>
                                   ) : (
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-black/75 text-white/70 border border-white/20 backdrop-blur-md">
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-black/80 text-white/70 border border-white/20 backdrop-blur-md">
                                       <span>{lang === 'tr' ? 'PROTOTİP' : 'PROTOTYPE'}</span>
                                     </span>
                                   )}
@@ -3896,8 +3897,8 @@ export default function App() {
 
                                 {/* Live Badge */}
                                 {project.demoUrl && !isAdmin && (
-                                  <div className="absolute top-2 right-2 bg-emerald-500 text-black text-[9px] font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md z-10">
-                                    <ExternalLink size={9} />
+                                  <div className="absolute top-2 right-2 bg-emerald-500 text-black text-[10px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-md z-10">
+                                    <ExternalLink size={10} />
                                     <span>{lang === 'tr' ? 'CANLI' : 'LIVE'}</span>
                                   </div>
                                 )}
@@ -3951,8 +3952,8 @@ export default function App() {
                                 )}
                               </div>
 
-                              {/* Header & Title */}
-                              <div className="space-y-1">
+                              {/* Content Header & Title */}
+                              <div className="flex flex-col gap-1">
                                 <div className="flex items-center justify-between gap-2">
                                   <span className="text-[10px] uppercase font-mono tracking-wider text-emerald-400 font-bold truncate">
                                     {project.category}
@@ -3966,18 +3967,16 @@ export default function App() {
                                 <h3 className="text-sm font-extrabold text-white group-hover:text-emerald-300 transition-colors leading-snug truncate">
                                   <HighlightText text={project.title} query={searchQuery} />
                                 </h3>
+                                <p className="text-xs text-white/75 leading-relaxed line-clamp-2 mt-0.5">
+                                  {project.description}
+                                </p>
                               </div>
-
-                              {/* Clean, Readable 2-Line Description */}
-                              <p className="text-xs text-white/75 leading-relaxed line-clamp-2">
-                                {project.description}
-                              </p>
                             </div>
 
                             {/* Card Footer: Tech Chips + Quick Actions */}
                             <div className="pt-3 mt-3 border-t border-white/10 flex items-center justify-between gap-2">
                               {/* Tech Stack Chips */}
-                              <div className="flex flex-wrap gap-1 items-center overflow-hidden max-h-[22px]">
+                              <div className="flex flex-wrap gap-1 items-center overflow-hidden max-h-[24px]">
                                 {project.tech.slice(0, 3).map((tItem, tIdx) => {
                                   const isSelected = selectedTech === tItem;
                                   return (
@@ -4010,7 +4009,7 @@ export default function App() {
                                     href={sanitizeUrl(project.demoUrl) || '#'}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="px-2 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-extrabold flex items-center gap-1 shadow-sm transition-transform hover:scale-105 cursor-pointer"
+                                    className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-extrabold flex items-center gap-1 shadow-sm transition-transform hover:scale-105 cursor-pointer"
                                     title={lang === 'tr' ? "Canlı Demoyu Aç" : "Open Live Demo"}
                                   >
                                     <ExternalLink size={10} />
@@ -4024,7 +4023,7 @@ export default function App() {
                                     setSelectedProject(project);
                                     setProjectDetailTab('casestudy');
                                   }}
-                                  className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
                                   title={lang === 'tr' ? "Detayları İncele" : "View Details"}
                                 >
                                   <span>{lang === 'tr' ? 'İncele' : 'Details'}</span>
