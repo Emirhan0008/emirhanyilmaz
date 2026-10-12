@@ -22,6 +22,8 @@ export interface Project {
   githubUrl?: string;
   folder?: string;
   isLive?: boolean;
+  status?: 'client' | 'personal' | 'prototype';
+  isFeatured?: boolean;
   caseStudy?: ProjectCaseStudy;
 }
 

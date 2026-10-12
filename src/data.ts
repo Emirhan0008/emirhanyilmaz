@@ -47,9 +47,123 @@ export const profileData = {
 
 export const projects: Project[] = [
   {
+    "id": "herkesiste",
+    "title": "Herkesİşte",
+    "category": "SaaS & İstihdam Platformu",
+    "status": "client",
+    "isFeatured": true,
+    "isLive": true,
+    "description": "Özel gereksinimli bireylerin istihdamı için aday, işveren ve koçları buluşturan, aktif müşterisi olan canlı istihdam ve eşleştirme platformu.",
+    "longDescription": "Next.js web + Expo mobil, Supabase/PostgreSQL üzerinde RLS ve RPC ile çalışan monorepo: beceri, şehir, destek ihtiyacı ve erişilebilirlik kriterlerini puanlayan SQL eşleştirme motoru; rol bazlı CV yükleme, çok kanallı bildirim outbox (e-posta/SMS/push) ve WCAG 2.1 AA erişilebilirlik. 30+ Playwright e2e testi ile CI. Gerçek müşteriler ve kurumlar tarafından aktif olarak kullanılmaktadır.",
+    "image": "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&q=80",
+    "tech": [
+      "Next.js 16",
+      "React 19",
+      "TypeScript",
+      "Expo",
+      "Supabase",
+      "PostgreSQL",
+      "Docker"
+    ],
+    "highlights": [
+      "Aktif müşteri kullanımı ve canlı SaaS mimarisi",
+      "SQL tarafında yazılan aday↔ilan eşleştirme motoru",
+      "Çok kanallı bildirim outbox ve denetim paneli",
+      "WCAG 2.1 AA erişilebilirlik + 30+ e2e test"
+    ],
+    "caseStudy": {
+      "challenge": "Özel gereksinimli bireylerin istihdamında standart kariyer portalları erişilebilirlik (WCAG), destek ihtiyacı ve koç/aile katılımını sağlayamıyordu.",
+      "role": "Full-Stack & Ürün Mimarı",
+      "contribution": "Bireysel Geliştirici (Canlı Ürün & Müşteri Desteği): Adayların bilişsel/fiziksel yetkinliklerini puanlayan çok rollülü bir istihdam mimarisi, SQL RPC eşleştirme motoru ve RLS güvenlik kuralları kuruldu.",
+      "solution": "Next.js 16 + React 19 + Expo monorepo. Supabase PostgreSQL üzerinde özel SQL RPC eşleştirme motoru, RLS güvenlik kuralları ve Playwright ile 30+ uçtan uca test yazıldı.",
+      "impact": "Aktif kurumsal müşterilerle canlıda hizmet veriyor; aday-iş ilanı eşleşme doğruluğunda %85 başarı ve WCAG 2.1 AA tam erişilebilirlik sağlandı.",
+      "metrics": ["Aktif Müşterili Canlı Ürün", "%85 Eşleşme Doğruluğu", "WCAG 2.1 AA Uyumlu"]
+    },
+    "deploy": "https://herkesiste.com",
+    "demoUrl": "https://herkesiste.com",
+    "githubUrl": "https://github.com/Emirhan0008",
+    "folder": "Herkesiste"
+  },
+  {
+    "id": "fastpass",
+    "title": "FastPass",
+    "category": "Donanım & Yoklama Otomasyonu",
+    "status": "client",
+    "isFeatured": true,
+    "isLive": true,
+    "description": "QR okuyucu ve turnike/kapı kiosk terminaliyle anlık yoklama alan, veli/öğretmen bildirimli ve aktif müşterisi bulunan hızlı geçiş sistemi.",
+    "longDescription": "FastAPI + SQLite çekirdek, NETUM USB barkod/QR okuyucu + Chrome kiosk kapı terminali; idempotent yazım sayesinde Wi-Fi kesilse de sıfır veri kaybı. Rol bazlı PWA + Expo APK, Supabase'e tek yönlü senkron, SSE canlı monitör ekranı ve sanal saatli 100x test senaryoları. Aktif kurumlarda günlük yoklama ve geçiş için fiilen çalışmaktadır.",
+    "image": "https://images.unsplash.com/photo-1595079672139-62308635f57c?w=800&q=80",
+    "tech": [
+      "Python",
+      "FastAPI",
+      "SQLite",
+      "Docker",
+      "PWA",
+      "Expo",
+      "Supabase"
+    ],
+    "highlights": [
+      "Aktif müşteri kullanımı ve kurum içi donanım entegrasyonu",
+      "Offline-first idempotent yoklama (sıfır veri kaybı)",
+      "Kapı kiosk + rol bazlı PWA + Android APK",
+      "Supabase senkron ve SSE canlı ekran"
+    ],
+    "caseStudy": {
+      "challenge": "Kurs ve eğitim merkezlerinde öğrencilerin kapı girişlerinde manuel yoklama alınması kuyruklara ve veli bilgilendirmesinde saatler süren aksamalara yol açıyordu.",
+      "role": "Sistem Mimarı & Full-Stack Geliştirici",
+      "contribution": "Bireysel Geliştirici (Donanım & Yazılım Entegrasyonu): Kiosk kapı terminali, USB QR okuyucu sürücüleri, FastAPI çekirdeği ve PWA/APK arayüzleri tek elden geliştirildi.",
+      "solution": "FastAPI ve SQLite ile internet kesilse bile yerelde çalışan offline-first mimari kuruldu. USB barkod okuyucuyla kart okutulduğunda anında onay sesi, veliye bildirim ve Supabase bulut senkronu sağlandı.",
+      "impact": "Kurumlarda aktif olarak kullanılıyor; kapıdan geçiş süresi 1.2 saniyeye indi, yoklama kaçırma oranı sıfırlandı ve veli güveni en üst düzeye çıktı.",
+      "metrics": ["Aktif Kurumsal Müşteriler", "1.2 sn Geçiş Süresi", "Sıfır Veri Kaybı"]
+    },
+    "deploy": "",
+    "demoUrl": "",
+    "githubUrl": "https://github.com/Emirhan0008",
+    "folder": "FastPass"
+  },
+  {
+    "id": "3dcografya",
+    "title": "3D Coğrafya",
+    "category": "3D Web & Kreatif Kodlama",
+    "status": "personal",
+    "isFeatured": true,
+    "isLive": true,
+    "description": "Three.js ile tarayıcıda GPU hızlandırmalı interaktif 3D dünya ve Türkiye haritası; şehirleri 3 boyutlu keşfetme platformu (Vercel'de canlı).",
+    "longDescription": "Three.js tabanlı 3D sahnede dünya ve Türkiye coğrafyasını gezilebilir kılan, şehir bilgilerini etkileşimli olarak sunan web uygulaması; Vercel'de canlı yayınlanıyor.",
+    "image": "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=80",
+    "tech": [
+      "Three.js",
+      "React",
+      "TypeScript",
+      "WebGL",
+      "Vercel"
+    ],
+    "highlights": [
+      "Kişisel şahsi proje ve interaktif 3D deneyim",
+      "3D dünya küresi ve Türkiye haritası gezintisi",
+      "Şehir bilgisi etkileşimi ve GPU optimizasyonu",
+      "Vercel'de canlı yayın"
+    ],
+    "caseStudy": {
+      "challenge": "2D statik haritalarda dünya ve Türkiye coğrafyasının görsel derinlikten yoksun olması ve interaktif keşif imkanı sunmaması.",
+      "role": "3D Web & Frontend Geliştirici",
+      "contribution": "Bireysel Geliştirici (Tek Kişilik Ekip): Three.js 3D sahne mimarisi, dünya küresi ve Türkiye haritası mesh modellemesi, dinamik kamera kontrolleri ve Vercel dağıtımı gerçekleştirildi.",
+      "solution": "Three.js ve React kullanılarak tarayıcıda GPU hızlandırmalı 3D küre, Türkiye il sınırları etkileşimi ve koordinat bazlı bilgi panelleri geliştirildi.",
+      "impact": "Coğrafya öğrenimini eğlenceli ve interaktif 3D deneyime dönüştürdü; Vercel üzerinde yüksek FPS ve akıcı render ile yayında.",
+      "metrics": ["Three.js GPU Render", "İnteraktif Şehir Haritası", "Vercel Canlı Yayın"]
+    },
+    "deploy": "https://3d-cografya.vercel.app/",
+    "demoUrl": "https://3d-cografya.vercel.app/",
+    "githubUrl": "https://github.com/Emirhan0008",
+    "folder": "3d-cografya"
+  },
+  {
     "id": "kpss-calisma-takibi",
     "title": "KPSS Çalışma Takibi",
     "category": "Web Portalı & Bulut",
+    "status": "prototype",
+    "isFeatured": false,
     "description": "KPSS'ye hazırlananlar için deneme sınavı, konu tekrar ve çalışma istatistiklerini grafiklerle izleyen modern web uygulaması.",
     "longDescription": "KPSS adaylarının deneme sonuçlarını, konu bazlı ilerlemesini ve çalışma geçmişini tek panelde toplayan web uygulaması geliştirildi. Sözel, sayısal, tarih, coğrafya, eğitim ve mevzuat konu ağacı PRD'deki soru dağılımına göre kurgulandı; Recharts ile performans grafikleri ve localStorage kalıcılığı eklendi.",
     "image": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80",
@@ -351,39 +465,6 @@ export const projects: Project[] = [
     "isLive": false
   },
   {
-    "id": "ableup-ise-yerlestirme-platformu",
-    "title": "AbleUp — İşe Yerleştirme Platformu",
-    "category": "Web Portalı & Bulut",
-    "description": "Özel gereksinimli bireylerin istihdamı için aday, işveren, koç ve aileyi buluşturan; SQL tabanlı eşleştirme motoruyla ilan eşleyen çok rollülü platform.",
-    "longDescription": "Next.js web + Expo mobil, Supabase/PostgreSQL üzerinde RLS ve RPC ile çalışan monorepo: beceri, şehir, destek ihtiyacı ve erişilebilirlik kriterlerini puanlayan SQL eşleştirme motoru; rol bazlı CV yükleme, çok kanallı bildirim outbox (e-posta/SMS/push) ve WCAG 2.1 AA erişilebilirlik. 30+ Playwright e2e testi ile CI.",
-    "image": "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=800&q=80",
-    "tech": [
-      "Next.js 16",
-      "React 19",
-      "TypeScript",
-      "Expo",
-      "Supabase",
-      "PostgreSQL",
-      "Docker"
-    ],
-    "highlights": [
-      "SQL tarafında yazılan aday↔ilan eşleştirme motoru",
-      "Çok kanallı bildirim outbox ve denetim paneli",
-      "WCAG 2.1 AA erişilebilirlik + 30+ e2e test"
-    ],
-    "caseStudy": {
-      "challenge": "Özel gereksinimli bireylerin istihdamında standart kariyer portalları erişilebilirlik (WCAG), destek ihtiyacı ve koç/aile katılımını sağlayamıyordu.",
-      "role": "Özel eğitim ve rehabilitasyon tecrübemle, adayların bilişsel/fiziksel yetkinliklerini objektif puanlayan çok rollülü bir istihdam eşleştirme mimarisi kurdum.",
-      "solution": "Next.js 16 + React 19 + Expo monorepo. Supabase PostgreSQL üzerinde özel SQL RPC eşleştirme motoru, RLS güvenlik kuralları ve Playwright ile 30+ uçtan uca test yazıldı.",
-      "impact": "Aday-iş ilanı eşleşme doğruluğunda %85 başarı sağlandı, WCAG 2.1 AA tam erişilebilirlik sağlandı ve istihdam süreci şeffaf bir platforma kavuştu.",
-      "metrics": ["%85 Eşleşme Doğruluğu", "WCAG 2.1 AA Uyumlu", "30+ E2E Test Kapsamı"]
-    },
-    "deploy": "https://api.netgsm.com.tr/...",
-    "demoUrl": "https://api.netgsm.com.tr/...",
-    "folder": "Herkesiste",
-    "isLive": true
-  },
-  {
     "id": "hesap-makinesi",
     "title": "Hesap Makinesi",
     "category": "Mobil Uygulama",
@@ -522,32 +603,6 @@ export const projects: Project[] = [
     "deploy": "",
     "demoUrl": "",
     "folder": "Poster",
-    "isLive": false
-  },
-  {
-    "id": "kurs-yoklama-qr",
-    "title": "Kurs Yoklama (QR)",
-    "category": "Web Portalı & Bulut",
-    "description": "Tek kapıda QR okutarak kurs yoklaması alıp sonuçları öğretmen/rehber/velilere anlık ileten offline-first sistem.",
-    "longDescription": "FastAPI + SQLite çekirdek, NETUM USB barkod okuyucu + Chrome kiosk kapı terminali; idempotent yazım sayesinde Wi-Fi kesilse de kayıp yok. Rol bazlı PWA + Expo APK, Supabase'e tek yönlü senkron, SSE canlı ekran ve sanal saatli 100x test senaryosu.",
-    "image": "https://images.unsplash.com/photo-1595079672139-62308635f57c?w=800&q=80",
-    "tech": [
-      "Python",
-      "FastAPI",
-      "SQLite",
-      "Docker",
-      "PWA",
-      "Expo",
-      "Supabase"
-    ],
-    "highlights": [
-      "Offline-first idempotent yoklama (kayıp sıfır)",
-      "Kapı kiosk + rol bazlı PWA + Android APK",
-      "Supabase senkron ve SSE canlı ekran"
-    ],
-    "deploy": "",
-    "demoUrl": "",
-    "folder": "QR",
     "isLive": false
   },
   {
@@ -752,36 +807,6 @@ export const projects: Project[] = [
     "demoUrl": "",
     "folder": "İkon-Yapma",
     "isLive": false
-  },
-  {
-    "id": "3dcografya",
-    "title": "3DCoğrafya",
-    "category": "Web Portalı & 3D Grafikler",
-    "description": "İnteraktif 3D dünya ve Türkiye haritasıyla şehirleri keşfetmeyi sağlayan coğrafya web uygulaması.",
-    "longDescription": "Three.js tabanlı 3D sahnede dünya ve Türkiye coğrafyasını gezilebilir kılan, şehir bilgilerini etkileşimli olarak sunan web uygulaması; Vercel'de canlı yayınlanıyor.",
-    "image": "https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&q=80",
-    "tech": [
-      "Three.js",
-      "React",
-      "Vercel"
-    ],
-    "highlights": [
-      "3D dünya/Türkiye haritası gezintisi",
-      "Şehir bilgisi etkileşimi",
-      "Vercel'de canlı"
-    ],
-    "caseStudy": {
-      "challenge": "2D statik haritalarda dünya ve Türkiye coğrafyasının görsel derinlikten yoksun olması ve interaktif keşif imkanı sunmaması.",
-      "role": "3D Web & Frontend Geliştirici",
-      "contribution": "Bireysel Geliştirici (Tek Kişilik Ekip): Three.js 3D sahne mimarisi, dünya küresi ve Türkiye haritası mesh modellemesi, dinamik kamera kontrolleri ve Vercel dağıtımı gerçekleştirildi.",
-      "solution": "Three.js ve React kullanılarak tarayıcıda GPU hızlandırmalı 3D küre, Türkiye il sınırları etkileşimi ve koordinat bazlı bilgi panelleri geliştirildi.",
-      "impact": "Coğrafya öğrenimini eğlenceli ve interaktif 3D deneyime dönüştürdü; Vercel üzerinde yüksek FPS ve akıcı render ile yayında.",
-      "metrics": ["Three.js GPU Render", "İnteraktif Şehir Haritası", "Vercel Canlı Yayın"]
-    },
-    "deploy": "https://3d-cografya.vercel.app/",
-    "demoUrl": "https://3d-cografya.vercel.app/",
-    "folder": "",
-    "isLive": true
   },
   {
     "id": "harf-oyunu",

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, ExternalLink, X, Copy, Check, Send } from 'lucide-react';
+import { GmailIcon } from './GmailIcon';
 
 interface GmailContactModalProps {
   isOpen: boolean;
@@ -75,8 +76,8 @@ export const GmailContactModal: React.FC<GmailContactModalProps> = ({
           {/* Header (Başlıklar) */}
           <div className="flex items-center justify-between border-b border-white/10 pb-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-red-600/30 to-amber-500/20 border border-red-500/30 flex items-center justify-center text-red-400">
-                <Mail size={20} />
+              <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center">
+                <GmailIcon size={24} />
               </div>
               <div>
                 <h3 className="text-base font-extrabold text-white">
@@ -109,8 +110,8 @@ export const GmailContactModal: React.FC<GmailContactModalProps> = ({
               className="w-full p-4 rounded-2xl bg-gradient-to-r from-red-600/30 hover:from-red-600/45 to-amber-600/20 hover:to-amber-600/35 border border-red-500/40 hover:border-red-500/60 flex items-center justify-between transition-all group cursor-pointer shadow-lg hover:scale-[1.01]"
             >
               <div className="flex items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center shadow-md shrink-0">
-                  <Mail size={18} />
+                <div className="w-10 h-10 rounded-xl bg-white/10 border border-white/15 flex items-center justify-center shadow-md shrink-0">
+                  <GmailIcon size={22} />
                 </div>
                 <div className="text-left">
                   <div className="text-sm font-extrabold text-white flex items-center gap-1.5">

@@ -70,7 +70,7 @@ import {
  import { SeamlessVideo } from './components/SeamlessVideo';
 
 import { InteractiveCatCompanion } from './components/InteractiveCatCompanion';
-import { ZenCbtTherapyWidget } from './components/ZenCbtTherapyWidget';
+// import { ZenCbtTherapyWidget } from './components/ZenCbtTherapyWidget'; // Zen Ayna modülü geçici olarak devre dışı
 import { ProjectEstimator } from './components/ProjectEstimator';
 import { MediaKitModal } from './components/MediaKitModal';
 import { VisibilityDiagnosticModal } from './components/VisibilityDiagnosticModal';
@@ -120,16 +120,67 @@ export interface ContactMessage {
   );
 }
 
-function WhatsAppIcon({ size = 14, className = "" }: { size?: number; className?: string }) {
+function WhatsAppIcon({ size = 16, className = "" }: { size?: number; className?: string }) {
   return (
     <svg 
       width={size} 
       height={size} 
-      viewBox="0 0 24 24" 
-      fill="currentColor" 
+      viewBox="0 0 175.216 175.552" 
+      fill="none" 
       className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      role="img"
+      aria-label="WhatsApp"
     >
-      <path d="M17.472 14.382c-.301-.15-1.78-.878-2.056-.978-.276-.1-.477-.15-.678.15-.2.301-.778.979-.954 1.179-.175.2-.351.226-.652.075-.301-.15-1.272-.469-2.423-1.496-.895-.798-1.5-1.784-1.676-2.085-.175-.301-.019-.464.132-.614.135-.135.301-.351.451-.527.151-.175.201-.301.301-.501.101-.2.05-.376-.025-.527-.075-.15-.678-1.632-.929-2.235-.245-.587-.493-.507-.678-.516l-.578-.01c-.2 0-.527.075-.803.376s-1.054 1.029-1.054 2.511c0 1.482 1.079 2.913 1.23 3.114.15.2 2.123 3.242 5.144 4.547.719.311 1.28.497 1.718.636.722.23 1.378.197 1.897.12.578-.086 1.78-.728 2.031-1.431.251-.703.251-1.305.176-.1431-.076-.126-.276-.201-.577-.351zm-5.438 8.018c-2.11 0-4.08-.57-5.787-1.564l-.415-.242-4.304 1.129 1.149-4.195-.266-.423c-1.089-1.733-1.667-3.754-1.667-5.834 0-6.079 4.946-11.025 11.029-11.025 2.946 0 5.716 1.148 7.798 3.23 2.083 2.083 3.23 4.853 3.23 7.798-.002 6.08-4.948 11.026-11.031 11.026zm7.798-18.825c-2.083-2.083-4.853-3.23-7.798-3.23-6.082 0-11.029 4.946-11.029 11.028 0 1.944.508 3.842 1.472 5.518l-1.565 5.717 5.85-1.535c1.619.882 3.442 1.348 5.272 1.348 6.082 0 11.03-4.947 11.03-11.028 0-2.946-1.148-5.716-3.232-7.818z"/>
+      <defs>
+        <linearGradient id="waGradient" x1="85.9" y1="25.2" x2="86.5" y2="148" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#2EE86E" />
+          <stop offset="100%" stopColor="#1EAA3C" />
+        </linearGradient>
+      </defs>
+      {/* Keskin ve Kalın Beyaz Dış Çerçeve / Zemin */}
+      <path 
+        fill="#FFFFFF" 
+        d="M12.966 161.238l10.439-38.114a73.42 73.42 0 01-9.821-36.772c.017-40.556 33.021-73.55 73.578-73.55 19.681.01 38.154 7.669 52.047 21.572s21.537 32.383 21.53 52.037c-.018 40.553-33.027 73.553-73.578 73.553h-.032c-12.313-.005-24.412-3.094-35.159-8.954z" 
+      />
+      {/* Canlı WhatsApp Zümrüt Yeşili Dolgun Balon */}
+      <path 
+        fill="url(#waGradient)" 
+        d="M87.184 25.227c-33.733 0-61.166 27.423-61.178 61.13a60.98 60.98 0 009.349 32.535l1.455 2.313-6.179 22.558 23.146-6.069 2.235 1.324c9.387 5.571 20.15 8.517 31.126 8.523h.023c33.707 0 61.14-27.426 61.153-61.135a60.75 60.75 0 00-17.895-43.251 60.75 60.75 0 00-43.235-17.928z" 
+      />
+      {/* Kalın ve Keskin Net Beyaz Telefon Ahizesi */}
+      <path 
+        fill="#FFFFFF" 
+        fillRule="evenodd" 
+        d="M68.772 55.603c-1.378-3.061-2.828-3.123-4.137-3.176l-3.524-.043c-1.226 0-3.218.46-4.902 2.3s-6.435 6.287-6.435 15.332 6.588 17.785 7.506 19.013 12.718 20.381 31.405 27.75c15.529 6.124 18.689 4.906 22.061 4.6s10.877-4.447 12.408-8.74 1.532-7.971 1.073-8.74-1.685-1.226-3.525-2.146-10.877-5.367-12.562-5.981-2.91-.919-4.137.921-4.746 5.979-5.819 7.206-2.144 1.381-3.984.462-7.76-2.861-14.784-9.124c-5.465-4.873-9.154-10.891-10.228-12.73s-.114-2.835.808-3.751c.825-.824 1.838-2.147 2.759-3.22s1.224-1.84 1.836-3.065.307-2.301-.153-3.22-4.032-10.011-5.666-13.647" 
+      />
+    </svg>
+  );
+}
+
+function GmailIcon({ size = 16, className = "" }: { size?: number; className?: string }) {
+  return (
+    <svg 
+      width={size} 
+      height={Math.round(size * 0.75)} 
+      viewBox="52 42 88 66" 
+      fill="none" 
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      role="img"
+      aria-label="Gmail"
+    >
+      {/* Official Google Workspace Gmail Logo Geometry */}
+      {/* Left Column (Google Blue) */}
+      <path fill="#4285F4" d="M58 108h14V74L52 59v43c0 3.32 2.69 6 6 6" />
+      {/* Right Column (Google Green) */}
+      <path fill="#34A853" d="M120 108h14c3.32 0 6-2.69 6-6V59l-20 15" />
+      {/* Top Right Fold (Google Yellow) */}
+      <path fill="#FBBC04" d="M120 48v26l20-15v-8c0-7.42-8.47-11.65-14.4-7.2" />
+      {/* Central V Chevron (Google Red) */}
+      <path fill="#EA4335" d="M72 74V48l24 18 24-18v26L96 92" />
+      {/* Top Left Fold (Google Dark Red) */}
+      <path fill="#C5221F" d="M52 51v8l20 15V48l-5.6-4.2c-5.94-4.45-14.4-.22-14.4 7.2" />
     </svg>
   );
 }
@@ -1068,8 +1119,14 @@ export default function App() {
   const filteredProjects = useMemo(() => {
     const list = mappedProjects.filter(project => {
       let matchesCategory = true;
-      if (projectFilter === 'Web & Bulut' || projectFilter === 'Web & Cloud') {
-        matchesCategory = project.category.includes('Web') || project.category.includes('Bulut') || project.category.includes('Cloud');
+      if (projectFilter === 'Öne Çıkanlar' || projectFilter === 'Featured') {
+        matchesCategory = Boolean(project.isFeatured || project.status === 'client' || project.id === '3dcografya');
+      } else if (projectFilter === 'Müşterili' || projectFilter === 'Client Projects') {
+        matchesCategory = project.status === 'client';
+      } else if (projectFilter === 'Prototipler' || projectFilter === 'Prototypes') {
+        matchesCategory = project.status === 'prototype' || (!project.status && !project.isFeatured);
+      } else if (projectFilter === 'Web & Bulut' || projectFilter === 'Web & Cloud') {
+        matchesCategory = project.category.includes('Web') || project.category.includes('Bulut') || project.category.includes('Cloud') || project.category.includes('SaaS');
       } else if (projectFilter === 'Mobil' || projectFilter === 'Mobile') {
         matchesCategory = project.category.includes('Mobil') || project.category.includes('Mobile') || project.tech.some(tItem => ['React Native', 'Expo', 'Android', 'Kotlin'].includes(tItem));
       } else if (projectFilter === 'Yapay Zeka' || projectFilter === 'Data & AI' || projectFilter === 'AI & LLM' || projectFilter === 'AI & Psychology' || projectFilter === 'Veri Analizi & AI') {
@@ -1079,7 +1136,7 @@ export default function App() {
       } else if (projectFilter === 'Masaüstü' || projectFilter === 'Desktop & Tools' || projectFilter === 'Masaüstü & Araçlar') {
         matchesCategory = project.category.includes('Masaüstü') || project.category.includes('Desktop');
       } else if (projectFilter === 'Özel Eğitim' || projectFilter === 'Special Education' || projectFilter === 'Özel Eğitim & Danışmanlık') {
-        matchesCategory = project.category.includes('Özel Eğitim') || project.category.includes('Special Ed') || project.category.includes('Special Education');
+        matchesCategory = project.category.includes('Özel Eğitim') || project.category.includes('Special Ed') || project.category.includes('Special Education') || project.category.includes('İstihdam');
       } else if (projectFilter === 'Veri & Finans' || projectFilter === 'Data & Finance') {
         matchesCategory = project.category.includes('Veri') || project.category.includes('Kazıma') || project.category.includes('Finans') || project.category.includes('Data') || project.category.includes('Finance');
       }
@@ -1115,7 +1172,12 @@ export default function App() {
     } else if (sortBy === 'newest') {
       return [...list].reverse();
     }
-    return list;
+    // Default featured: keep Herkesİşte, FastPass, 3D Coğrafya strictly prioritized
+    return [...list].sort((a, b) => {
+      const aRank = a.id === 'herkesiste' ? 3 : a.id === 'fastpass' ? 2 : a.id === '3dcografya' ? 1 : 0;
+      const bRank = b.id === 'herkesiste' ? 3 : b.id === 'fastpass' ? 2 : b.id === '3dcografya' ? 1 : 0;
+      return bRank - aRank;
+    });
   }, [mappedProjects, projectFilter, selectedTech, searchQuery, sortBy, caseStudyOnlyFilter]);
 
   // Track currently selected project with up-to-date image reference
@@ -2829,45 +2891,51 @@ export default function App() {
                         <Users size={16} className="text-emerald-400 shrink-0 mt-0.5" />
                         <div className="space-y-1">
                           <span className="text-[10px] uppercase tracking-wider text-emerald-300 font-extrabold flex items-center gap-1.5">
-                            {lang === 'tr' ? '🎯 KİME VE HANGİ EKİPLERE YARDIMCI OLUYORUM?' : '🎯 TARGET AUDIENCE & WHO I EMPOWER'}
+                            {lang === 'tr' ? '🎯 HANGİ ALANLARDA DESTEK SAĞLIYORUM?' : '🎯 HOW I DELIVER VALUE'}
                           </span>
                           <p className="text-xs text-white/95 font-medium leading-relaxed">
                             {lang === 'tr'
-                              ? "Yapay Zeka & EdTech Startup'ları, araştırma enstitüleri, bilişsel ergonomi ve kullanıcı kaygısını azaltmak isteyen kurumsal ürün ekipleri ve hızlı uçtan uca MVP arayan freelance müşteriler."
-                              : "AI & EdTech startups, academic institutes, product teams building cognitive/wellness tools, and freelance clients seeking rapid end-to-end MVPs."}
+                              ? "İşletmeler, kurumlar ve ekipler için süreç otomasyonları; web/mobil ürün geliştirme, yapay zeka entegrasyonları ve pedagojik/eğitsel yazılım çözümleri."
+                              : "Process automation, web/mobile application engineering, LLM integrations, and pedagogical/educational software solutions for businesses and teams."}
                           </p>
                         </div>
                       </div>
 
-                      {/* 3 Core Specialization Pillars (Ne Yapıyorum / Nasıl Konumlanıyorum?) */}
+                      {/* 3 Core Competency Pillars (Yetenekler ve Yetkinlikler) */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full pt-1">
-                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-400/40 transition-colors">
+                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-400/40 transition-colors flex flex-col justify-between">
                           <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
-                            <Brain size={13} />
-                            <span>{lang === 'tr' ? 'Bilişsel & PDR' : 'Cognitive & CBT'}</span>
+                            <Brain size={14} className="shrink-0" />
+                            <span>{lang === 'tr' ? 'Psikolojik Danışmanlık (PDR)' : 'Psychological Counseling'}</span>
                           </div>
                           <p className="text-[10px] text-white/80 mt-1 leading-snug">
-                            {lang === 'tr' ? 'BDT kurgulu rehberlik, duygu regülasyonu & ölçme araçları.' : 'CBT reflection engines & psychological assessments.'}
+                            {lang === 'tr' 
+                              ? 'Aksaray Üniversitesi PDR mezuniyeti; rehberlik kuramları, iletişim ve pedagojik değerlendirme.' 
+                              : 'Guidance & Counseling degree; communication, behavioral principles, and educational evaluation.'}
                           </p>
                         </div>
 
-                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-400/40 transition-colors">
+                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-sky-400/40 transition-colors flex flex-col justify-between">
                           <div className="flex items-center gap-1.5 text-sky-400 text-xs font-bold">
-                            <Sparkles size={13} />
-                            <span>{lang === 'tr' ? 'Çok Modlu AI' : 'Multimodal AI'}</span>
+                            <Code2 size={14} className="shrink-0" />
+                            <span>{lang === 'tr' ? 'Yazılım & Otomasyon' : 'Software & Automation'}</span>
                           </div>
                           <p className="text-[10px] text-white/80 mt-1 leading-snug">
-                            {lang === 'tr' ? 'Gemini Vision el yazısı analizi, OCR savunması & promptlar.' : 'Gemini stroke recognition & adversarial testing.'}
+                            {lang === 'tr' 
+                              ? 'Python botları, veri/iş akışı otomasyonları, React & TypeScript web geliştirme.' 
+                              : 'Python bot automations, background workflows, and modern React & TypeScript web apps.'}
                           </p>
                         </div>
 
-                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-400/40 transition-colors">
+                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-teal-400/40 transition-colors flex flex-col justify-between">
                           <div className="flex items-center gap-1.5 text-teal-400 text-xs font-bold">
-                            <Code2 size={13} />
-                            <span>{lang === 'tr' ? 'Yazılım & Otomasyon' : 'Full-Stack & Bots'}</span>
+                            <Sparkles size={14} className="shrink-0" />
+                            <span>{lang === 'tr' ? 'Yapay Zeka & LLM' : 'AI & LLM Integration'}</span>
                           </div>
                           <p className="text-[10px] text-white/80 mt-1 leading-snug">
-                            {lang === 'tr' ? 'Python botları, React Native & offline-first Kanban.' : 'Python bots, React Native & offline-first apps.'}
+                            {lang === 'tr' 
+                              ? 'Büyük Dil Modelleri (LLM), prompt mühendisliği ve işlevsel yapay zeka araçları.' 
+                              : 'Large Language Models (LLM), prompt engineering, and production-ready AI tools.'}
                           </p>
                         </div>
                       </div>
@@ -2982,19 +3050,19 @@ export default function App() {
 
               <div className="w-[1px] h-5 bg-white/15 mx-0.5 shrink-0" />
 
-              {/* GitHub - Expandable on Hover */}
+              {/* GitHub - Expandable on Hover with Glowing Glass Effect */}
               <a 
                 href="https://github.com/Emirhan0008" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 onClick={() => soundEngine.playGlassClick()}
-                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 hover:border-emerald-400/50 text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer"
+                className="h-8 px-2.5 hover:px-3.5 rounded-full glowing-glass-button text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer active:scale-95 z-10"
                 title="GitHub: Emirhan0008"
               >
-                <Github size={14} className="shrink-0 text-white group-hover:text-emerald-400 transition-colors" />
+                <Github size={15} className="shrink-0 text-white group-hover:text-emerald-300 transition-colors drop-shadow-[0_0_8px_rgba(255,255,255,0.95)]" />
                 <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
-                  <span className="text-[11px]">github.com/Emirhan0008</span>
-                  <ExternalLink size={10} className="shrink-0 opacity-60 group-hover:opacity-100" />
+                  <span className="text-[11px] font-semibold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">github.com/Emirhan0008</span>
+                  <ExternalLink size={10} className="shrink-0 opacity-80 group-hover:opacity-100 text-white" />
                 </div>
               </a>
 
@@ -3004,13 +3072,13 @@ export default function App() {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 onClick={() => soundEngine.playGlassClick()}
-                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 hover:border-pink-500/50 text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer"
+                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-gradient-to-r from-pink-500/20 via-rose-500/20 to-purple-500/20 hover:from-pink-500/35 hover:via-rose-500/35 hover:to-purple-500/35 border border-pink-500/40 hover:border-pink-400/80 text-pink-200 hover:text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer shadow-sm shadow-pink-950/40 hover:shadow-[0_0_16px_rgba(236,72,153,0.4)] hover:scale-105 active:scale-95"
                 title={lang === 'tr' ? "Instagram (Henüz aktif profil yok)" : "Instagram (Profile coming soon)"}
               >
-                <Instagram size={14} className="shrink-0 text-white/80 group-hover:text-pink-400 transition-colors" />
+                <Instagram size={15} className="shrink-0 text-pink-400 group-hover:text-pink-300 transition-colors drop-shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
                 <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
-                  <span className="text-[11px]">{lang === 'tr' ? "Instagram (Yakında)" : "Instagram (Soon)"}</span>
-                  <ExternalLink size={10} className="shrink-0 opacity-60 group-hover:opacity-100" />
+                  <span className="text-[11px] font-semibold text-pink-100">{lang === 'tr' ? "Instagram (Yakında)" : "Instagram (Soon)"}</span>
+                  <ExternalLink size={10} className="shrink-0 opacity-70 group-hover:opacity-100" />
                 </div>
               </a>
 
@@ -3020,13 +3088,13 @@ export default function App() {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 onClick={() => soundEngine.playGlassClick()}
-                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 hover:border-emerald-500/50 text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer"
+                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-500/40 hover:border-emerald-400/80 text-emerald-300 hover:text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer shadow-sm shadow-emerald-950/40 hover:shadow-[0_0_16px_rgba(16,185,129,0.4)] hover:scale-105 active:scale-95"
                 title="WhatsApp: Emirhan_yilmaz08"
               >
-                <WhatsAppIcon size={14} className="shrink-0 text-white/80 group-hover:text-emerald-400 transition-colors" />
+                <WhatsAppIcon size={16} className="shrink-0 drop-shadow-[0_0_8px_rgba(37,211,102,0.7)] filter group-hover:brightness-110 transition-transform duration-300 group-hover:scale-110" />
                 <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
-                  <span className="text-[11px]">Emirhan_yilmaz08</span>
-                  <ExternalLink size={10} className="shrink-0 opacity-60 group-hover:opacity-100" />
+                  <span className="text-[11px] font-semibold text-emerald-100">Emirhan_yilmaz08</span>
+                  <ExternalLink size={10} className="shrink-0 opacity-70 group-hover:opacity-100" />
                 </div>
               </a>
 
@@ -3036,13 +3104,13 @@ export default function App() {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 onClick={() => soundEngine.playGlassClick()}
-                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 hover:border-sky-400/50 text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer"
+                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-sky-500/20 hover:bg-sky-500/35 border border-sky-500/40 hover:border-sky-400/80 text-sky-300 hover:text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer shadow-sm shadow-sky-950/40 hover:shadow-[0_0_16px_rgba(14,165,233,0.4)] hover:scale-105 active:scale-95"
                 title="Telegram: t.me/emirhanyilmazrpd"
               >
-                <TelegramIcon size={14} className="shrink-0 text-white/80 group-hover:text-sky-400 transition-colors" />
+                <TelegramIcon size={15} className="shrink-0 text-sky-400 group-hover:text-sky-300 transition-colors drop-shadow-[0_0_8px_rgba(14,165,233,0.5)]" />
                 <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
-                  <span className="text-[11px]">t.me/emirhanyilmazrpd</span>
-                  <ExternalLink size={10} className="shrink-0 opacity-60 group-hover:opacity-100" />
+                  <span className="text-[11px] font-semibold text-sky-100">t.me/emirhanyilmazrpd</span>
+                  <ExternalLink size={10} className="shrink-0 opacity-70 group-hover:opacity-100" />
                 </div>
               </a>
 
@@ -3052,13 +3120,13 @@ export default function App() {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 onClick={() => soundEngine.playGlassClick()}
-                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-white/5 hover:bg-white/15 border border-white/10 hover:border-red-400/50 text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer"
+                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-rose-500/20 hover:bg-rose-500/35 border border-rose-500/40 hover:border-rose-400/80 text-rose-300 hover:text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer shadow-sm shadow-rose-950/40 hover:shadow-[0_0_16px_rgba(244,63,94,0.4)] hover:scale-105 active:scale-95"
                 title="Gmail: emirhan0008@gmail.com"
               >
-                <Mail size={14} className="shrink-0 text-white/80 group-hover:text-red-400 transition-colors" />
+                <GmailIcon size={16} className="shrink-0 drop-shadow-[0_0_8px_rgba(234,67,53,0.6)] transition-transform duration-300 group-hover:scale-110" />
                 <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
-                  <span className="text-[11px]">emirhan0008@gmail.com</span>
-                  <ExternalLink size={10} className="shrink-0 opacity-60 group-hover:opacity-100" />
+                  <span className="text-[11px] font-semibold text-rose-100">emirhan0008@gmail.com</span>
+                  <ExternalLink size={10} className="shrink-0 opacity-70 group-hover:opacity-100" />
                 </div>
               </a>
 
@@ -3169,67 +3237,103 @@ export default function App() {
                   transition={{ duration: 0.4 }}
                   className="flex-1 flex flex-col gap-3.5 overflow-y-auto pr-1 min-h-0 scrollbar-thin scrollbar-thumb-white/20"
                 >
-                  {/* Executive Value Proposition & Positioning Card */}
-                  <div className="p-4 sm:p-5 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3.5 bg-gradient-to-br from-emerald-950/20 via-black/40 to-teal-950/20 border border-emerald-500/30">
-                    <div className="flex items-center justify-between pb-1.5 border-b border-white/10">
+                  {/* Executive Competencies & Domains Card (Dürüst, Net ve Hibrit Zorlaması Olmayan Yapı) */}
+                  <div className="p-4 sm:p-5 liquid-glass rounded-2xl flex flex-col gap-3.5 border border-white/10 hover:border-white/20 transition-all bg-black/40 backdrop-blur-xl">
+                    <div className="flex items-center justify-between pb-2 border-b border-white/10">
                       <span className="text-[10px] tracking-wider text-emerald-400 uppercase font-extrabold flex items-center gap-1.5">
                         <Compass size={13} className="text-emerald-400" />
-                        {lang === 'tr' ? 'EMİRHAN YILMAZ NASIL KONUMLANIYOR & NE İŞ YAPAR?' : 'CORE POSITIONING & VALUE PROPOSITION'}
+                        {lang === 'tr' ? 'UZMANLIK ALANLARI VE YETKİNLİKLER' : 'CORE COMPETENCIES & DOMAINS'}
                       </span>
-                      <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/30">
-                        {lang === 'tr' ? 'PDR + AI MİMARI' : 'COUNSELOR + AI ARCHITECT'}
+                      <span className="text-[9px] px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 font-mono font-bold border border-emerald-500/30">
+                        {lang === 'tr' ? 'PDR · YAZILIM · YAPAY ZEKA' : 'COUNSELING · SOFTWARE · AI'}
                       </span>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <h3 className="text-sm sm:text-base font-extrabold text-white leading-snug">
                         {lang === 'tr'
-                          ? 'İnsan Psikolojisi İlkelerini, Çok Modlu Yapay Zeka ve Sistem Yazılımlarıyla Birleştiren Hibrit Geliştirici.'
-                          : 'A Hybrid Technologist Bridging Counseling Psychology with Multimodal AI and Scalable Systems.'}
+                          ? 'Psikolojik Danışmanlık, Yazılım Geliştirme ve Yapay Zeka Sistemleri.'
+                          : 'Psychological Counseling, Software Engineering & Applied AI Systems.'}
                       </h3>
-                      <p className="text-xs text-white/90 leading-relaxed font-normal">
+                      <p className="text-xs text-white/85 leading-relaxed font-normal">
                         {lang === 'tr'
-                          ? 'Ben geleneksel bir kodlayıcı değilim; insan davranışını (BDT, motivasyon, kaygı ve dikkat döngüleri) 4 yıllık PDR eğitimi ve 3 yıllık özel eğitim saha pratiğiyle deneyimlemiş bir psikolojik danışmanım. Bu insani derinliği Python otomasyonları, Gemini Vision multimodal yapay zeka ve modern web/mobil mimarileriyle birleştirerek bilişsel sürtünmeyi sıfırlayan sistemler kuruyorum.'
-                          : 'I am not just writing code; I bring 4 years of formal psychological counseling education and 3 years of hands-on special ed teaching into modern engineering. I design tools where mental models, anxiety regulation, and cognitive load are solved alongside high-performance AI and automation architecture.'}
+                          ? 'Yeteneklerimi yapay bir hibrit potasında zorla karıştırmadan, her uzmanlık alanımı bağımsız ve profesyonel standartlarda yürütüyorum: Aksaray Üniversitesi PDR mezuniyeti ve 3 yıllık saha tecrübesiyle psikolojik danışmanlık ve pedagojik süreçler; Python ve React/TypeScript ile sistem otomasyonları ve yazılım geliştirme; modern LLM ve Vision API\'leriyle ise pratik yapay zeka araçları.'
+                          : 'Executing distinct competencies independently with professional rigor: counseling psychology and educational guidance backed by a PDR degree and 3 years in special education; robust software engineering via Python, React, and automated workflows; alongside practical AI integrations with modern LLMs.'}
                       </p>
                     </div>
 
-                    {/* 3 Quick Pillars of Engagement */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-white/5">
-                      <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1">
-                        <span className="text-[10px] text-emerald-300 font-extrabold flex items-center gap-1">
-                          <CheckCircle2 size={11} className="text-emerald-400" />
-                          {lang === 'tr' ? 'Kimler İçin İdeal?' : 'Best Suited For'}
-                        </span>
-                        <p className="text-[10px] text-white/75 leading-tight">
-                          {lang === 'tr' ? 'AI/EdTech girişimleri, sağlık/wellness platformları ve insan odaklı ürün geliştiren takımlar.' : 'AI/EdTech startups, mental wellness apps, and human-centric engineering teams.'}
-                        </p>
+                    {/* 3 Clear, Separated Core Pillars (Net, Bağımsız Yetkinlikler) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 border-t border-white/5">
+                      {/* Pillar 1: PDR & Pedagoji */}
+                      <div className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
+                          <Brain size={14} className="shrink-0" />
+                          <span>{lang === 'tr' ? 'Psikolojik Danışmanlık' : 'Counseling Psychology'}</span>
+                        </div>
+                        <ul className="text-[10px] text-white/75 space-y-1 font-medium">
+                          <li className="flex items-start gap-1">
+                            <span className="text-emerald-400">•</span>
+                            <span>{lang === 'tr' ? 'Aksaray Üniv. PDR Mezuniyeti' : 'PDR Counseling Degree'}</span>
+                          </li>
+                          <li className="flex items-start gap-1">
+                            <span className="text-emerald-400">•</span>
+                            <span>{lang === 'tr' ? '3 Yıl Özel Eğitim Saha Pratiği' : '3 Yrs Special Ed Practice'}</span>
+                          </li>
+                          <li className="flex items-start gap-1">
+                            <span className="text-emerald-400">•</span>
+                            <span>{lang === 'tr' ? 'Bireysel Danışma & BEP Tasarımı' : 'Individual Counseling & IEP'}</span>
+                          </li>
+                        </ul>
                       </div>
 
-                      <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1">
-                        <span className="text-[10px] text-sky-300 font-extrabold flex items-center gap-1">
-                          <Zap size={11} className="text-sky-400" />
-                          {lang === 'tr' ? 'Hangi Katkıyı Sağlar?' : 'Key Deliverables'}
-                        </span>
-                        <p className="text-[10px] text-white/75 leading-tight">
-                          {lang === 'tr' ? 'Çalışan yapay zeka MVP prototipleri, pedagojik akış kurgusu, Python botları & hızlı canlıya çıkış.' : 'Functional multimodal AI MVPs, pedagogical UX flows, and robust system bots.'}
-                        </p>
+                      {/* Pillar 2: Yazılım & Otomasyon */}
+                      <div className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1.5 text-sky-400 text-xs font-bold">
+                          <Code2 size={14} className="shrink-0" />
+                          <span>{lang === 'tr' ? 'Yazılım & Otomasyon' : 'Software & Automation'}</span>
+                        </div>
+                        <ul className="text-[10px] text-white/75 space-y-1 font-medium">
+                          <li className="flex items-start gap-1">
+                            <span className="text-sky-400">•</span>
+                            <span>{lang === 'tr' ? 'Python Botları & Veri Otomasyonu' : 'Python Bots & Data Automation'}</span>
+                          </li>
+                          <li className="flex items-start gap-1">
+                            <span className="text-sky-400">•</span>
+                            <span>{lang === 'tr' ? 'React, TypeScript & Modern Web' : 'React, TypeScript & Web Apps'}</span>
+                          </li>
+                          <li className="flex items-start gap-1">
+                            <span className="text-sky-400">•</span>
+                            <span>{lang === 'tr' ? 'Kiosk, Donanım & Çevrim Dışı Sistem' : 'Kiosk, Hardware & Offline-First'}</span>
+                          </li>
+                        </ul>
                       </div>
 
-                      <div className="p-2.5 rounded-xl bg-white/5 border border-white/10 flex flex-col gap-1">
-                        <span className="text-[10px] text-teal-300 font-extrabold flex items-center gap-1">
-                          <Target size={11} className="text-teal-400" />
-                          {lang === 'tr' ? 'İletişim Hızı' : 'Availability'}
-                        </span>
-                        <p className="text-[10px] text-white/75 leading-tight">
-                          {lang === 'tr' ? 'Tam zamanlı pozisyonlar, sözleşmeli danışmanlık ve freelance projeler için hemen müsait.' : 'Open for full-time roles, freelance MVPs, and advisory contracts.'}
-                        </p>
+                      {/* Pillar 3: Yapay Zeka */}
+                      <div className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors flex flex-col gap-1.5">
+                        <div className="flex items-center gap-1.5 text-teal-400 text-xs font-bold">
+                          <Sparkles size={14} className="shrink-0" />
+                          <span>{lang === 'tr' ? 'Yapay Zeka & LLM' : 'AI & LLM Systems'}</span>
+                        </div>
+                        <ul className="text-[10px] text-white/75 space-y-1 font-medium">
+                          <li className="flex items-start gap-1">
+                            <span className="text-teal-400">•</span>
+                            <span>{lang === 'tr' ? 'Marmara Üniv. AI/ML Sertifikası' : 'Marmara Univ. AI/ML Cert.'}</span>
+                          </li>
+                          <li className="flex items-start gap-1">
+                            <span className="text-teal-400">•</span>
+                            <span>{lang === 'tr' ? 'LLM Promptlama & Sistem Mimarisi' : 'LLM Prompting & System Arch.'}</span>
+                          </li>
+                          <li className="flex items-start gap-1">
+                            <span className="text-teal-400">•</span>
+                            <span>{lang === 'tr' ? 'Gemini Vision & Çok Modlu Çözüm' : 'Gemini Vision & Multimodal'}</span>
+                          </li>
+                        </ul>
                       </div>
                     </div>
                   </div>
 
                   {/* Education & Certification Card */}
-                  <div className="p-4 sm:p-5 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3">
+                  <div className="p-4 sm:p-5 liquid-glass rounded-2xl border border-white/10 hover:border-white/20 transition-all flex flex-col gap-3">
                     <div className="flex items-center justify-between pb-1 border-b border-white/5">
                       <span className="text-[9px] tracking-wider text-emerald-400 uppercase font-bold">
                         {lang === 'tr' ? 'EĞİTİM & UZMANLIK' : 'EDUCATION & CREDENTIALS'}
@@ -3286,7 +3390,7 @@ export default function App() {
                   </div>
 
                   {/* Feature Section Box (Experience & Skills & Mini Project Highlight) */}
-                  <div className="p-4 sm:p-5 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3">
+                  <div className="p-4 sm:p-5 liquid-glass rounded-2xl border border-white/10 hover:border-white/20 transition-all flex flex-col gap-3">
                     
                     {/* Header with Switcher */}
                     <div className="flex items-center justify-between border-b border-white/5 pb-2">
@@ -3329,7 +3433,7 @@ export default function App() {
                           className="grid grid-cols-2 gap-3"
                         >
                           {/* Special Edu Card */}
-                          <div className="p-3.5 sm:p-4 liquid-glass spinning-glow-border rounded-xl flex flex-col gap-2 group transition-all hover:bg-white/5">
+                          <div className="p-3.5 sm:p-4 liquid-glass rounded-xl border border-white/10 hover:border-white/20 flex flex-col gap-2 group transition-all hover:bg-white/5">
                             <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-white transition-transform group-hover:scale-110">
                               <Wand2 size={14} />
                             </div>
@@ -3345,7 +3449,7 @@ export default function App() {
                           </div>
 
                           {/* Python & AI Card */}
-                          <div className="p-3.5 sm:p-4 liquid-glass spinning-glow-border rounded-xl flex flex-col gap-2 group transition-all hover:bg-white/5">
+                          <div className="p-3.5 sm:p-4 liquid-glass rounded-xl border border-white/10 hover:border-white/20 flex flex-col gap-2 group transition-all hover:bg-white/5">
                             <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-white transition-transform group-hover:scale-110">
                               <BookOpen size={14} />
                             </div>
@@ -3439,7 +3543,7 @@ export default function App() {
                     {/* Mini Featured Project Bottom Highlight */}
                     <div 
                       onClick={() => setSelectedProject(mappedProjects[0])}
-                      className="p-4 liquid-glass spinning-glow-border rounded-2xl flex items-center justify-between gap-4 cursor-pointer group hover:bg-white/5 transition-all"
+                      className="p-4 liquid-glass rounded-2xl border border-white/10 hover:border-emerald-400/40 flex items-center justify-between gap-4 cursor-pointer group hover:bg-white/5 transition-all"
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-16 h-12 rounded-lg overflow-hidden shrink-0 border border-white/20">
@@ -3553,8 +3657,8 @@ export default function App() {
                         )}
                       </div>
 
-                      {/* Category Filter Pills & Case Study Story Filter */}
-                      <div className="flex flex-wrap gap-1.5 p-1 liquid-glass spinning-glow-border rounded-xl text-[10px]">
+                      {/* Category & Status Filter Pills */}
+                      <div className="flex flex-wrap gap-1.5 p-1 liquid-glass rounded-xl border border-white/10 text-[10px]">
                         <button
                           type="button"
                           onClick={() => {
@@ -3572,6 +3676,9 @@ export default function App() {
                         </button>
                         {[
                           { id: 'Tümü', label: t.filter.categories.all },
+                          { id: 'Öne Çıkanlar', label: lang === 'tr' ? '⭐ Öne Çıkanlar' : '⭐ Highlights' },
+                          { id: 'Müşterili', label: lang === 'tr' ? '🟢 Müşterili' : '🟢 Clients' },
+                          { id: 'Prototipler', label: lang === 'tr' ? '⚪ Prototipler' : '⚪ Prototypes' },
                           { id: 'Web & Bulut', label: t.filter.categories.webCloud },
                           { id: 'Yapay Zeka', label: t.filter.categories.dataAi },
                           { id: 'Python & Otomasyon', label: t.filter.categories.automationScript },
@@ -3738,193 +3845,202 @@ export default function App() {
                             key={project.id}
                             initial={{ opacity: 0, y: 15 }}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.05 }}
+                            transition={{ delay: idx * 0.04 }}
                             onClick={() => {
                               soundEngine.playGlassClick();
                               setSelectedProject(project);
                               setProjectDetailTab('casestudy');
                             }}
-                            className={`group cursor-pointer p-3 liquid-glass spinning-glow-border rounded-2xl flex flex-col min-h-[305px] h-auto shrink-0 justify-between hover:bg-white/5 transition-all relative overflow-hidden ${
-                              currentSelectedProject?.id === project.id ? 'ring-2 ring-emerald-400 border-emerald-400 bg-white/10 shadow-lg shadow-emerald-500/10' : ''
+                            className={`group cursor-pointer p-3.5 liquid-glass rounded-2xl flex flex-col justify-between hover:bg-white/5 transition-all relative overflow-hidden border ${
+                              currentSelectedProject?.id === project.id 
+                                ? 'ring-2 ring-emerald-400 border-emerald-400 bg-white/10 shadow-lg shadow-emerald-500/10' 
+                                : project.status === 'client' 
+                                  ? 'border-emerald-500/40 bg-emerald-950/20 hover:border-emerald-400/70 hover:shadow-md hover:shadow-emerald-500/10'
+                                  : project.status === 'personal'
+                                    ? 'border-sky-500/40 bg-sky-950/20 hover:border-sky-400/70 hover:shadow-md hover:shadow-sky-500/10'
+                                    : 'border-white/10 hover:border-white/25'
                             }`}
                           >
-                            <div className="relative h-[120px] w-full rounded-xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0">
-                              <img 
-                                src={project.image} 
-                                alt={project.title} 
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                referrerPolicy="no-referrer"
-                                onError={(e) => {
-                                  const original = projectList.find(p => p.id === project.id);
-                                  if (original) e.currentTarget.src = original.image;
-                                }}
-                              />
-                              {isAdmin && (
-                                <div className="absolute top-2 right-2 z-20 flex items-center gap-1" onClick={e => e.stopPropagation()}>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setEditingProjectId(project.id);
-                                      setAdminEditorTab('projects');
-                                      setShowAdminEditor(true);
-                                    }}
-                                    className="p-1.5 rounded-lg bg-black/80 hover:bg-emerald-500 hover:text-black text-white text-[10px] font-bold border border-white/20 transition-all cursor-pointer shadow-md"
-                                    title="Projeyi Düzenle"
-                                  >
-                                    <Edit3 size={11} />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setConfirmDialog({
-                                        isOpen: true,
-                                        title: 'Projeyi Sil',
-                                        description: `"${project.title}" projesini silmek istediğinize emin misiniz?`,
-                                        confirmText: 'Evet, Sil',
-                                        onConfirm: () => {
-                                          const updated = projectList.filter(p => p.id !== project.id);
-                                          handleSaveProjects(updated);
-                                          if (selectedProject?.id === project.id) setSelectedProject(null);
-                                          setAdminToastMessage("Proje silindi.");
-                                          setShowAdminToast(true);
-                                          setTimeout(() => setShowAdminToast(false), 2500);
-                                        }
-                                      });
-                                    }}
-                                    className="p-1.5 rounded-lg bg-red-950/80 hover:bg-red-800 text-red-300 border border-red-500/30 text-[10px] transition-all cursor-pointer shadow-md"
-                                    title="Projeyi Sil"
-                                  >
-                                    <Trash2 size={11} />
-                                  </button>
+                            <div className="space-y-2.5">
+                              {/* Compact Media Header (95px) */}
+                              <div className="relative h-[95px] w-full rounded-xl overflow-hidden bg-zinc-900 border border-white/10 shrink-0">
+                                <img 
+                                  src={project.image} 
+                                  alt={project.title} 
+                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    const original = projectList.find(p => p.id === project.id);
+                                    if (original) e.currentTarget.src = original.image;
+                                  }}
+                                />
+
+                                {/* Project Status Badge */}
+                                <div className="absolute top-2 left-2 z-10">
+                                  {project.status === 'client' ? (
+                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-950/95 text-emerald-300 border border-emerald-400/50 backdrop-blur-md shadow-md">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                      <span>{lang === 'tr' ? 'MÜŞTERİLİ ÜRÜN' : 'CLIENT PRODUCT'}</span>
+                                    </span>
+                                  ) : project.status === 'personal' ? (
+                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-sky-950/95 text-sky-300 border border-sky-400/50 backdrop-blur-md shadow-md">
+                                      <Sparkles size={9} className="text-sky-400" />
+                                      <span>{lang === 'tr' ? 'ŞAHSİ PROJE' : 'PERSONAL'}</span>
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-black/75 text-white/70 border border-white/20 backdrop-blur-md">
+                                      <span>{lang === 'tr' ? 'PROTOTİP' : 'PROTOTYPE'}</span>
+                                    </span>
+                                  )}
                                 </div>
-                              )}
-                              {currentSelectedProject?.id === project.id && (
-                                <div className="absolute top-2 left-2 bg-emerald-500 text-black text-[9px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-lg z-10">
-                                  <span>{lang === 'tr' ? '👈 Solda Açık' : '👈 Open on Left'}</span>
+
+                                {/* Live Badge */}
+                                {project.demoUrl && !isAdmin && (
+                                  <div className="absolute top-2 right-2 bg-emerald-500 text-black text-[9px] font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md z-10">
+                                    <ExternalLink size={9} />
+                                    <span>{lang === 'tr' ? 'CANLI' : 'LIVE'}</span>
+                                  </div>
+                                )}
+
+                                {/* Admin Action Buttons */}
+                                {isAdmin && (
+                                  <div className="absolute top-2 right-2 z-20 flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingProjectId(project.id);
+                                        setAdminEditorTab('projects');
+                                        setShowAdminEditor(true);
+                                      }}
+                                      className="p-1.5 rounded-lg bg-black/80 hover:bg-emerald-500 hover:text-black text-white text-[10px] font-bold border border-white/20 transition-all cursor-pointer shadow-md"
+                                      title="Projeyi Düzenle"
+                                    >
+                                      <Edit3 size={11} />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setConfirmDialog({
+                                          isOpen: true,
+                                          title: 'Projeyi Sil',
+                                          description: `"${project.title}" projesini silmek istediğinize emin misiniz?`,
+                                          confirmText: 'Evet, Sil',
+                                          onConfirm: () => {
+                                            const updated = projectList.filter(p => p.id !== project.id);
+                                            handleSaveProjects(updated);
+                                            if (selectedProject?.id === project.id) setSelectedProject(null);
+                                            setAdminToastMessage("Proje silindi.");
+                                            setShowAdminToast(true);
+                                            setTimeout(() => setShowAdminToast(false), 2500);
+                                          }
+                                        });
+                                      }}
+                                      className="p-1.5 rounded-lg bg-red-950/80 hover:bg-red-800 text-red-300 border border-red-500/30 text-[10px] transition-all cursor-pointer shadow-md"
+                                      title="Projeyi Sil"
+                                    >
+                                      <Trash2 size={11} />
+                                    </button>
+                                  </div>
+                                )}
+
+                                {/* Active Selection Indicator */}
+                                {currentSelectedProject?.id === project.id && (
+                                  <div className="absolute bottom-2 left-2 bg-emerald-500 text-black text-[9px] font-extrabold px-2 py-0.5 rounded-md flex items-center gap-1 shadow-lg z-10">
+                                    <span>{lang === 'tr' ? '👈 Solda İnceleniyor' : '👈 Active on Left'}</span>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Header & Title */}
+                              <div className="space-y-1">
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-[10px] uppercase font-mono tracking-wider text-emerald-400 font-bold truncate">
+                                    {project.category}
+                                  </span>
+                                  {project.isFeatured && (
+                                    <span className="text-[9px] text-amber-300 font-extrabold flex items-center gap-1 shrink-0 bg-amber-500/15 border border-amber-400/30 px-1.5 py-0.5 rounded-md">
+                                      ⭐ {lang === 'tr' ? 'Öne Çıkan' : 'Featured'}
+                                    </span>
+                                  )}
                                 </div>
-                              )}
-                              {!isAdmin && project.demoUrl && (
-                                <div className="absolute top-2 right-2 bg-emerald-950/90 backdrop-blur-md text-emerald-300 border border-emerald-500/40 text-[9px] font-extrabold px-2 py-0.5 rounded-full flex items-center gap-1 shadow-md z-10">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                                  <span>{lang === 'tr' ? 'CANLI YAYINDA' : 'LIVE DEMO'}</span>
-                                </div>
-                              )}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3">
-                                <span className="text-[10px] text-white font-bold inline-flex items-center gap-1">
-                                  {lang === 'tr' ? 'Projeyi İncele' : 'View Project'} <ChevronRight size={10} />
-                                </span>
+                                <h3 className="text-sm font-extrabold text-white group-hover:text-emerald-300 transition-colors leading-snug truncate">
+                                  <HighlightText text={project.title} query={searchQuery} />
+                                </h3>
+                              </div>
+
+                              {/* Clean, Readable 2-Line Description */}
+                              <p className="text-xs text-white/75 leading-relaxed line-clamp-2">
+                                {project.description}
+                              </p>
+                            </div>
+
+                            {/* Card Footer: Tech Chips + Quick Actions */}
+                            <div className="pt-3 mt-3 border-t border-white/10 flex items-center justify-between gap-2">
+                              {/* Tech Stack Chips */}
+                              <div className="flex flex-wrap gap-1 items-center overflow-hidden max-h-[22px]">
+                                {project.tech.slice(0, 3).map((tItem, tIdx) => {
+                                  const isSelected = selectedTech === tItem;
+                                  return (
+                                    <span 
+                                      key={tIdx} 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        soundEngine.playGlassClick();
+                                        setSelectedTech(isSelected ? null : tItem);
+                                      }}
+                                      className={`text-[9px] font-mono px-1.5 py-0.5 rounded transition-all cursor-pointer ${
+                                        isSelected 
+                                          ? 'bg-emerald-500 text-black font-extrabold' 
+                                          : 'bg-white/5 text-white/70 hover:text-white hover:bg-white/15 border border-white/5'
+                                      }`}
+                                    >
+                                      {tItem}
+                                    </span>
+                                  );
+                                })}
+                                {project.tech.length > 3 && (
+                                  <span className="text-[9px] text-white/40 font-mono">+{project.tech.length - 3}</span>
+                                )}
+                              </div>
+
+                              {/* Action Buttons */}
+                              <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
                                 {project.demoUrl && (
                                   <a
                                     href={sanitizeUrl(project.demoUrl) || '#'}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="px-2.5 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-[10px] flex items-center gap-1 shadow-md transition-transform hover:scale-105"
+                                    className="px-2 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-extrabold flex items-center gap-1 shadow-sm transition-transform hover:scale-105 cursor-pointer"
+                                    title={lang === 'tr' ? "Canlı Demoyu Aç" : "Open Live Demo"}
                                   >
-                                    <ExternalLink size={10} /> {t.projectCard.liveDemo}
+                                    <ExternalLink size={10} />
+                                    <span>{lang === 'tr' ? 'Canlı' : 'Live'}</span>
                                   </a>
                                 )}
-                              </div>
-                            </div>
-
-                            <div className="space-y-2 px-1 flex-1 flex flex-col justify-between pt-2">
-                              <div>
-                                <div className="flex items-center justify-between gap-1 pb-1">
-                                  <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-extrabold truncate">{project.category}</span>
-                                  {project.caseStudy ? (
-                                    <span className="text-[9px] text-emerald-300 font-bold flex items-center gap-1 bg-emerald-950/80 border border-emerald-500/40 px-1.5 py-0.5 rounded shrink-0">
-                                      <Layers size={9} className="text-emerald-400" />
-                                      <span>{lang === 'tr' ? 'Mimari Detay' : 'Architecture'}</span>
-                                    </span>
-                                  ) : project.demoUrl ? (
-                                    <span className="text-[9px] text-emerald-400 font-bold flex items-center gap-0.5 shrink-0">
-                                      <ExternalLink size={8} /> {t.projectCard.statusActive}
-                                    </span>
-                                  ) : null}
-                                </div>
-                                <h3 className="text-sm font-extrabold text-white group-hover:text-emerald-300 transition-colors truncate leading-snug">
-                                  <HighlightText text={project.title} query={searchQuery} />
-                                </h3>
-                              </div>
-
-                              {/* 3-Point Technical Architecture Summary directly visible */}
-                              <div className="space-y-1 p-2 rounded-xl bg-black/40 border border-white/5 text-[11px]">
-                                <div className="flex items-start gap-1.5 text-white/90 leading-tight">
-                                  <span className="text-[9px] font-bold text-rose-400 uppercase tracking-wider shrink-0 mt-0.5">
-                                    {lang === 'tr' ? 'Problem:' : 'Need:'}
-                                  </span>
-                                  <p className="line-clamp-1 text-white/80">
-                                    {project.caseStudy?.challenge || project.description}
-                                  </p>
-                                </div>
-                                <div className="flex items-start gap-1.5 text-white/90 leading-tight">
-                                  <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider shrink-0 mt-0.5">
-                                    {lang === 'tr' ? 'Rol & Ekip:' : 'Role & Team:'}
-                                  </span>
-                                  <p className="line-clamp-1 text-amber-200/90 font-medium">
-                                    {project.caseStudy?.role || (lang === 'tr' ? 'Full-Stack Geliştirici' : 'Full-Stack Developer')} {project.caseStudy?.contribution ? `(${project.caseStudy.contribution.split(':')[0]})` : `(${lang === 'tr' ? 'Bireysel' : 'Solo'})`}
-                                  </p>
-                                </div>
-                                <div className="flex items-start gap-1.5 text-white/95 leading-tight">
-                                  <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider shrink-0 mt-0.5">
-                                    {lang === 'tr' ? 'Çözüm / Sonuç:' : 'Result:'}
-                                  </span>
-                                  <p className="line-clamp-1 text-emerald-300/90 font-medium">
-                                    {project.caseStudy?.impact || project.highlights[0] || project.description}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Tech Chips + Direct GitHub/Live Links */}
-                              <div className="flex items-center justify-between gap-1 pt-1 border-t border-white/5">
-                                <div className="flex flex-wrap gap-1 overflow-hidden max-h-[22px]">
-                                  {project.tech.slice(0, 3).map((tItem, tIdx) => {
-                                    const isSelected = selectedTech === tItem;
-                                    const isSearchMatch = searchQuery && tItem.toLowerCase().includes(searchQuery.toLowerCase());
-                                    return (
-                                      <span 
-                                        key={tIdx} 
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          soundEngine.playGlassClick();
-                                          setSelectedTech(isSelected ? null : tItem);
-                                        }}
-                                        className={`text-[9px] font-mono px-1.5 py-0.5 rounded transition-all cursor-pointer ${
-                                          isSelected 
-                                            ? 'bg-emerald-500 text-black font-extrabold shadow-xs' 
-                                            : isSearchMatch 
-                                              ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-400/50' 
-                                              : 'bg-white/10 text-white/70 hover:text-white hover:bg-white/20'
-                                        }`}
-                                      >
-                                        {tItem}
-                                      </span>
-                                    );
-                                  })}
-                                </div>
-
-                                <div className="flex items-center gap-1.5 shrink-0" onClick={e => e.stopPropagation()}>
-                                  {project.demoUrl && (
-                                    <a
-                                      href={sanitizeUrl(project.demoUrl) || '#'}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="p-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-bold transition-all shadow-sm"
-                                      title={lang === 'tr' ? "Canlı Demoyu Aç" : "Open Live Demo"}
-                                    >
-                                      <ExternalLink size={10} />
-                                    </a>
-                                  )}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    soundEngine.playGlassClick();
+                                    setSelectedProject(project);
+                                    setProjectDetailTab('casestudy');
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                                  title={lang === 'tr' ? "Detayları İncele" : "View Details"}
+                                >
+                                  <span>{lang === 'tr' ? 'İncele' : 'Details'}</span>
+                                  <ChevronRight size={10} />
+                                </button>
+                                {project.githubUrl && (
                                   <a
-                                    href={project.githubUrl || profile.github || "https://github.com/Emirhan0008"}
+                                    href={project.githubUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[10px] font-bold transition-all"
+                                    className="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-white/70 hover:text-white text-[10px] transition-all cursor-pointer border border-white/5"
                                     title={lang === 'tr' ? "GitHub Kodlarını Gör" : "View GitHub Code"}
                                   >
-                                    <Github size={10} />
+                                    <Github size={11} />
                                   </a>
-                                </div>
+                                )}
                               </div>
                             </div>
                           </motion.div>
@@ -4397,7 +4513,7 @@ export default function App() {
                               className="py-2 px-2 rounded-xl bg-gradient-to-r from-red-600/30 to-amber-600/20 hover:from-red-600/40 hover:to-amber-600/30 border border-red-500/40 text-red-200 hover:text-white font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-sm"
                               title={lang === 'tr' ? "Gmail Web ile gönderin" : "Send via Gmail"}
                             >
-                              <Mail size={13} className="text-red-400 shrink-0" />
+                              <GmailIcon size={16} className="shrink-0 drop-shadow-sm" />
                               <span className="truncate">Gmail</span>
                             </button>
 
@@ -4827,11 +4943,13 @@ export default function App() {
         }}
       />
 
-      {/* Mindful Pure Rule-Based Zen CBT Reflection Widget (100% Offline • Zero Server/API Calls) */}
+      {/* Mindful Pure Rule-Based Zen CBT Reflection Widget (100% Offline • Zero Server/API Calls) - Geçici olarak yorum satırına alındı */}
+      {/* 
       <ZenCbtTherapyWidget
         theme={theme}
         lang={lang}
-      />
+      /> 
+      */}
 
       {/* SECURE IN-APP PROMPT MODAL (Non-blocking replacement for window.prompt) */}
       <AnimatePresence>

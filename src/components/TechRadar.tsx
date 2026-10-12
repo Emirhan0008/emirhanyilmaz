@@ -144,7 +144,7 @@ const SKILL_NODES: SkillNode[] = [
     experienceEn: '3 Yrs Field Experience',
     description: '1. ve 2. kademe özel eğitim sınıflarında teknoloji destekli BEP uygulamaları', 
     descriptionEn: 'Technology-supported IEP implementations across primary and secondary special education classrooms.',
-    relatedProjectIds: ['forkids', 'hece-cizme-gemini', 'ableup-ise-yerlestirme-platformu'] 
+    relatedProjectIds: ['forkids', 'hece-cizme-gemini', 'herkesiste'] 
   }
 ];
 

@@ -922,10 +922,22 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                     className="p-2 rounded bg-black/40 hover:bg-emerald-950/40 border border-emerald-500/20 hover:border-emerald-500/50 cursor-pointer transition-all group"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-emerald-300 font-bold group-hover:text-emerald-200">
-                        [{i + 1}] {p.title}
-                      </span>
-                      <span className="text-[10px] text-amber-300 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/30">
+                      <div className="flex items-center gap-1.5 truncate">
+                        <span className="text-emerald-300 font-bold group-hover:text-emerald-200">
+                          [{i + 1}] {p.title}
+                        </span>
+                        {p.status === 'client' && (
+                          <span className="text-[9px] font-extrabold text-emerald-300 bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-500/40">
+                            {isEn ? 'CLIENT' : 'MÜŞTERİLİ'}
+                          </span>
+                        )}
+                        {p.status === 'personal' && (
+                          <span className="text-[9px] font-extrabold text-sky-300 bg-sky-950/80 px-1.5 py-0.5 rounded border border-sky-500/40">
+                            {isEn ? 'PERSONAL' : 'ŞAHSİ'}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-amber-300 bg-amber-950/40 px-2 py-0.5 rounded border border-amber-500/30 shrink-0">
                         {p.category}
                       </span>
                     </div>

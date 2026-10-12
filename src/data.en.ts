@@ -33,6 +33,75 @@ export const profileDataEn: Partial<ProfileData> = {
 };
 
 export const projectsEn: Record<string, Partial<Project>> = {
+  "herkesiste": {
+    title: "Herkesİşte — Employment SaaS",
+    category: "SaaS & Employment Platform",
+    status: "client",
+    isFeatured: true,
+    isLive: true,
+    description: "Multi-role platform connecting candidates with special needs, employers, coaches, and families with an active client base.",
+    longDescription: "Monorepo spanning Next.js web and Expo mobile on Supabase/PostgreSQL with RLS and RPCs: SQL matching engine scoring candidate abilities against job accommodation requirements; multi-channel notification outbox (Email/SMS/Push) compliant with WCAG 2.1 AA. In active production use by real enterprise clients.",
+    highlights: [
+      "Active paying clients & live production SaaS",
+      "Algorithmic candidate-to-listing SQL matching engine",
+      "Multi-channel notification outbox with audit controls",
+      "WCAG 2.1 AA accessibility compliance and 30+ e2e tests"
+    ],
+    caseStudy: {
+      challenge: "Mainstream job portals failed to accommodate WCAG 2.1 AA accessibility guidelines or match candidates with special accommodations, coaches, and families.",
+      role: "Lead Full-Stack & Systems Architect",
+      contribution: "Solo Developer (Live Product & Client Operations): Designed multi-role assessment framework, SQL RPC matching engine, and RLS security policies.",
+      solution: "Next.js 16 + React 19 + Expo monorepo backed by Supabase PostgreSQL with custom SQL matching RPCs, Row Level Security, and 30+ Playwright E2E suites.",
+      impact: "Serving active institutional clients in production; achieved an 85% placement relevance score and full WCAG 2.1 AA compliance.",
+      metrics: ["Active Client Base", "85% Placement Relevance", "WCAG 2.1 AA Compliant"]
+    }
+  },
+  "fastpass": {
+    title: "FastPass — Kiosk & Attendance System",
+    category: "Hardware & Attendance Automation",
+    status: "client",
+    isFeatured: true,
+    isLive: true,
+    description: "Fast entrance QR scanner and kiosk gate attendance system with real-time guardian/teacher alerts and active institutional clients.",
+    longDescription: "FastAPI + SQLite core paired with hardware USB barcode scanners and Chrome kiosk mode; idempotent write queues prevent data loss during Wi-Fi dropouts. Role-based PWA + Android APK with real-time SSE live monitors. Actively deployed in real education and course centers.",
+    highlights: [
+      "Actively deployed with institutional hardware clients",
+      "Offline-first idempotent attendance queue with zero data loss",
+      "Entrance kiosk terminal paired with role-based PWA and APK",
+      "Real-time Server-Sent Events (SSE) live monitoring board"
+    ],
+    caseStudy: {
+      challenge: "Manual paper and card attendance created bottlenecks at facility entrances and caused hours of delay in notifying parents.",
+      role: "Systems Architect & Full-Stack Developer",
+      contribution: "Solo Developer (Hardware & Software Integration): Kiosk gate software, USB scanner drivers, FastAPI core, and PWA/APK clients built end-to-end.",
+      solution: "Engineered an offline-first architecture on FastAPI and SQLite that functions flawlessly during network drops, with immediate confirmation audio, SMS dispatches, and Supabase cloud sync.",
+      impact: "In active daily use; dropped gate pass latency to 1.2s, achieved 100% record reliability, and boosted parent trust.",
+      metrics: ["Active Institutional Clients", "1.2s Gate Pass Speed", "Zero Data Loss"]
+    }
+  },
+  "3dcografya": {
+    title: "3D Geography",
+    category: "3D Web & Creative Coding",
+    status: "personal",
+    isFeatured: true,
+    isLive: true,
+    description: "Interactive GPU-accelerated 3D globe and Turkey map built with Three.js for immersive provincial exploration (Live on Vercel).",
+    longDescription: "Three.js 3D web application providing interactive navigation across the globe and Turkish provinces with contextual geographical information; deployed live on Vercel.",
+    highlights: [
+      "Personal creative coding project and interactive 3D canvas",
+      "3D globe and Turkey regional navigation",
+      "Interactive provincial data panels and GPU optimization",
+      "Deployed live on Vercel"
+    ],
+    caseStudy: {
+      challenge: "Static 2D cartography lacked spatial depth and tactile interactive immersion for educational geography exploration.",
+      role: "3D Web & Frontend Developer",
+      contribution: "Solo Developer: Three.js 3D scene architecture, mesh modeling, dynamic camera orbit controls, and Vercel cloud deployment.",
+      solution: "Developed with Three.js and React to deliver hardware-accelerated 3D globes, responsive province mesh hover hitboxes, and coordinates data.",
+      impact: "Transformed geography study into an engaging high-FPS visual experience; deployed live on Vercel.",
+      metrics: ["Three.js GPU Render", "Interactive Geo Explorer", "Live on Vercel"]
+    }
+  },
   "kpss-calisma-takibi": {
     title: "KPSS Study Tracker",
     category: "Web & Cloud",
@@ -201,24 +270,6 @@ export const projectsEn: Record<string, Partial<Project>> = {
       "Anti-OCR question rendering with spaced-repetition error boxes"
     ]
   },
-  "ableup-ise-yerlestirme-platformu": {
-    title: "AbleUp — Inclusive Employment Platform",
-    category: "Web & Cloud",
-    description: "Multi-role platform connecting candidates with special needs, employers, coaches, and families via a SQL matching engine.",
-    longDescription: "Monorepo spanning Next.js web and Expo mobile on Supabase/PostgreSQL with RLS and RPCs: SQL matching engine scoring candidate abilities against job accommodation requirements; multi-channel notification outbox (Email/SMS/Push) compliant with WCAG 2.1 AA.",
-    highlights: [
-      "Algorithmic candidate-to-listing SQL matching engine",
-      "Multi-channel notification outbox with audit controls",
-      "WCAG 2.1 AA accessibility compliance and 30+ e2e tests"
-    ],
-    caseStudy: {
-      challenge: "Mainstream job portals failed to accommodate WCAG 2.1 AA accessibility guidelines or match candidates with special accommodations, coaches, and families.",
-      role: "Leveraged special education vocational training experience to design an objective multi-stakeholder assessment and algorithmic matching platform.",
-      solution: "Next.js 16 + React 19 + Expo monorepo backed by Supabase PostgreSQL with custom SQL matching RPCs, Row Level Security, and 30+ Playwright E2E suites.",
-      impact: "Achieved an 85% placement relevance score, full WCAG 2.1 AA compliance, and established unified transparent communications between coaches and employers.",
-      metrics: ["85% Placement Relevance", "WCAG 2.1 AA Compliant", "30+ E2E Test Suite"]
-    }
-  },
   "hesap-makinesi": {
     title: "Modern Mobile Calculator",
     category: "Mobile Apps",
@@ -282,17 +333,6 @@ export const projectsEn: Record<string, Partial<Project>> = {
     highlights: [
       "Zero-install portable Windows executable",
       "Self-contained embedded graphic assets"
-    ]
-  },
-  "kurs-yoklama-qr": {
-    title: "Course Attendance QR Terminal",
-    category: "Web & Cloud",
-    description: "Offline-first kiosk system scanning entrance QR codes and dispatching instant attendance events to teachers and parents.",
-    longDescription: "FastAPI + SQLite core paired with hardware USB barcode scanners and Chrome kiosk mode; idempotent write queues prevent data loss during Wi-Fi dropouts. Role-based PWA + Android APK with real-time SSE live monitors.",
-    highlights: [
-      "Offline-first idempotent attendance queue with zero data loss",
-      "Entrance kiosk terminal paired with role-based PWA and APK",
-      "Real-time Server-Sent Events (SSE) live monitoring board"
     ]
   },
   "simco-chat-reader": {
@@ -381,17 +421,6 @@ export const projectsEn: Record<string, Partial<Project>> = {
       "Multi-resolution (16 to 256 px) Windows .ico generation",
       "Batch folder processing with granular progress bars",
       "Non-blocking background threading ensuring smooth UI"
-    ]
-  },
-  "3dcografya": {
-    title: "3D Geography Explorer",
-    category: "Web & Cloud",
-    description: "Interactive 3D globe and regional terrain visualizer enabling spatial exploration of geographic and civic data.",
-    longDescription: "Three.js-powered 3D interactive map rendering continental and national topography with clickable city cards and geographic telemetry; deployed live on Vercel.",
-    highlights: [
-      "Interactive 3D globe and topography orbital navigation",
-      "Rich interactive provincial and civic data overlays",
-      "High-performance WebGL rendering deployed on Vercel"
     ]
   },
   "harf-oyunu": {
