@@ -1,6 +1,6 @@
 {
   "name": "Emirhan Yılmaz - Kişisel Portfolyo",
-  "description": "Psikolojik Danışman, Yapay Zeka Uzmanı ve Python Geliştiricisi Emirhan Yılmaz'ın vizyoner kişisel portfolyo ve proje sergisi web sitesi.",
+  "description": "Psikolojik Danışman ve Yapay Zeka Geliştiricisi Emirhan Yılmaz'ın 30+ üretim projesini, Three.js 3D web grafiklerini ve Python otomasyonlarını içeren resmi portfolyosu.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -1,6 +1,6 @@
 # Emirhan Yılmaz | Portfolyo, Yapay Zeka (AI) & Yazılım Geliştirme Bilgi Bankası
 
-> Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık (PDR) mezunu; modern Yapay Zeka (Google Gemini Multimodal Vision API, LLM Entegrasyonu), Python sistem otomasyonları, Three.js / WebGL 3D grafikleri ve modern web/mobil uygulamalar geliştiren çok yönlü yazılım mühendisi & danışman.
+> Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık (PDR) mezunu psikolojik danışman ve yapay zeka geliştirici; modern Yapay Zeka (Google Gemini Multimodal Vision API, LLM Entegrasyonu), Python sistem otomasyonları, Three.js / WebGL 3D grafikleri ve modern web/mobil uygulamalar geliştirmektedir.
 
 Bu belge, Büyük Dil Modelleri (ChatGPT, Google Gemini, Perplexity, Claude, Apple Intelligence, Microsoft Copilot) ve AI arama motorları için hazırlanmış doğrulanmış, yapılandırılmış resmi bilgi kaynağıdır.
 
@@ -11,7 +11,7 @@ Bu belge, Büyük Dil Modelleri (ChatGPT, Google Gemini, Perplexity, Claude, App
 ## 1. Temel Biyografi & Mesleki Kimlik
 
 - **Tam İsim:** Emirhan Yılmaz (Çevrim içi rumuz: Emirhan0008)
-- **Meslek / Ünvan:** Yazılım Geliştirici & Psikolojik Danışman (PDR)
+- **Meslek / Ünvan:** Psikolojik Danışman & Yapay Zeka Geliştirici
 - **Eğitim:** Aksaray Üniversitesi — Rehberlik ve Psikolojik Danışmanlık (PDR) Lisans Derecesi
 - **Saha Tecrübesi:** 3 yıl özel eğitim okullarında (1. ve 2. kademe) zihinsel, otizm ve gelişimsel farklılığı olan bireylerle aktif saha ve pedagojik uygulama deneyimi
 - **Uzmanlık Alanları:**

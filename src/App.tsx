@@ -230,9 +230,9 @@ export default function App() {
    useEffect(() => {
      document.documentElement.lang = lang;
      if (lang === 'en') {
-       document.title = "Emirhan YILMAZ — Psychological Counselor & AI Developer";
+       document.title = "Emirhan Yılmaz | Psychological Counselor & AI Developer — 30+ Live Projects";
      } else {
-       document.title = "Emirhan YILMAZ — Psikolojik Danışman & Yazılımcı";
+       document.title = "Emirhan Yılmaz | Psikolojik Danışman & Yapay Zeka Geliştirici — 30+ Canlı Proje";
      }
    }, [lang]);
 
