@@ -1289,6 +1289,28 @@ export default function App() {
       window.history.pushState(null, '', targetPath);
     }
     document.title = targetTitle;
+
+    // Dynamic Meta Description & Canonical Sync for SEO/GEO
+    try {
+      const metaDesc = document.querySelector('meta[name="description"]');
+      if (metaDesc) {
+        if (selectedProject) {
+          metaDesc.setAttribute('content', `${selectedProject.title} — ${selectedProject.description} | ${profile.name}`);
+        } else if (selectedArticle) {
+          metaDesc.setAttribute('content', `${selectedArticle.title} — ${selectedArticle.excerpt} | ${profile.name}`);
+        } else if (activeTab === 'projects') {
+          metaDesc.setAttribute('content', `${profile.name} — 30+ yazılım, yapay zeka (Gemini Vision), 3D Coğrafya ve Python otomasyon projesi.`);
+        } else {
+          metaDesc.setAttribute('content', "Aksaray Üniversitesi PDR mezunu Emirhan Yılmaz'ın resmi portfolyosu. 3 yıllık özel eğitim saha deneyimini Google Gemini AI, Python otomasyonları, Three.js 3D web ve modern yazılımlarla birleştiren vizyoner geliştirici.");
+        }
+      }
+      const canonicalLink = document.querySelector('link[rel="canonical"]');
+      if (canonicalLink) {
+        canonicalLink.setAttribute('href', `${window.location.origin}${targetPath}`);
+      }
+    } catch {
+      // Ignore DOM errors in SSR or restricted environments
+    }
   }, [activeTab, selectedProject, selectedArticle, profile.name, profile.title]);
 
   const getPreparedMessage = () => {

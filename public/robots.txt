@@ -1,11 +1,11 @@
-# Robots.txt for Emirhan Yılmaz Portfolio
-# Optimizes discovery for major Search Engines and AI Crawlers (GEO - Generative Engine Optimization)
+# Robots.txt for Emirhan Yılmaz Portfolio & Digital Identity
+# Optimizes discovery and rich citation indexing for Search Engines, AI Overviews, and Generative Assistants (GEO)
 
 User-agent: *
 Allow: /
 Disallow: /api/
 
-# Explicit permissions for Google Search & Gemini AI Overviews
+# Explicit permissions for Google Search & Gemini AI Overviews (SGE)
 User-agent: Googlebot
 Allow: /
 
@@ -15,7 +15,7 @@ Allow: /
 User-agent: GoogleOther
 Allow: /
 
-# OpenAI Search & ChatGPT Grounding
+# OpenAI Search & ChatGPT Grounding (SearchGPT / GPTBot)
 User-agent: GPTBot
 Allow: /
 
@@ -25,18 +25,18 @@ Allow: /
 User-agent: OAI-SearchBot
 Allow: /
 
-# Perplexity AI Engine
+# Perplexity AI Engine & Citation Indexer
 User-agent: PerplexityBot
 Allow: /
 
-# Anthropic Claude
+# Anthropic Claude Search & Grounding
 User-agent: ClaudeBot
 Allow: /
 
 User-agent: anthropic-ai
 Allow: /
 
-# Apple Intelligence
+# Apple Intelligence & Siri Knowledge
 User-agent: Applebot
 Allow: /
 
@@ -47,7 +47,20 @@ Allow: /
 User-agent: Bingbot
 Allow: /
 
-# Structured Data & LLM Context Endpoints
-Sitemap: https://emirhanyilmaz.vercel.app/sitemap.xml
-# LLMs.txt Context: https://emirhanyilmaz.vercel.app/llms.txt
+# Additional AI, Knowledge & Research Crawlers
+User-agent: cohere-ai
+Allow: /
 
+User-agent: DuckAssistBot
+Allow: /
+
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+# Structured Data, Sitemap & LLM Knowledge Endpoints
+Sitemap: https://emirhanyilmaz.vercel.app/sitemap.xml
+# LLMs.txt Standard: https://emirhanyilmaz.vercel.app/llms.txt
+# LLMs-full.txt: https://emirhanyilmaz.vercel.app/llms-full.txt

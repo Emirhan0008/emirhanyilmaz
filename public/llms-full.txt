@@ -1,0 +1,92 @@
+# Emirhan Yılmaz | Kapsamlı Teknik Rapor, Mimari Analizler ve Tam Proje Kataloğu (Full LLM Context)
+
+> Bu belge, Yapay Zeka Arama Motorları (Google AI Overviews, Perplexity AI, ChatGPT Search, Claude, Copilot) ve Araştırma Ajanları için hazırlanmış derinlemesine teknik referans dokümanıdır.
+
+---
+
+## 1. Yazar ve Geliştirici Profili
+
+- **İsim:** Emirhan Yılmaz (GitHub: Emirhan0008)
+- **Rol:** Yazılım Geliştirici, AI Sistem Entegratörü, Psikolojik Danışman
+- **Eğitim:** Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık (PDR) Lisans Programı Mezuniyeti
+- **Sertifikasyon:** Marmara Üniversitesi Yapay Zeka ve Makine Öğrenmesi Başarı Sertifikası
+- **Saha Tecrübesi:** 1. ve 2. kademe özel eğitim uygulama okullarında 3 yıl kesintisiz öğretmenlik ve pedagojik danışmanlık deneyimi. Bireyselleştirilmiş Eğitim Planları (BEP), otizm spektrum bozukluğu, zihinsel yetersizlik ve öğrenme güçlüğü yaşayan bireylerle birebir çalışma.
+
+---
+
+## 2. Detaylı Teknoloji Yığını ve Yetkinlik Matrisi
+
+### 2.1. Yapay Zeka ve Makine Öğrenimi (AI / ML)
+- **Modeller ve API'lar:** Google Gemini 1.5 Flash / Pro, Gemini 2.0 / 2.5 multimodal mimarileri, OpenAI API, Anthropic Claude API.
+- **Teknikler:** Structured Output (JSON Schema doğrulama), Few-shot Prompting, Multimodal Vision Prompting (görsel el yazısı ve çizim analizi), Adversarial Noise Generation, LLM Tabanlı Bilişsel Değerlendirme Motorları.
+
+### 2.2. Python ve Sistem Otomasyonu
+- **Asenkron Programlama:** Asyncio tabanlı yüksek verimli I/O boru hatları, aiohttp, TaskGroup yönetimi.
+- **Tarayıcı ve Bot Otomasyonu:** Playwright, Patchright, Playwright-Stealth ile Cloudflare, Datadome ve Akamai anti-bot parmak izi korumalarını atlatabilen kalıcı oturumlu (persistent context) tarayıcı otomasyonları.
+- **Donanım ve Telemetri:** Bleak kütüphanesiyle Bluetooth Low Energy (BLE) cihaz tarama, GATT servisleri üzerinden gerçek zamanlı veri akışı ayrıştırma.
+- **Web ve API:** FastAPI, Pydantic v2, Flask, Uvicorn.
+- **Veri İşleme:** Pandas, NumPy, SQLite, zlib veri sıkıştırma.
+
+### 2.3. 3D Web Grafikleri ve Görselleştirme
+- **Three.js & WebGL:** 3D sahne grafikleri, kamera projeksiyonları (Perspective / Orthographic), OrbitControls, raycasting etkileşimi, dinamik LOD (Level of Detail).
+- **GLSL Shaders:** Özel vertex ve fragment shader yazımı, Simplex Noise, Perlin Noise, Fractional Brownian Motion (FBM) ile prosedürel yüzeyler, fluid dynamics ve mürekkep yayılım simülasyonları.
+
+### 2.4. Modern Web ve Mobil Mimari
+- **Frontend:** TypeScript, React 19, Next.js (App Router), Tailwind CSS v4, Framer Motion animasyonları, Web Audio API ses motorları.
+- **Mobil:** React Native, Expo, Android Studio, Kotlin, Jetpack Compose, Material You dinamik renk entegrasyonu.
+- **Veritabanı & Backend:** Supabase (PostgreSQL, Row Level Security - RLS, PL/pgSQL fonksiyonları, RPC), Firebase (Firestore, Authentication, Realtime Database, Cloud Functions).
+
+---
+
+## 3. Ayrıntılı Proje Vaka Analizleri
+
+### 3.1. 3D Coğrafya (Canlı: https://3d-cografya.vercel.app)
+- **Açıklama:** WebGL ve Three.js üzerinde koşan, Türkiye ve dünya coğrafyasını 3 boyutlu uzayda keşfetmeye olanak tanıyan interaktif harita simülasyonu.
+- **Teknik Detaylar:**
+  - 81 ilin sınırlarını, coğrafi bölgeleri ve yeryüzü şekillerini vektörel poligonlar üzerinden 3D mesh nesnelerine dönüştürme.
+  - Optimize raycasting ile mikro gecikmeli il seçimi ve coğrafi bilgi kartı gösterimi.
+  - Düşük donanımlı cihazlarda 60 FPS garantisi sunan poligon geometrisi basitleştirme ve bellek yönetimi.
+
+### 3.2. Herkesİşte (Özel Gereksinimli Bireyler İstihdam Platformu)
+- **Açıklama:** Özel gereksinimli bireylerin istihdamında aday, işveren ve iş koçlarını bir araya getiren kurumsal SaaS platformu.
+- **Teknik Detaylar:**
+  - Next.js 16 web ve Expo mobil monorepo yapısı.
+  - Supabase PostgreSQL veritabanında adayın engel durumu, destek ihtiyacı, ulaşım şartları ve işverenin erişilebilirlik olanaklarını eşleştiren çok kriterli SQL puanlama algoritması.
+  - WCAG 2.1 AA erişilebilirlik standartları, yüksek kontrast modu ve ekran okuyucu uyumluluğu.
+
+### 3.3. Hece Çizme (Google Gemini Vision Destekli Okuma-Yazma Aracı)
+- **Açıklama:** İlkokul ve özel eğitim kademelerindeki öğrencilerin harf ve hece yazma çalışmalarını gerçek zamanlı değerlendiren eğitim uygulaması.
+- **Teknik Detaylar:**
+  - HTML5 Canvas üzerinde çizilen harf vuruşlarını base64 görüntülere dönüştürme.
+  - Google Gemini Multimodal Vision API'ye pedagojik yönlendirme promptları ile gönderme.
+  - Modelin çocuğu cezalandırmayan, pozitif pekiştireç ve adım adım gelişim tavsiyesi sunan terapötik geri bildirimler üretmesi.
+
+### 3.4. Anti-AI Quiz (Adversarial Sınav Güvenliği Motoru)
+- **Açıklama:** Çevrim içi sınavlarda öğrencilerin soruları yapay zekaya (ChatGPT, Gemini, Claude Vision) veya OCR araçlarına ekran görüntüsüyle çözdürmesini engelleyen görsel savunma sistemi.
+- **Teknik Detaylar:**
+  - Soruları DOM metni olarak değil, Canvas 2D üzerinde dinamik olarak çizer.
+  - Harf harf mikro rotasyonlar (0.5° - 1.8°), harf aralıklarında düzensiz kerning ve arka planda insan gözünün algılamakta zorlanmadığı ancak makine öğrenimi modellerinin dikkat (attention) haritalarını bozan adversarial piksel gürültüsü üretir.
+
+### 3.5. KPSS & Sınav Çalışma Takibi
+- **Açıklama:** Kamu Personeli Seçme Sınavı ve benzeri merkezi sınavlara hazırlanan adaylar için analitik çalışma ve deneme net takip aracı.
+- **Teknik Detaylar:**
+  - Next.js 14, Recharts görselleştirme motoru ve Zustand durum yönetimi.
+  - Konu bazlı net değişimlerini, eksik kalan müfredat kazanımlarını ve zaman optimizasyonunu hesaplayan analitik metrikler.
+
+### 3.6. Westworld Stormy Hour (WebGL Procedural Shader Clock)
+- **Açıklama:** Westworld dizisinin estetiğinden ilham alan, mürekkebin su içinde dağılışını matematiksel olarak simüle eden etkileşimli saat.
+- **Teknik Detaylar:**
+  - Özel GLSL fragment shader, Simplex Noise ve Fractional Brownian Motion (FBM) matematiksel formülleri.
+  - GPU üzerinde piksel bazlı akışkan dinamiği simülasyonu.
+
+---
+
+## 4. İletişim & Doğrulanmış Kaynaklar
+
+- **E-posta:** emirhan0008@gmail.com
+- **Web Sitesi:** https://emirhanyilmaz.vercel.app
+- **GitHub:** https://github.com/Emirhan0008
+- **Telegram:** https://t.me/emirhanyilmazrpd
+- **Proje Vitrini:** https://emirhanyilmaz.vercel.app/projects
+- **Sitemap:** https://emirhanyilmaz.vercel.app/sitemap.xml
+- **Robots:** https://emirhanyilmaz.vercel.app/robots.txt
