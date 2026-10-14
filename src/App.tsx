@@ -16,6 +16,7 @@ import {
   Briefcase, 
   ChevronRight,
   ChevronLeft, 
+  ChevronDown,
   Mail, 
   Github, 
   CheckCircle2, 
@@ -125,34 +126,22 @@ function WhatsAppIcon({ size = 16, className = "" }: { size?: number; className?
     <svg 
       width={size} 
       height={size} 
-      viewBox="0 0 175.216 175.552" 
+      viewBox="0 0 24 24" 
       fill="none" 
       className={className}
       xmlns="http://www.w3.org/2000/svg"
       role="img"
       aria-label="WhatsApp"
     >
-      <defs>
-        <linearGradient id="waGradient" x1="85.9" y1="25.2" x2="86.5" y2="148" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#2EE86E" />
-          <stop offset="100%" stopColor="#1EAA3C" />
-        </linearGradient>
-      </defs>
-      {/* Keskin ve Kalın Beyaz Dış Çerçeve / Zemin */}
-      <path 
-        fill="#FFFFFF" 
-        d="M12.966 161.238l10.439-38.114a73.42 73.42 0 01-9.821-36.772c.017-40.556 33.021-73.55 73.578-73.55 19.681.01 38.154 7.669 52.047 21.572s21.537 32.383 21.53 52.037c-.018 40.553-33.027 73.553-73.578 73.553h-.032c-12.313-.005-24.412-3.094-35.159-8.954z" 
+      {/* Canlı, keskin WhatsApp yeşili gövde balonu */}
+      <path
+        d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2Z"
+        fill="#25D366"
       />
-      {/* Canlı WhatsApp Zümrüt Yeşili Dolgun Balon */}
-      <path 
-        fill="url(#waGradient)" 
-        d="M87.184 25.227c-33.733 0-61.166 27.423-61.178 61.13a60.98 60.98 0 009.349 32.535l1.455 2.313-6.179 22.558 23.146-6.069 2.235 1.324c9.387 5.571 20.15 8.517 31.126 8.523h.023c33.707 0 61.14-27.426 61.153-61.135a60.75 60.75 0 00-17.895-43.251 60.75 60.75 0 00-43.235-17.928z" 
-      />
-      {/* Kalın ve Keskin Net Beyaz Telefon Ahizesi */}
-      <path 
-        fill="#FFFFFF" 
-        fillRule="evenodd" 
-        d="M68.772 55.603c-1.378-3.061-2.828-3.123-4.137-3.176l-3.524-.043c-1.226 0-3.218.46-4.902 2.3s-6.435 6.287-6.435 15.332 6.588 17.785 7.506 19.013 12.718 20.381 31.405 27.75c15.529 6.124 18.689 4.906 22.061 4.6s10.877-4.447 12.408-8.74 1.532-7.971 1.073-8.74-1.685-1.226-3.525-2.146-10.877-5.367-12.562-5.981-2.91-.919-4.137.921-4.746 5.979-5.819 7.206-2.144 1.381-3.984.462-7.76-2.861-14.784-9.124c-5.465-4.873-9.154-10.891-10.228-12.73s-.114-2.835.808-3.751c.825-.824 1.838-2.147 2.759-3.22s1.224-1.84 1.836-3.065.307-2.301-.153-3.22-4.032-10.011-5.666-13.647" 
+      {/* Kalın, net ve keskin beyaz telefon ahizesi */}
+      <path
+        d="M17.52 14.33C17.22 14.18 15.75 13.45 15.48 13.35C15.21 13.25 15.01 13.2 14.81 13.5C14.61 13.8 14.04 14.47 13.87 14.67C13.69 14.86 13.52 14.89 13.22 14.74C12.92 14.59 11.96 14.28 10.82 13.26C9.93 12.47 9.33 11.49 9.16 11.19C8.98 10.89 9.14 10.73 9.29 10.58C9.43 10.45 9.59 10.23 9.74 10.06C9.89 9.88 9.94 9.76 10.04 9.56C10.14 9.36 10.09 9.18 10.01 9.03C9.94 8.88 9.34 7.41 9.09 6.81C8.85 6.22 8.61 6.3 8.43 6.29C8.26 6.28 8.06 6.28 7.86 6.28C7.66 6.28 7.34 6.35 7.07 6.65C6.79 6.95 6.02 7.67 6.02 9.14C6.02 10.61 7.09 12.03 7.24 12.23C7.39 12.43 9.34 15.43 12.33 16.72C13.04 17.03 13.6 17.21 14.03 17.35C14.75 17.58 15.4 17.55 15.92 17.47C16.5 17.38 17.7 16.74 17.95 16.04C18.2 15.34 18.2 14.74 18.12 14.62C18.05 14.49 17.82 14.48 17.52 14.33Z"
+        fill="#FFFFFF"
       />
     </svg>
   );
@@ -185,6 +174,62 @@ function GmailIcon({ size = 16, className = "" }: { size?: number; className?: s
   );
 }
 
+function ScrollDownIndicator({ 
+  containerRef, 
+  lang = 'tr' 
+}: { 
+  containerRef: React.RefObject<HTMLDivElement | null>; 
+  lang?: 'tr' | 'en' 
+}) {
+  const [canScrollDown, setCanScrollDown] = useState(false);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const checkOverflow = () => {
+      const isScrollable = el.scrollHeight - el.clientHeight > 45;
+      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 35;
+      setCanScrollDown(isScrollable && !isNearBottom);
+    };
+
+    checkOverflow();
+    el.addEventListener('scroll', checkOverflow, { passive: true });
+    window.addEventListener('resize', checkOverflow);
+    
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      ro = new ResizeObserver(checkOverflow);
+      ro.observe(el);
+    }
+
+    return () => {
+      el.removeEventListener('scroll', checkOverflow);
+      window.removeEventListener('resize', checkOverflow);
+      if (ro) ro.disconnect();
+    };
+  }, [containerRef]);
+
+  if (!canScrollDown) return null;
+
+  return (
+    <div className="sticky bottom-2 left-0 right-0 flex justify-center pointer-events-none z-30 pb-0.5 select-none animate-fadeIn">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          containerRef.current?.scrollBy({ top: 220, behavior: 'smooth' });
+        }}
+        className="pointer-events-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-950/90 hover:bg-zinc-900 border border-emerald-500/40 hover:border-emerald-400 text-[10px] text-zinc-300 hover:text-white font-medium shadow-xl backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer group"
+        title={lang === 'tr' ? 'Aşağı kaydır' : 'Scroll down'}
+      >
+        <ChevronDown size={12} className="text-emerald-400 group-hover:translate-y-0.5 transition-transform animate-bounce" />
+        <span className="tracking-wide">{lang === 'tr' ? 'Aşağı Kaydır' : 'Scroll Down'}</span>
+      </button>
+    </div>
+  );
+}
+
 export default function App() {
    const [activeTab, setActiveTab] = useState<'profile' | 'projects' | 'articles' | 'contact'>('profile');
    const [activeLightboxImage, setActiveLightboxImage] = useState<string | null>(null);
@@ -208,6 +253,15 @@ export default function App() {
    const [heroParallax, setHeroParallax] = useState({ x: 0, y: 0 });
    const [copiedEmail, setCopiedEmail] = useState(false);
    const [inboxMessages, setInboxMessages] = useState<ContactMessage[]>([]);
+
+   // Scroll Viewport Refs for Elegant Scroll-Down Indicators
+   const leftProfileScrollRef = useRef<HTMLDivElement>(null);
+   const leftProjectDetailRef = useRef<HTMLDivElement>(null);
+   const leftArticleDetailRef = useRef<HTMLDivElement>(null);
+   const rightProfileScrollRef = useRef<HTMLDivElement>(null);
+   const rightProjectsScrollRef = useRef<HTMLDivElement>(null);
+   const rightArticlesScrollRef = useRef<HTMLDivElement>(null);
+   const rightContactScrollRef = useRef<HTMLDivElement>(null);
 
    // Multi-language (i18n) Support
    const [lang, setLang] = useState<Language>(() => {
@@ -480,25 +534,23 @@ export default function App() {
      setTimeout(() => setShowAdminToast(false), 3500);
    };
 
-   // Easter Egg Trigger (6 Clicks on Avatar)
+  // Easter Egg Trigger (8 rapid intentional clicks on avatar with zero pre-reveal clues or heart hints)
   const handleAvatarEasterClick = () => {
     const now = Date.now();
     let newCount = 1;
-    if (now - lastAvatarClickTime < 1800) {
+    // Window of 1000ms between clicks to ensure deliberate rapid tapping
+    if (now - lastAvatarClickTime < 1000) {
       newCount = avatarClickCount + 1;
     }
     setLastAvatarClickTime(now);
     setAvatarClickCount(newCount);
 
-    if (newCount >= 6) {
+    if (newCount >= 8) {
       setAvatarClickCount(0);
       setEasterUsername('');
       setEasterPassword('');
       setEasterError('');
       setShowEasterEggLogin(true);
-      soundEngine.playGlassClick();
-    } else {
-      soundEngine.playGlassClick();
     }
   };
 
@@ -1686,53 +1738,54 @@ export default function App() {
             onClick={() => setShowEasterEggLogin(false)}
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
+              initial={{ scale: 0.94, y: 16 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
+              exit={{ scale: 0.94, y: 16 }}
               onClick={e => e.stopPropagation()}
-              className="w-full max-w-sm rounded-[2.5rem] liquid-glass-strong border border-rose-500/30 p-7 shadow-2xl relative text-center space-y-5"
+              className="w-full max-w-sm rounded-3xl bg-zinc-950/95 border border-white/10 p-7 shadow-2xl relative text-center space-y-5 backdrop-blur-2xl"
             >
               {/* Close Button */}
               <button
                 type="button"
                 onClick={() => setShowEasterEggLogin(false)}
                 className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-white/10"
+                title="Kapat"
               >
                 <X size={15} />
               </button>
 
-              {/* Heart Lock Icon */}
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-600/30 to-red-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center mx-auto shadow-lg shadow-rose-500/20">
-                <Heart size={26} className="fill-rose-500/30 text-rose-400 animate-pulse" />
+              {/* Discrete Security Lock Icon */}
+              <div className="w-12 h-12 rounded-2xl bg-white/5 text-zinc-300 border border-white/10 flex items-center justify-center mx-auto shadow-sm">
+                <Lock size={20} className="text-zinc-300" />
               </div>
 
               {/* Title & Desc */}
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <h3 className="text-lg font-bold tracking-tight text-white flex items-center justify-center gap-2">
-                  Özel Erişim Portalı
+                  Erişim Doğrulaması
                 </h3>
-                <p className="text-xs text-white/60 leading-relaxed max-w-[280px] mx-auto">
-                  Lütfen yetkili kullanıcı adı ve şifrenizi girin.
+                <p className="text-xs text-zinc-400 leading-relaxed max-w-[280px] mx-auto">
+                  Devam etmek için yetkili kullanıcı adı ve anahtarınızı girin.
                 </p>
               </div>
 
               {/* Form */}
               <form onSubmit={handleEasterLoginSubmit} className="space-y-3.5 text-left">
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-rose-300/80 px-1">Kullanıcı Adı</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 px-1">Kullanıcı Adı</label>
                   <input
                     type="text"
                     required
                     placeholder="Kullanıcı adı..."
                     value={easterUsername}
                     onChange={e => setEasterUsername(e.target.value)}
-                    className="w-full py-2.5 px-3.5 rounded-xl bg-white/5 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-rose-400 text-xs text-white placeholder-white/30 font-medium"
+                    className="w-full py-2.5 px-3.5 rounded-xl bg-zinc-900/90 border border-white/10 focus:outline-hidden focus:border-zinc-400 text-xs text-white placeholder-zinc-500 font-medium transition-colors"
                     autoFocus
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-rose-300/80 px-1">Şifre</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 px-1">Anahtar / Şifre</label>
                   <div className="relative">
                     <input
                       type={showEasterPassword ? 'text' : 'password'}
@@ -1740,12 +1793,13 @@ export default function App() {
                       placeholder="Şifre..."
                       value={easterPassword}
                       onChange={e => setEasterPassword(e.target.value)}
-                      className="w-full py-2.5 pl-3.5 pr-10 rounded-xl bg-white/5 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-rose-400 text-xs text-white placeholder-white/30 font-mono tracking-widest"
+                      className="w-full py-2.5 pl-3.5 pr-10 rounded-xl bg-zinc-900/90 border border-white/10 focus:outline-hidden focus:border-zinc-400 text-xs text-white placeholder-zinc-500 font-mono tracking-widest transition-colors"
                     />
                     <button
                       type="button"
                       onClick={() => setShowEasterPassword(!showEasterPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                      title={showEasterPassword ? "Gizle" : "Göster"}
                     >
                       {showEasterPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                     </button>
@@ -1753,17 +1807,17 @@ export default function App() {
                 </div>
 
                 {easterError && (
-                  <span className="text-[10px] text-rose-400 font-bold block text-center">
+                  <span className="text-[10px] text-red-400 font-bold block text-center">
                     ⚠️ {easterError}
                   </span>
                 )}
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer text-white shadow-lg shadow-rose-600/30 hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98 border border-white/10"
                 >
-                  <Heart size={14} className="fill-white" />
-                  <span>Giriş Yap ve Kilidi Aç</span>
+                  <Lock size={13} className="text-zinc-300" />
+                  <span>Doğrula ve Giriş Yap</span>
                 </button>
               </form>
             </motion.div>
@@ -1971,59 +2025,15 @@ export default function App() {
                   referrerPolicy="no-referrer"
                 />
               </div>
-              <span className="text-xl font-semibold tracking-tight text-white transition-opacity duration-300 group-hover:opacity-95 truncate">
+              <span className="text-xl font-semibold tracking-tight text-white transition-opacity duration-300 group-hover:opacity-95 truncate hidden sm:inline-block max-w-[140px] xl:max-w-none">
                 {profile.name.split(' ')[0]} <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-white/95 to-white/80">{profile.name.split(' ').slice(1).join(' ')}</span>
               </span>
             </div>
 
             {/* Desktop Navigation Tabs */}
-            <nav id="main-nav" aria-label="Ana Gezinti Menüsü" className="hidden md:flex items-center gap-1.5 p-1 liquid-glass rounded-full text-xs shrink-0">
+            <nav id="main-nav" aria-label="Ana Gezinti Menüsü" className="hidden md:flex items-center gap-0.5 sm:gap-1 p-1 bg-zinc-900/90 border border-white/10 rounded-full text-xs shrink-0 backdrop-blur-md max-w-full overflow-x-auto scrollbar-none">
               {navItems.map(item => {
-                const isProjects = item.id === 'projects';
                 const isActive = activeTab === item.id;
-
-                if (isProjects) {
-                  return (
-                    <motion.button
-                      key={item.id}
-                      onClick={() => {
-                        soundEngine.playTabSwitch();
-                        setActiveTab(item.id);
-                        setMobileMenuOpen(false);
-                      }}
-                      animate={{
-                        scale: isActive ? [1, 1.05, 1] : [1, 1.07, 1],
-                        boxShadow: [
-                          "0 0 0px rgba(52, 211, 153, 0)",
-                          "0 0 18px rgba(52, 211, 153, 0.75)",
-                          "0 0 0px rgba(52, 211, 153, 0)"
-                        ]
-                      }}
-                      transition={{
-                        duration: 1.8,
-                        repeat: Infinity,
-                        ease: "easeInOut"
-                      }}
-                      className={`relative px-4 py-1.5 rounded-full font-extrabold transition-colors duration-300 flex items-center gap-1.5 cursor-pointer border ${
-                        isActive
-                          ? (theme === 'terminal'
-                              ? 'bg-emerald-500/35 text-emerald-200 border-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.4)]'
-                              : 'bg-emerald-500/30 text-white border-emerald-400')
-                          : (theme === 'terminal'
-                              ? 'bg-emerald-950/50 text-emerald-300 border-emerald-500/60 hover:bg-emerald-900/50'
-                              : 'bg-gradient-to-r from-emerald-500/25 via-teal-500/20 to-emerald-400/25 text-white border-emerald-400/70 hover:border-emerald-300')
-                      }`}
-                      id={`nav-btn-${item.id}`}
-                    >
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-80"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400"></span>
-                      </span>
-                      <span>{theme === 'terminal' ? `> ${item.label.toUpperCase()}_` : item.label}</span>
-                    </motion.button>
-                  );
-                }
-
                 return (
                   <button
                     key={item.id}
@@ -2032,18 +2042,18 @@ export default function App() {
                       setActiveTab(item.id);
                       setMobileMenuOpen(false);
                     }}
-                    className={`px-4 py-1.5 rounded-full transition-all duration-300 font-bold ${
+                    className={`px-2.5 sm:px-3 lg:px-3.5 py-1 rounded-full transition-all duration-200 font-medium cursor-pointer whitespace-nowrap text-[11px] sm:text-xs ${
                       isActive 
                         ? (theme === 'terminal'
-                            ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/60 shadow-[0_0_12px_rgba(52,211,153,0.35)]'
-                            : 'bg-white/15 text-white shadow-xs')
+                            ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/60 shadow-xs font-semibold'
+                            : 'bg-white/15 text-white font-semibold shadow-xs')
                         : (theme === 'terminal'
                             ? 'text-emerald-400/70 hover:text-emerald-300 hover:bg-emerald-950/30'
-                            : 'text-white/85 hover:text-white hover:bg-white/10')
+                            : 'text-zinc-400 hover:text-white hover:bg-white/5')
                     }`}
                     id={`nav-btn-${item.id}`}
                   >
-                    {theme === 'terminal' ? `> ${item.label.toUpperCase()}_` : item.label}
+                    {theme === 'terminal' ? (isActive ? `> ${item.label}` : item.label) : item.label}
                   </button>
                 );
               })}
@@ -2832,31 +2842,20 @@ export default function App() {
                 /* DEFAULT VIEW: HERO / PROFILE DISPLAY */
                 <motion.div 
                   key="hero-profile-content"
-                  initial={{ opacity: 0, y: 15 }}
+                  initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
-                  transition={{ duration: 0.4 }}
-                  onMouseMove={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const x = (e.clientX - rect.left) / rect.width - 0.5;
-                    const y = (e.clientY - rect.top) / rect.height - 0.5;
-                    setHeroParallax({ x: x * 8, y: y * 8 });
-                  }}
-                  onMouseLeave={() => setHeroParallax({ x: 0, y: 0 })}
-                  style={{
-                    transform: `perspective(1000px) rotateY(${heroParallax.x}deg) rotateX(${-heroParallax.y}deg)`,
-                    transition: 'transform 0.15s ease-out'
-                  }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.3 }}
                   className="flex-1 flex flex-col justify-between overflow-y-auto pr-1"
                 >
                   <div className="flex flex-col items-start gap-5 lg:gap-6 max-w-xl py-2">
                     <div className="flex items-center gap-4">
-                      <div className="w-20 h-20 rounded-full p-1 liquid-glass flex items-center justify-center overflow-hidden transition-transform duration-500 hover:rotate-6 shadow-xl shadow-emerald-500/10">
+                      <div className="w-20 h-20 rounded-full p-1 bg-zinc-900 border border-white/10 flex items-center justify-center overflow-hidden transition-transform duration-300 hover:scale-105 shadow-xl relative select-none">
                         <img 
                           src={profile.avatar} 
                           alt="Emirhan Yılmaz Avatar"
-                        onClick={handleAvatarEasterClick}
-                        style={{ cursor: "pointer" }} 
+                          onClick={handleAvatarEasterClick}
+                          style={{ cursor: "pointer" }} 
                           className="w-full h-full object-cover rounded-full"
                           referrerPolicy="no-referrer"
                           onError={(e) => {
@@ -2881,47 +2880,44 @@ export default function App() {
 
                     <div className="space-y-3.5">
                       <div className="flex flex-wrap items-center gap-2">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 liquid-glass rounded-full text-[10px] tracking-wider uppercase text-emerald-300 font-bold border border-emerald-400/30">
-                          <Brain size={11} className="text-emerald-400" />
-                          <span>PDR (Psikolojik Danışmanlık) & Yapay Zeka</span>
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-900/80 rounded-full text-xs text-emerald-400 font-medium border border-white/10">
+                          <Brain size={12} className="text-emerald-400" />
+                          <span>PDR (Psikolojik Danışmanlık) &amp; Yapay Zeka</span>
                         </div>
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 liquid-glass rounded-full text-[10px] text-emerald-400 font-extrabold tracking-wider uppercase select-none">
-                          <span className="relative flex h-1.5 w-1.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
-                          </span>
-                          <span>{lang === 'tr' ? 'PROJELERE & İŞ BİRLİĞİNE AÇIK' : 'OPEN TO WORK & COLLABORATION'}</span>
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 rounded-full text-xs text-emerald-300 font-medium border border-emerald-500/25 select-none">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                          <span>{lang === 'tr' ? 'Yeni Projeler İçin Müsait' : 'Available for Work & Collaboration'}</span>
                         </div>
                       </div>
 
-                      <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.1] text-white">
+                      <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.12] text-white">
                         {lang === 'tr' ? (
                           <>
-                            İnsan Psikolojisi & <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-sky-300 font-serif italic">Yapay Zeka Mimarisi</span>
+                            İnsan Psikolojisi &amp; <br />
+                            <span className="text-emerald-400">Yapay Zeka Sistemleri</span>
                           </>
                         ) : (
                           <>
-                            Human Psychology & <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-sky-300 font-serif italic">AI Systems Engineering</span>
+                            Human Psychology &amp; <br />
+                            <span className="text-emerald-400">AI Systems Engineering</span>
                           </>
                         )}
                       </h1>
 
-                      <p className="text-xs sm:text-sm text-white/90 font-medium leading-relaxed max-w-xl">
+                      <p className="text-xs sm:text-sm text-zinc-300 font-normal leading-relaxed max-w-xl">
                         {lang === 'tr' 
                           ? 'Aksaray Üniversitesi PDR mezuniyeti ve 3 yıllık özel eğitim tecrübesiyle; insan zihninin dinamiklerini yapay zeka (LLM / Gemini Multimodal Vision), mobil ve Python otomasyonlarıyla buluşturuyorum. Bilişsel yükü azaltan, şefkatli ve yüksek etkili dijital ürünler inşa ediyorum.'
                           : 'Bridging a degree in Psychological Counseling (GPC) and 3 years of classroom special ed with modern AI (Gemini Vision / LLMs), mobile apps, and Python system automations to minimize cognitive load.'}
                       </p>
 
-                      {/* Direct Target Audience Card (Kime Yardımcı Oluyorum?) */}
-                      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-teal-950/20 to-black/60 border border-emerald-500/30 flex items-start gap-3 w-full shadow-md">
+                      {/* Direct Target Audience Card */}
+                      <div className="p-4 rounded-xl bg-zinc-900/70 border border-white/10 flex items-start gap-3 w-full">
                         <Users size={16} className="text-emerald-400 shrink-0 mt-0.5" />
                         <div className="space-y-1">
-                          <span className="text-[10px] uppercase tracking-wider text-emerald-300 font-extrabold flex items-center gap-1.5">
-                            {lang === 'tr' ? '🎯 HANGİ ALANLARDA DESTEK SAĞLIYORUM?' : '🎯 HOW I DELIVER VALUE'}
+                          <span className="text-xs uppercase tracking-wider text-emerald-400 font-semibold block">
+                            {lang === 'tr' ? 'Çalışma & Destek Alanları' : 'Core Focus Areas'}
                           </span>
-                          <p className="text-xs text-white/95 font-medium leading-relaxed">
+                          <p className="text-xs text-zinc-300 leading-relaxed">
                             {lang === 'tr'
                               ? "İşletmeler, kurumlar ve ekipler için süreç otomasyonları; web/mobil ürün geliştirme, yapay zeka entegrasyonları ve pedagojik/eğitsel yazılım çözümleri."
                               : "Process automation, web/mobile application engineering, LLM integrations, and pedagogical/educational software solutions for businesses and teams."}
@@ -2929,38 +2925,38 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* 3 Core Competency Pillars (Yetenekler ve Yetkinlikler) */}
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full pt-1">
-                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-emerald-400/40 transition-colors flex flex-col justify-between">
-                          <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
+                      {/* 3 Core Competency Pillars */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full pt-1">
+                        <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-white/10 hover:border-emerald-500/30 transition-colors flex flex-col justify-between">
+                          <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-semibold">
                             <Brain size={14} className="shrink-0" />
-                            <span>{lang === 'tr' ? 'Psikolojik Danışmanlık (PDR)' : 'Psychological Counseling'}</span>
+                            <span>{lang === 'tr' ? 'Psikolojik Danışmanlık' : 'Psychological Counseling'}</span>
                           </div>
-                          <p className="text-[10px] text-white/80 mt-1 leading-snug">
+                          <p className="text-[11px] text-zinc-400 mt-1.5 leading-relaxed">
                             {lang === 'tr' 
                               ? 'Aksaray Üniversitesi PDR mezuniyeti; rehberlik kuramları, iletişim ve pedagojik değerlendirme.' 
                               : 'Guidance & Counseling degree; communication, behavioral principles, and educational evaluation.'}
                           </p>
                         </div>
 
-                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-sky-400/40 transition-colors flex flex-col justify-between">
-                          <div className="flex items-center gap-1.5 text-sky-400 text-xs font-bold">
+                        <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-white/10 hover:border-sky-500/30 transition-colors flex flex-col justify-between">
+                          <div className="flex items-center gap-1.5 text-sky-400 text-xs font-semibold">
                             <Code2 size={14} className="shrink-0" />
                             <span>{lang === 'tr' ? 'Yazılım & Otomasyon' : 'Software & Automation'}</span>
                           </div>
-                          <p className="text-[10px] text-white/80 mt-1 leading-snug">
+                          <p className="text-[11px] text-zinc-400 mt-1.5 leading-relaxed">
                             {lang === 'tr' 
                               ? 'Python botları, veri/iş akışı otomasyonları, React & TypeScript web geliştirme.' 
                               : 'Python bot automations, background workflows, and modern React & TypeScript web apps.'}
                           </p>
                         </div>
 
-                        <div className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-teal-400/40 transition-colors flex flex-col justify-between">
-                          <div className="flex items-center gap-1.5 text-teal-400 text-xs font-bold">
+                        <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-white/10 hover:border-teal-500/30 transition-colors flex flex-col justify-between">
+                          <div className="flex items-center gap-1.5 text-teal-400 text-xs font-semibold">
                             <Sparkles size={14} className="shrink-0" />
                             <span>{lang === 'tr' ? 'Yapay Zeka & LLM' : 'AI & LLM Integration'}</span>
                           </div>
-                          <p className="text-[10px] text-white/80 mt-1 leading-snug">
+                          <p className="text-[11px] text-zinc-400 mt-1.5 leading-relaxed">
                             {lang === 'tr' 
                               ? 'Büyük Dil Modelleri (LLM), prompt mühendisliği ve işlevsel yapay zeka araçları.' 
                               : 'Large Language Models (LLM), prompt engineering, and production-ready AI tools.'}
@@ -2970,48 +2966,35 @@ export default function App() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2.5 pt-1">
-                      <motion.button 
+                      <button 
                         onClick={() => {
                           soundEngine.playTabSwitch();
                           setActiveTab('projects');
                         }}
-                        animate={{
-                          scale: [1, 1.04, 1],
-                          boxShadow: [
-                            "0 0 0px rgba(52, 211, 153, 0)",
-                            "0 0 20px rgba(52, 211, 153, 0.7)",
-                            "0 0 0px rgba(52, 211, 153, 0)"
-                          ]
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                        className="inline-flex items-center gap-2.5 pl-4 pr-3 py-2 bg-gradient-to-r from-emerald-600/50 via-teal-500/40 to-emerald-500/50 hover:from-emerald-500/70 hover:to-teal-400/60 border border-emerald-400/80 rounded-full text-xs sm:text-sm font-extrabold text-white transition-all group active:scale-95 cursor-pointer relative shadow-lg"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl text-xs sm:text-sm font-semibold transition-all group active:scale-98 cursor-pointer shadow-sm hover:scale-[1.02]"
                         id="cta-explore-projects"
                       >
-                        <Code2 size={14} className="text-emerald-300" />
+                        <Code2 size={14} className="text-zinc-950" />
                         <span>{lang === 'tr' ? 'Projeleri İncele' : 'Explore Projects'}</span>
-                        <ArrowRight size={13} className="text-emerald-300 group-hover:translate-x-0.5 transition-transform" />
-                      </motion.button>
+                        <ArrowRight size={13} className="text-zinc-950 group-hover:translate-x-0.5 transition-transform" />
+                      </button>
 
                       <button 
                         onClick={() => {
                           soundEngine.playTabSwitch();
                           setActiveTab('contact');
                         }}
-                        className="inline-flex items-center gap-2 px-4 py-2 liquid-glass hover:bg-white/15 rounded-full text-xs sm:text-sm font-bold text-white transition-all hover:scale-105 active:scale-95 border border-white/20 hover:border-emerald-400/50 cursor-pointer shadow-md"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white rounded-xl text-xs sm:text-sm font-medium transition-all active:scale-98 border border-white/10 hover:border-white/20 cursor-pointer"
                       >
                         <Mail size={13} className="text-emerald-400" />
-                        <span>{lang === 'tr' ? 'İletişime Geç & Teklif Al' : 'Contact & Inquire'}</span>
+                        <span>{lang === 'tr' ? 'İletişime Geç' : 'Get in Touch'}</span>
                       </button>
 
                       <a
                         href={profile.github || "https://github.com/Emirhan0008"}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-3 py-2 liquid-glass hover:bg-white/10 rounded-full text-xs font-semibold font-mono text-white/80 hover:text-white transition-all border border-white/10 hover:border-emerald-400/30"
+                        className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-zinc-900 hover:bg-zinc-800 rounded-xl text-xs font-mono text-zinc-300 hover:text-white transition-all border border-white/10 hover:border-white/20"
                         title={`GitHub: ${profile.name}`}
                       >
                         <Github size={13} className="text-white/80" />
@@ -3116,13 +3099,13 @@ export default function App() {
                 target="_blank" 
                 rel="noopener noreferrer" 
                 onClick={() => soundEngine.playGlassClick()}
-                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-500/40 hover:border-emerald-400/80 text-emerald-300 hover:text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer shadow-sm shadow-emerald-950/40 hover:shadow-[0_0_16px_rgba(16,185,129,0.4)] hover:scale-105 active:scale-95"
+                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-500/50 hover:border-emerald-400 text-emerald-200 hover:text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer shadow-sm hover:scale-105 active:scale-95"
                 title="WhatsApp: Emirhan_yilmaz08"
               >
-                <WhatsAppIcon size={16} className="shrink-0 drop-shadow-[0_0_8px_rgba(37,211,102,0.7)] filter group-hover:brightness-110 transition-transform duration-300 group-hover:scale-110" />
+                <WhatsAppIcon size={16} className="shrink-0 transition-transform duration-300 group-hover:scale-110" />
                 <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
                   <span className="text-[11px] font-semibold text-emerald-100">Emirhan_yilmaz08</span>
-                  <ExternalLink size={10} className="shrink-0 opacity-70 group-hover:opacity-100" />
+                  <ExternalLink size={10} className="shrink-0 opacity-80 group-hover:opacity-100" />
                 </div>
               </a>
 
@@ -3252,6 +3235,12 @@ export default function App() {
                   setSelectedProject(null);
                   setSelectedArticle(null);
                   setShowEstimatorModal(true);
+                }}
+                onTriggerMelting={() => {
+                  setIsMeltingSite(true);
+                  setTimeout(() => {
+                    setShowMeltingSlagHeart(true);
+                  }, 2500);
                 }}
               />
             ) : (
@@ -3901,27 +3890,27 @@ export default function App() {
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
 
                                 {/* Project Status Badge (Sadece Öne Çıkan) */}
-                                <div className="absolute top-2 left-2 z-10">
+                                <div className="absolute top-2.5 left-2.5 z-10">
                                   {project.isFeatured && (
-                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-extrabold bg-emerald-950/95 text-emerald-300 border border-emerald-400/60 backdrop-blur-md shadow-md">
-                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-black/80 text-emerald-300 border border-emerald-500/30 backdrop-blur-md">
+                                      <span className="text-emerald-400">★</span>
                                       <span>{lang === 'tr' ? 'Öne Çıkan' : 'Featured'}</span>
                                     </span>
                                   )}
                                 </div>
 
-                                {/* Siteye Git Badge */}
+                                {/* Siteye Git Action */}
                                 {project.demoUrl && !isAdmin && (
                                   <a
                                     href={sanitizeUrl(project.demoUrl) || '#'}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     onClick={(e) => e.stopPropagation()}
-                                    className="absolute top-2 right-2 bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-md z-10 transition-transform hover:scale-105 cursor-pointer"
+                                    className="absolute top-2.5 right-2.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-[10px] font-bold px-2.5 py-1 rounded-md flex items-center gap-1.5 shadow-sm z-10 transition-all hover:scale-[1.03] active:scale-95 cursor-pointer"
                                     title={lang === 'tr' ? "Siteye Git" : "Visit Site"}
                                   >
                                     <span>{lang === 'tr' ? 'Siteye Git' : 'Visit Site'}</span>
-                                    <ExternalLink size={10} className="shrink-0" />
+                                    <ExternalLink size={11} className="shrink-0" />
                                   </a>
                                 )}
 
@@ -4403,9 +4392,9 @@ export default function App() {
                             <button
                               type="button"
                               onClick={handleWhatsAppOpen}
-                              className="px-3 py-1.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 font-extrabold text-xs flex items-center gap-1.5 cursor-pointer shadow-md"
+                              className="px-3 py-1.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-200 font-extrabold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
                             >
-                              <Phone size={12} className="text-emerald-400" />
+                              <WhatsAppIcon size={14} className="shrink-0" />
                               <span>{lang === 'tr' ? "WhatsApp'tan da İlet" : 'Also Send via WhatsApp'}</span>
                             </button>
                           </div>
@@ -4534,10 +4523,10 @@ export default function App() {
                             <button 
                               type="button"
                               onClick={handleWhatsAppOpen}
-                              className="py-2 px-2 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-300 font-bold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-sm truncate"
+                              className="py-2 px-2 rounded-xl bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-500/40 text-emerald-200 font-bold text-xs flex items-center justify-center gap-1.5 transition-all hover:scale-[1.01] cursor-pointer shadow-sm truncate"
                               title="WhatsApp"
                             >
-                              <Phone size={12} className="text-emerald-400 shrink-0" />
+                              <WhatsAppIcon size={14} className="shrink-0" />
                               <span className="truncate">WhatsApp</span>
                             </button>
 

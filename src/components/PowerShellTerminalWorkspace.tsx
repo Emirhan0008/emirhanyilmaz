@@ -19,6 +19,7 @@ interface PowerShellTerminalWorkspaceProps {
   onOpenProjectModal?: (project: Project) => void;
   onOpenArticleModal?: (article: Article) => void;
   onOpenEstimator?: () => void;
+  onTriggerMelting?: () => void;
   lang?: 'tr' | 'en';
   projects?: Project[];
   articles?: Article[];
@@ -57,6 +58,66 @@ export const PulsingNormalOpenButton: React.FC<{
   );
 };
 
+export const MatrixRainCanvas: React.FC = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animId: number;
+    let width = (canvas.width = canvas.parentElement?.clientWidth || 800);
+    let height = (canvas.height = canvas.parentElement?.clientHeight || 600);
+
+    const chars = '0123456789ABCDEF01UXPDRGEMINI';
+    const fontSize = 12;
+    const columns = Math.floor(width / fontSize);
+    const drops: number[] = Array(columns).fill(1);
+
+    const draw = () => {
+      ctx.fillStyle = 'rgba(2, 13, 8, 0.12)';
+      ctx.fillRect(0, 0, width, height);
+
+      ctx.fillStyle = '#10b981';
+      ctx.font = `${fontSize}px monospace`;
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = chars.charAt(Math.floor(Math.random() * chars.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+      animId = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    const handleResize = () => {
+      if (!canvas) return;
+      width = canvas.width = canvas.parentElement?.clientWidth || 800;
+      height = canvas.height = canvas.parentElement?.clientHeight || 600;
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 pointer-events-none opacity-20 z-0"
+    />
+  );
+};
+
 export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspaceProps> = ({
   onSwitchToNormal,
   onSwitchToSplit,
@@ -64,6 +125,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
   onOpenProjectModal,
   onOpenArticleModal,
   onOpenEstimator,
+  onTriggerMelting,
   lang = 'tr',
   projects: customProjects,
   articles: customArticles,
@@ -80,6 +142,8 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const [isMatrixActive, setIsMatrixActive] = useState<boolean>(false);
+  const [isTerminalEasterUnlocked, setIsTerminalEasterUnlocked] = useState<boolean>(false);
   
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -252,9 +316,22 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                   <div><span className="text-emerald-400 font-bold">Set-Theme Normal</span> (veya <span className="text-emerald-400">exit</span>) : Normal Cam UI&apos;ya döner</div>
                 </div>
               </div>
+
+              <div className="bg-emerald-950/20 p-2.5 rounded-lg border border-emerald-500/20 col-span-1 md:col-span-2">
+                <div className="text-cyan-400 font-bold mb-1">🧠 Bilişsel UX &amp; Geliştirici Özel Komutları:</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-white/90">
+                  <div><span className="text-emerald-400 font-bold">whoami</span> : Kullanıcı kimliği, sistem ayrıcalıkları &amp; mimari vizyon</div>
+                  <div><span className="text-emerald-400 font-bold">cognitive-ux</span> : PDR destekli kullanıcı deneyimi ve tüketici karar mimarisi</div>
+                  <div><span className="text-emerald-400 font-bold">neofetch</span> : Donanım, çekirdek ve yapay zeka sistem kartı</div>
+                  <div><span className="text-emerald-400 font-bold">stack</span> : Canlı teknoloji ve performans metrikleri kıyaslaması</div>
+                  <div><span className="text-emerald-400 font-bold">matrix</span> : Yeşil fosfor Matrix dijital kod yağmurunu açar/kapatır</div>
+                  <div><span className="text-emerald-400 font-bold">coffee</span> : Yoğun mühendislik ve UX odaklanması için espresso</div>
+                </div>
+              </div>
             </div>
-            <div className="text-emerald-400/80 text-[11px] italic">
-              İpucu: Komutları ve dosya isimlerini yazarken veya aşağıdaki hızlı butonlara tıklayarak doğrudan çalıştırabilirsiniz.
+            <div className="text-emerald-400/80 text-[11px] italic flex items-center justify-between">
+              <span>İpucu: Komutları yazarken Sekme (Tab) ile tamamlayabilir ya da hızlı çipten tıklayabilirsiniz.</span>
+              <span className="text-amber-300 font-mono text-[10px] hidden sm:inline">Gizli komutlar: whoami, cognitive-ux, stack, matrix, coffee, quote</span>
             </div>
           </div>
         )
@@ -1399,6 +1476,452 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
       }
     }
 
+    // ==========================================
+    // 18. SECRET & GEEK COMMAND: WHOAMI / WHOAMI /ALL / ID
+    // ==========================================
+    if (mainCmd === 'whoami' || mainCmd === 'id') {
+      soundEngine.playTerminalKey();
+      setLines(prev => [
+        ...prev,
+        {
+          id: `whoami-${Date.now()}`,
+          type: 'output',
+          elements: (
+            <div className="font-mono text-xs p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-lg space-y-2.5">
+              <div className="text-amber-400 font-bold border-b border-emerald-500/30 pb-1.5 flex items-center justify-between">
+                <span>USER &amp; ARCHITECTURAL IDENTITY INFORMATION</span>
+                <span className="text-[10px] text-white/50 font-normal">NT AUTHORITY\\SYSTEM-LEVEL</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+                <div>
+                  <span className="text-white/50">User Name:</span> <span className="text-emerald-300 font-bold">EMIRHAN-WORKSTATION\\Emirhan Yilmaz</span>
+                </div>
+                <div>
+                  <span className="text-white/50">SID:</span> <span className="text-white/70">S-1-5-21-9382104-1928401-1001</span>
+                </div>
+                <div>
+                  <span className="text-white/50">Discipline:</span> <span className="text-cyan-300 font-bold">AI Systems &amp; Cognitive UX Engineer</span>
+                </div>
+                <div>
+                  <span className="text-white/50">Core Philosophy:</span> <span className="text-white/80">PDR &amp; Behavioral Psychology backed AI Systems</span>
+                </div>
+              </div>
+
+              <div className="pt-1.5 border-t border-white/10 space-y-1">
+                <div className="text-white/60 text-[10px] font-bold uppercase tracking-wider">Active Privileges &amp; Specializations:</div>
+                <div className="grid grid-cols-12 text-[10px] text-white/50 border-b border-white/10 pb-0.5">
+                  <span className="col-span-5">Privilege Name</span>
+                  <span className="col-span-5">Description</span>
+                  <span className="col-span-2 text-right">State</span>
+                </div>
+                <div className="grid grid-cols-12 text-[11px] text-emerald-300">
+                  <span className="col-span-5 font-bold">SeCognitiveUxPrivilege</span>
+                  <span className="col-span-5 text-white/70">Bilişsel Yük Azaltımı &amp; Karar Ergonomisi</span>
+                  <span className="col-span-2 text-right text-emerald-400 font-bold">Enabled</span>
+                </div>
+                <div className="grid grid-cols-12 text-[11px] text-emerald-300">
+                  <span className="col-span-5 font-bold">SeBehavioralModelingPrivilege</span>
+                  <span className="col-span-5 text-white/70">Tüketici Davranış Dinamikleri &amp; Etik Nudge</span>
+                  <span className="col-span-2 text-right text-emerald-400 font-bold">Enabled</span>
+                </div>
+                <div className="grid grid-cols-12 text-[11px] text-emerald-300">
+                  <span className="col-span-5 font-bold">SeAgenticPipelinePrivilege</span>
+                  <span className="col-span-5 text-white/70">Otonom LLM İstem &amp; Tool-Calling Hatları</span>
+                  <span className="col-span-2 text-right text-emerald-400 font-bold">Enabled</span>
+                </div>
+                <div className="grid grid-cols-12 text-[11px] text-emerald-300">
+                  <span className="col-span-5 font-bold">SeFullstackExecutionPrivilege</span>
+                  <span className="col-span-5 text-white/70">Python, TypeScript, React, React Native</span>
+                  <span className="col-span-2 text-right text-emerald-400 font-bold">Enabled</span>
+                </div>
+              </div>
+            </div>
+          )
+        }
+      ]);
+      return;
+    }
+
+    // ==========================================
+    // 19. SECRET & GEEK COMMAND: COGNITIVE-UX / BEHAVIOR / PDR-UX
+    // ==========================================
+    if (mainCmd === 'cognitive-ux' || mainCmd === 'ux' || mainCmd === 'behavior' || mainCmd === 'pdr-ux' || mainCmd === 'ux-framework' || mainCmd === 'consumer-behavior') {
+      soundEngine.playAiSparkle();
+      setLines(prev => [
+        ...prev,
+        {
+          id: `cux-${Date.now()}`,
+          type: 'output',
+          elements: (
+            <div className="font-mono text-xs p-3.5 bg-emerald-950/25 border border-emerald-500/40 rounded-xl space-y-3">
+              <div className="flex items-center justify-between border-b border-emerald-500/30 pb-2">
+                <div className="text-emerald-300 font-bold flex items-center gap-2">
+                  <Sparkles size={14} className="text-emerald-400" />
+                  <span>BİLİŞSEL UX &amp; TÜKETİCİ DAVRANIŞLARI MİMARİSİ (PDR YETKİNLİĞİ)</span>
+                </div>
+                <span className="text-[10px] text-amber-300 font-bold bg-amber-950/50 px-2 py-0.5 rounded border border-amber-500/30">
+                  METODOLOJİ
+                </span>
+              </div>
+              <p className="text-white/85 text-[11px] leading-relaxed italic border-l-2 border-emerald-400 pl-2.5">
+                &ldquo;Yapay zeka modelleri ne kadar güçlenirse güçlensin, son kararı veren insan zihninin bilişsel kapasitesi ve algı filtreleri sabittir. PDR altyapımı; kullanıcıyı boğmayan, karar yorgunluğunu sıfırlayan ve tüketici güveni inşa eden sistemler tasarlamak için kullanıyorum.&rdquo;
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 text-[11px] pt-1">
+                <div className="bg-emerald-900/20 p-2.5 rounded-lg border border-emerald-500/20 space-y-1">
+                  <div className="text-emerald-300 font-bold flex items-center gap-1.5">
+                    <span className="text-emerald-400">01.</span> Bilişsel Yükü Optimize Etme
+                  </div>
+                  <div className="text-white/75 text-[10px] leading-relaxed">
+                    AI çıktılarının karar felcine (analysis paralysis) yol açmaması için kademeli bilgi aktarımı (progressive disclosure) ve yüksek kontrastlı net eylem patikaları.
+                  </div>
+                </div>
+                <div className="bg-emerald-900/20 p-2.5 rounded-lg border border-emerald-500/20 space-y-1">
+                  <div className="text-emerald-300 font-bold flex items-center gap-1.5">
+                    <span className="text-emerald-400">02.</span> Tüketici Karar Mimarisi &amp; Nudge
+                  </div>
+                  <div className="text-white/75 text-[10px] leading-relaxed">
+                    Kullanıcıyı manipüle etmeden, bilişsel yanlılıkları (cognitive biases) nötrleyen ve en rasyonel tercihe yönlendiren etik davranışsal tetikleyiciler.
+                  </div>
+                </div>
+                <div className="bg-emerald-900/20 p-2.5 rounded-lg border border-emerald-500/20 space-y-1">
+                  <div className="text-emerald-300 font-bold flex items-center gap-1.5">
+                    <span className="text-emerald-400">03.</span> İnsan-AI Etkileşimi (HAI Ergonomics)
+                  </div>
+                  <div className="text-white/75 text-[10px] leading-relaxed">
+                    Kullanıcının yapay zekaya aşırı bağımlılık veya temelsiz güvensizlik beslemesini engelleyen, sistemin sınırlarını şeffaf gösteren diyalog ergonomisi.
+                  </div>
+                </div>
+                <div className="bg-emerald-900/20 p-2.5 rounded-lg border border-emerald-500/20 space-y-1">
+                  <div className="text-emerald-300 font-bold flex items-center gap-1.5">
+                    <span className="text-emerald-400">04.</span> Zihinsel Model Senkronizasyonu
+                  </div>
+                  <div className="text-white/75 text-[10px] leading-relaxed">
+                    Karmaşık otonom algoritmaların, kullanıcının sezgilerine ve beklentilerine pürüzsüzce oturmasını sağlayan zihinsel eşleme (mental model mapping).
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        }
+      ]);
+      return;
+    }
+
+    // ==========================================
+    // 20. SECRET & GEEK COMMAND: NEOFETCH / FASTFETCH / SYSINFO
+    // ==========================================
+    if (mainCmd === 'neofetch' || mainCmd === 'fastfetch' || mainCmd === 'sysinfo') {
+      soundEngine.playTerminalKey();
+      setLines(prev => [
+        ...prev,
+        {
+          id: `neofetch-${Date.now()}`,
+          type: 'output',
+          elements: (
+            <div className="font-mono text-xs p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-lg flex flex-col sm:flex-row gap-4 items-start">
+              <pre className="text-emerald-400 font-bold text-[11px] leading-tight select-none">
+{`       /\\_/\\
+      ( o.o )
+       > ^ <
+      /  ~  \\
+     / |   | \\
+    (_/     \\_)`}
+              </pre>
+              <div className="space-y-1 text-[11px]">
+                <div className="text-emerald-300 font-bold">emirhan@workstation-x64</div>
+                <div className="text-white/40">-----------------------------</div>
+                <div><span className="text-amber-300 font-bold">OS:</span> Windows PowerShell 7.4.5 x64 (Portfolio Edition)</div>
+                <div><span className="text-amber-300 font-bold">Host:</span> AI Studio &amp; Cognitive UX Engine</div>
+                <div><span className="text-amber-300 font-bold">Kernel:</span> Behavioral-Ergonomics-2.5.0</div>
+                <div><span className="text-amber-300 font-bold">Specialty:</span> AI Systems, Consumer Behavior UX &amp; Agent Workflows</div>
+                <div><span className="text-amber-300 font-bold">Uptime:</span> 365 days of active building &amp; optimization</div>
+                <div><span className="text-amber-300 font-bold">Shell:</span> pwsh 7.4.5 [Host: Emirhan-Workstation]</div>
+                <div><span className="text-amber-300 font-bold">Core Stack:</span> Python 3.12, TypeScript, React 19, Tailwind, Gemini SDK</div>
+                <div className="flex items-center gap-1.5 pt-1.5">
+                  <span className="w-3 h-3 bg-red-500 rounded-sm inline-block" />
+                  <span className="w-3 h-3 bg-yellow-500 rounded-sm inline-block" />
+                  <span className="w-3 h-3 bg-green-500 rounded-sm inline-block" />
+                  <span className="w-3 h-3 bg-cyan-500 rounded-sm inline-block" />
+                  <span className="w-3 h-3 bg-blue-500 rounded-sm inline-block" />
+                  <span className="w-3 h-3 bg-purple-500 rounded-sm inline-block" />
+                </div>
+              </div>
+            </div>
+          )
+        }
+      ]);
+      return;
+    }
+
+    // ==========================================
+    // 21. SECRET & GEEK COMMAND: COFFEE / CAFFEINE
+    // ==========================================
+    if (mainCmd === 'coffee' || mainCmd === 'caffeine' || mainCmd === 'kahve') {
+      soundEngine.playGlassClick();
+      setLines(prev => [
+        ...prev,
+        {
+          id: `coffee-${Date.now()}`,
+          type: 'output',
+          elements: (
+            <div className="font-mono text-xs p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-lg space-y-2">
+              <pre className="text-amber-400 font-bold leading-tight select-none text-[11px]">
+{`      (  )   (   )  )
+       ) (   )  (  (
+      ( )  (    ) )
+     _____________
+    <_____________> ___
+    |  ☕ ESPRESSO|/ _ \\
+    |   EMIRHAN   | | | |
+    |   SYSTEMS   |\\___/
+    |             |
+    \\_____________/`}
+              </pre>
+              <div className="text-emerald-300 font-bold">[HTTP 200 OK] Taze çekilmiş double-shot espresso demlendi!</div>
+              <div className="text-white/70 text-[11px]">
+                Yakıt: Yüksek odaklanma, bilişsel UX akışları ve gece geç saatlerde yazılan algoritmalar.
+              </div>
+            </div>
+          )
+        }
+      ]);
+      return;
+    }
+
+    // ==========================================
+    // 22. SECRET & GEEK COMMAND: SUDO / SU
+    // ==========================================
+    if (mainCmd === 'sudo' || mainCmd === 'su') {
+      soundEngine.playGlassClick();
+      setLines(prev => [
+        ...prev,
+        {
+          id: `sudo-${Date.now()}`,
+          type: 'error',
+          elements: (
+            <div className="font-mono text-xs p-2.5 bg-red-950/40 border border-red-500/40 rounded-lg space-y-1">
+              <div className="text-red-400 font-bold">[GÜVENLİK DENETİMİ]</div>
+              <div className="text-white/90">
+                &apos;emirhan&apos; kullanıcısı sudoers dosyasında bulunamadı. Bu olay Noel Baba&apos;ya raporlanacaktır. 🎅
+              </div>
+              <div className="text-white/60 text-[10px]">
+                İpucu: Windows PowerShell ortamında &apos;sudo&apos; kullanılmaz. Ancak zaten en yüksek &apos;whoami&apos; ayrıcalıklarına sahipsiniz.
+              </div>
+            </div>
+          )
+        }
+      ]);
+      return;
+    }
+
+    // ==========================================
+    // 23. SECRET & GEEK COMMAND: MATRIX / CMATRIX
+    // ==========================================
+    if (mainCmd === 'matrix' || mainCmd === 'cmatrix') {
+      soundEngine.playTerminalKey();
+      setIsMatrixActive(prev => !prev);
+      setLines(prev => [
+        ...prev,
+        {
+          id: `matrix-${Date.now()}`,
+          type: 'success',
+          text: !isMatrixActive 
+            ? "Matrix yeşil fosfor kod yağmuru etkinleştirildi! Kapatmak için tekrar 'matrix' yazabilirsiniz."
+            : "Matrix kod yağmuru kapatıldı, standart PowerShell moduna dönüldü."
+        }
+      ]);
+      return;
+    }
+
+    // ==========================================
+    // 24. SECRET & GEEK COMMAND: STACK / BENCH / TECH-STACK
+    // ==========================================
+    if (mainCmd === 'stack' || mainCmd === 'bench' || mainCmd === 'tech-stack') {
+      soundEngine.playGlassClick();
+      setLines(prev => [
+        ...prev,
+        {
+          id: `stack-${Date.now()}`,
+          type: 'table',
+          elements: (
+            <div className="font-mono text-xs p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-lg space-y-2">
+              <div className="text-emerald-300 font-bold border-b border-emerald-500/30 pb-1.5 flex items-center justify-between">
+                <span>SYSTEM &amp; SKILL ARCHITECTURE BENCHMARK</span>
+                <span className="text-[10px] text-amber-300">REAL-TIME TELEMETRY</span>
+              </div>
+              <div className="grid grid-cols-12 text-white/50 border-b border-white/10 pb-1 text-[10px] font-bold">
+                <span className="col-span-4">Alan</span>
+                <span className="col-span-4">Teknoloji &amp; Metodoloji</span>
+                <span className="col-span-2">Yetkinlik</span>
+                <span className="col-span-2 text-right">Performans</span>
+              </div>
+              <div className="space-y-1 text-[11px]">
+                <div className="grid grid-cols-12 items-center text-emerald-300">
+                  <span className="col-span-4 font-bold">AI &amp; Agent Systems</span>
+                  <span className="col-span-4 text-white/80">Gemini 2.5 SDK, Prompt Ops, RAG</span>
+                  <span className="col-span-2 text-amber-300">Uzman</span>
+                  <span className="col-span-2 text-right font-mono font-bold text-emerald-400">99.8%</span>
+                </div>
+                <div className="grid grid-cols-12 items-center text-emerald-300">
+                  <span className="col-span-4 font-bold">Bilişsel UX &amp; Ergonomi</span>
+                  <span className="col-span-4 text-white/80">PDR, Friction Zero, Fitts&apos;s Law</span>
+                  <span className="col-span-2 text-amber-300">İleri Düzey</span>
+                  <span className="col-span-2 text-right font-mono font-bold text-emerald-400">100%</span>
+                </div>
+                <div className="grid grid-cols-12 items-center text-emerald-300">
+                  <span className="col-span-4 font-bold">Frontend &amp; Mobile</span>
+                  <span className="col-span-4 text-white/80">React 19, TypeScript, React Native</span>
+                  <span className="col-span-2 text-amber-300">Uzman</span>
+                  <span className="col-span-2 text-right font-mono font-bold text-emerald-400">98.5%</span>
+                </div>
+                <div className="grid grid-cols-12 items-center text-emerald-300">
+                  <span className="col-span-4 font-bold">Backend &amp; Otomasyon</span>
+                  <span className="col-span-4 text-white/80">Python 3.12, Node.js, Playwright</span>
+                  <span className="col-span-2 text-amber-300">İleri Düzey</span>
+                  <span className="col-span-2 text-right font-mono font-bold text-emerald-400">96.0%</span>
+                </div>
+              </div>
+            </div>
+          )
+        }
+      ]);
+      return;
+    }
+
+    // ==========================================
+    // 25. SECRET & GEEK COMMAND: QUOTE / INSPIRE
+    // ==========================================
+    if (mainCmd === 'quote' || mainCmd === 'inspire') {
+      const quotes = [
+        { text: "Bilişsel yükü azaltmak, kullanıcının zihninde en yüksek saygıyı inşa etmektir.", author: "Emirhan Yılmaz (Bilişsel UX Felsefesi)" },
+        { text: "Tasarım gerçekten bir iletişim eylemidir; bu da tasarımcının iletişim kurduğu insanı derinlemesine anlaması anlamına gelir.", author: "Don Norman" },
+        { text: "Bir bilgisayar keman gibidir. Bir aceminin kemanın müzik ürettiğini düşündüğünü hayal edebilirsiniz, oysa asıl üreten müzisyendir.", author: "Alan Kay" },
+        { text: "Makinelerin düşünüp düşünemeyeceği sorusu, denizaltıların yüzüp yüzemeyeceği sorusu kadar önemlidir.", author: "Edsger W. Dijkstra" }
+      ];
+      const randomQ = quotes[Math.floor(Math.random() * quotes.length)];
+      soundEngine.playGlassClick();
+      setLines(prev => [
+        ...prev,
+        {
+          id: `quote-${Date.now()}`,
+          type: 'output',
+          elements: (
+            <div className="font-mono text-xs p-3 bg-emerald-950/20 border border-emerald-500/30 rounded-lg space-y-1.5 italic">
+              <div className="text-white/90 leading-relaxed">&ldquo;{randomQ.text}&rdquo;</div>
+              <div className="text-emerald-400 font-bold text-right text-[11px]">— {randomQ.author}</div>
+            </div>
+          )
+        }
+      ]);
+      return;
+    }
+
+    // ==========================================
+    // 26. SPECIAL EASTER EGG COMMANDS (AYSEGUL / SECRET / UNLOCK / MELT)
+    // ==========================================
+    if (mainCmd === 'aysegul' || mainCmd === 'secret' || mainCmd === 'secrets' || mainCmd === 'classified') {
+      soundEngine.playTerminalKey();
+      setLines(prev => [
+        ...prev,
+        {
+          id: `sec-${Date.now()}`,
+          type: 'output',
+          elements: (
+            <div className="font-mono text-xs p-3 bg-zinc-900/90 border border-white/20 rounded-lg space-y-2">
+              <div className="text-zinc-200 font-bold flex items-center gap-2">
+                <span>[GÜVENLİK PROTOKOLÜ: ŞİFRELİ OTURUM]</span>
+              </div>
+              <div className="text-white/70 text-[11px] leading-relaxed">
+                Bu alana erişim için yetkili güvenlik anahtarını doğrulamanız gerekmektedir.
+              </div>
+              <div className="text-amber-300 font-mono text-[11px]">
+                Kullanım: <span className="font-bold">unlock &lt;anahtar&gt;</span> (veya <span className="font-bold">auth &lt;anahtar&gt;</span>)
+              </div>
+            </div>
+          )
+        }
+      ]);
+      return;
+    }
+
+    // Authentication for Easter Egg: unlock 25092025 / auth 25092025 / 25092025
+    if (
+      mainCmd === 'unlock' || 
+      mainCmd === 'auth' || 
+      lower.includes('25092025') || 
+      lower.includes('250925')
+    ) {
+      const cleanKey = rawCmd.replace(/^(unlock|auth)\s*/i, '').replace(/[\.\s\/\-:,_#*]/g, '');
+      if (cleanKey.includes('25092025') || cleanKey.includes('250925') || lower.includes('25092025')) {
+        soundEngine.playSuccessChime();
+        setIsTerminalEasterUnlocked(true);
+        setLines(prev => [
+          ...prev,
+          {
+            id: `sec-success-${Date.now()}`,
+            type: 'output',
+            elements: (
+              <div className="font-mono text-xs p-3.5 bg-rose-950/40 border border-rose-500/40 rounded-xl space-y-2.5 text-white">
+                <div className="text-rose-300 font-bold flex items-center justify-between border-b border-rose-500/30 pb-1.5">
+                  <span>[DOĞRULAMA BAŞARILI — ÖZEL ERİŞİM AÇILDI]</span>
+                  <span className="text-[10px] text-rose-200 font-mono">25.09.2025</span>
+                </div>
+                <div className="text-rose-100 font-medium text-xs leading-relaxed italic">
+                  &ldquo;Şşşt... Sessiz ol, yaklaş yaklaş... 🐾 Emirhan seni çok ama çok seviyor haberin olsun! Dünyadaki her şeyden çok... Bunu sadece sana fısıldamam tembihlendi, aramızda kalsın! ❤️✨&rdquo;
+                </div>
+                <div className="text-rose-200/80 text-[11px]">
+                  &ldquo;Dünya eriyip yok olsa da sevgim bakidir kar tanem...&rdquo;
+                </div>
+                <div className="pt-2 border-t border-rose-500/20 flex items-center justify-between gap-2">
+                  <span className="text-[11px] text-amber-300 font-mono">
+                    Görsel erimeyi başlatmak için: <span className="font-bold underline cursor-pointer" onClick={() => executeCommand('melt')}>melt</span> yazın.
+                  </span>
+                  <button
+                    onClick={() => {
+                      if (onTriggerMelting) onTriggerMelting();
+                    }}
+                    className="px-2.5 py-1 rounded bg-rose-600 hover:bg-rose-500 text-white font-bold text-[10px] transition-all cursor-pointer shadow-md"
+                  >
+                    Erimeyi Başlat 🌋
+                  </button>
+                </div>
+              </div>
+            )
+          }
+        ]);
+        return;
+      } else {
+        setLines(prev => [
+          ...prev,
+          {
+            id: `sec-fail-${Date.now()}`,
+            type: 'error',
+            text: "Yetkilendirme başarısız: Anahtar geçersiz. 'unlock <anahtar>' biçiminde deneyin."
+          }
+        ]);
+        return;
+      }
+    }
+
+    // Trigger full melting from terminal
+    if (mainCmd === 'melt' || mainCmd === 'melting') {
+      soundEngine.playSuccessChime();
+      setLines(prev => [
+        ...prev,
+        {
+          id: `melt-${Date.now()}`,
+          type: 'system',
+          text: "[ERİME PROTOKOLÜ BAŞLATILDI] 🌋 Sistem arayüzü sıvı lav ve magma partikülleriyle çözülüyor..."
+        }
+      ]);
+      if (onTriggerMelting) {
+        setTimeout(() => {
+          onTriggerMelting();
+        }, 300);
+      }
+      return;
+    }
+
     // Default: Unrecognized Command
     setLines(prev => [
       ...prev,
@@ -1456,7 +1979,11 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
     } else if (e.key === 'Tab') {
       e.preventDefault();
       // Auto-complete basic suggestions
-      const suggestions = ['help', 'dir', 'ls', 'Get-Projects', 'Get-Articles', 'Get-Skills', 'Get-Bio', 'cat Bio.txt', 'cat Skills.json', 'cd Projects', 'cd Articles', 'Clear-Host', 'cls', 'exit'];
+      const suggestions = [
+        'help', 'whoami', 'cognitive-ux', 'dir', 'ls', 'neofetch', 'stack', 'matrix', 'coffee', 'quote',
+        'Get-Projects', 'Get-Articles', 'Get-Skills', 'Get-Bio', 'cat Bio.txt', 'cat Skills.json', 
+        'cd Projects', 'cd Articles', 'Clear-Host', 'cls', 'exit'
+      ];
       const match = suggestions.find(s => s.toLowerCase().startsWith(commandInput.toLowerCase()));
       if (match) {
         setCommandInput(match);
@@ -1467,12 +1994,13 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
   // Quick Action Buttons
   const quickActions = [
     { label: 'help', cmd: 'help', title: 'Komut Kılavuzu' },
+    { label: 'whoami', cmd: 'whoami', title: 'Sistem Kimliği & Yetkiler' },
+    { label: '🧠 Bilişsel UX', cmd: 'cognitive-ux', title: 'PDR Destekli UX ve Tüketici Davranış Mimarisi' },
     { label: '✨ Proje Mimarisi', cmd: 'New-Architecture', title: 'Yapay Zeka Mimari ve Teklif Oluşturucu' },
     { label: 'dir', cmd: 'dir', title: 'Dizin İçeriği' },
     { label: 'Get-Projects', cmd: 'Get-Projects', title: 'Projeler Tablosu' },
-    { label: 'Get-Articles', cmd: 'Get-Articles', title: 'Makaleler' },
-    { label: 'cat Bio.txt', cmd: 'cat Bio.txt', title: 'Özgeçmiş' },
-    { label: 'Get-Skills', cmd: 'Get-Skills', title: 'Yetenekler' },
+    { label: 'stack', cmd: 'stack', title: 'Teknoloji & Performans Metrikleri' },
+    { label: 'neofetch', cmd: 'neofetch', title: 'Sistem Özeti' },
     { label: 'cls (Ctrl+C)', cmd: 'cls', title: 'Ekranı Temizle (veya Ctrl+C)' },
     { label: 'Cam UI', cmd: 'exit', title: 'Cam Arayüze Dön' }
   ];
@@ -1590,8 +2118,9 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
       {/* Terminal Screen Body / Lines Container */}
       <div 
         ref={scrollContainerRef}
-        className="flex-1 p-4 overflow-y-auto space-y-2 text-xs leading-relaxed scrollbar-thin"
+        className="flex-1 p-4 overflow-y-auto space-y-2 text-xs leading-relaxed scrollbar-thin relative"
       >
+        {isMatrixActive && <MatrixRainCanvas />}
         {lines.map((line) => {
           if (line.type === 'prompt') {
             return (

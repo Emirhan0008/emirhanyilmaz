@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Heart, Eye, EyeOff, X } from 'lucide-react';
+import { Heart, Eye, EyeOff, X, Lock } from 'lucide-react';
 
 interface EasterEggModalProps {
   isOpen: boolean;
@@ -43,11 +43,11 @@ export const EasterEggModal: React.FC<EasterEggModalProps> = ({
             onClick={onClose}
           >
             <motion.div
-              initial={{ scale: 0.9, y: 20 }}
+              initial={{ scale: 0.94, y: 16 }}
               animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
+              exit={{ scale: 0.94, y: 16 }}
               onClick={e => e.stopPropagation()}
-              className="w-full max-w-sm rounded-[2.5rem] liquid-glass-strong border border-rose-500/30 p-7 shadow-2xl relative text-center space-y-5"
+              className="w-full max-w-sm rounded-3xl bg-zinc-950/95 border border-white/10 p-7 shadow-2xl relative text-center space-y-5 backdrop-blur-2xl"
             >
               {/* Close Button */}
               <button
@@ -59,38 +59,38 @@ export const EasterEggModal: React.FC<EasterEggModalProps> = ({
                 <X size={15} />
               </button>
 
-              {/* Heart Lock Icon */}
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-rose-600/30 to-red-500/20 text-rose-400 border border-rose-500/40 flex items-center justify-center mx-auto shadow-lg shadow-rose-500/20">
-                <Heart size={26} className="fill-rose-500/30 text-rose-400 animate-pulse" />
+              {/* Discrete Security Lock Icon */}
+              <div className="w-12 h-12 rounded-2xl bg-white/5 text-zinc-300 border border-white/10 flex items-center justify-center mx-auto shadow-sm">
+                <Lock size={20} className="text-zinc-300" />
               </div>
 
               {/* Title & Desc */}
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <h3 className="text-lg font-bold tracking-tight text-white flex items-center justify-center gap-2">
-                  Özel Erişim Portalı
+                  Erişim Doğrulaması
                 </h3>
-                <p className="text-xs text-white/60 leading-relaxed max-w-[280px] mx-auto">
-                  Lütfen yetkili kullanıcı adı ve şifrenizi girin.
+                <p className="text-xs text-zinc-400 leading-relaxed max-w-[280px] mx-auto">
+                  Devam etmek için yetkili kullanıcı adı ve anahtarınızı girin.
                 </p>
               </div>
 
               {/* Form */}
               <form onSubmit={onSubmit} className="space-y-3.5 text-left">
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-rose-300/80 px-1">Kullanıcı Adı</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 px-1">Kullanıcı Adı</label>
                   <input
                     type="text"
                     required
                     placeholder="Kullanıcı adı..."
                     value={username}
                     onChange={e => setUsername(e.target.value)}
-                    className="w-full py-2.5 px-3.5 rounded-xl bg-white/5 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-rose-400 text-xs text-white placeholder-white/30 font-medium"
+                    className="w-full py-2.5 px-3.5 rounded-xl bg-zinc-900/90 border border-white/10 focus:outline-hidden focus:border-zinc-400 text-xs text-white placeholder-zinc-500 font-medium transition-colors"
                     autoFocus
                   />
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase font-bold tracking-wider text-rose-300/80 px-1">Şifre</label>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 px-1">Anahtar / Şifre</label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -98,12 +98,12 @@ export const EasterEggModal: React.FC<EasterEggModalProps> = ({
                       placeholder="Şifre..."
                       value={password}
                       onChange={e => setPassword(e.target.value)}
-                      className="w-full py-2.5 pl-3.5 pr-10 rounded-xl bg-white/5 border border-white/10 focus:outline-hidden focus:ring-1 focus:ring-rose-400 text-xs text-white placeholder-white/30 font-mono tracking-widest"
+                      className="w-full py-2.5 pl-3.5 pr-10 rounded-xl bg-zinc-900/90 border border-white/10 focus:outline-hidden focus:border-zinc-400 text-xs text-white placeholder-zinc-500 font-mono tracking-widest transition-colors"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(prev => !prev)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors cursor-pointer"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white transition-colors cursor-pointer"
                       title={showPassword ? "Gizle" : "Göster"}
                     >
                       {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -112,17 +112,17 @@ export const EasterEggModal: React.FC<EasterEggModalProps> = ({
                 </div>
 
                 {error && (
-                  <span className="text-[10px] text-rose-400 font-bold block text-center">
+                  <span className="text-[10px] text-red-400 font-bold block text-center">
                     ⚠️ {error}
                   </span>
                 )}
 
                 <button
                   type="submit"
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 font-extrabold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer text-white shadow-lg shadow-rose-600/30 hover:scale-[1.02] active:scale-[0.98]"
+                  className="w-full py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-98 border border-white/10"
                 >
-                  <Heart size={14} className="fill-white" />
-                  <span>Giriş Yap ve Kilidi Aç</span>
+                  <Lock size={13} className="text-zinc-300" />
+                  <span>Doğrula ve Giriş Yap</span>
                 </button>
               </form>
             </motion.div>
