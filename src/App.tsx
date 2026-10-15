@@ -8,6 +8,7 @@ import {
   ArrowRight, 
   ArrowLeft,
   Instagram, 
+  Linkedin,
   Menu, 
   X, 
   GraduationCap, 
@@ -3059,6 +3060,17 @@ export default function App() {
                           <span>github.com/Emirhan0008</span>
                           <ExternalLink size={10} className="opacity-60" />
                         </a>
+                        <a 
+                          href="https://www.linkedin.com/in/emirhan-y%C4%B1lmaz-3357b5109" 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="inline-flex items-center gap-1.5 text-[11px] font-mono text-white/80 hover:text-blue-400 transition-colors font-bold px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10"
+                          title="LinkedIn Profilini İncele"
+                        >
+                          <Linkedin size={12} className="text-blue-400" />
+                          <span>LinkedIn</span>
+                          <ExternalLink size={10} className="opacity-60" />
+                        </a>
                       </div>
                     </div>
                   </footer>
@@ -3103,6 +3115,22 @@ export default function App() {
                 <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
                   <span className="text-[11px] font-semibold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">github.com/Emirhan0008</span>
                   <ExternalLink size={10} className="shrink-0 opacity-80 group-hover:opacity-100 text-white" />
+                </div>
+              </a>
+
+              {/* LinkedIn - Expandable on Hover */}
+              <a 
+                href="https://www.linkedin.com/in/emirhan-y%C4%B1lmaz-3357b5109" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                onClick={() => soundEngine.playGlassClick()}
+                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-blue-600/20 hover:bg-blue-600/35 border border-blue-500/40 hover:border-blue-400/80 text-blue-200 hover:text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer shadow-sm shadow-blue-950/40 hover:shadow-[0_0_16px_rgba(37,99,235,0.4)] hover:scale-105 active:scale-95"
+                title="LinkedIn: in/emirhan-yılmaz-3357b5109"
+              >
+                <Linkedin size={15} className="shrink-0 text-blue-400 group-hover:text-blue-200 transition-colors drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+                <div className="max-w-0 opacity-0 group-hover:max-w-[220px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
+                  <span className="text-[11px] font-semibold text-blue-100">in/emirhan-yılmaz</span>
+                  <ExternalLink size={10} className="shrink-0 opacity-70 group-hover:opacity-100" />
                 </div>
               </a>
 
@@ -4445,7 +4473,7 @@ export default function App() {
                     </div>
 
                     {/* Quick Access Channels Row */}
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 shrink-0 pt-0.5">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1.5 shrink-0 pt-0.5">
                       <a
                         href={profile.github || "https://github.com/Emirhan0008"}
                         target="_blank"
@@ -4455,6 +4483,18 @@ export default function App() {
                         <Github size={12} className="text-white/70 group-hover:text-emerald-400 shrink-0 transition-colors" />
                         <span className="truncate font-mono text-[11px]">GitHub</span>
                         <ExternalLink size={9} className="text-white/40 ml-auto shrink-0 group-hover:text-white" />
+                      </a>
+
+                      <a
+                        href="https://www.linkedin.com/in/emirhan-y%C4%B1lmaz-3357b5109"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="py-1.5 px-2.5 rounded-xl bg-blue-950/40 hover:bg-blue-900/40 border border-blue-500/30 flex items-center justify-center gap-1.5 text-xs text-blue-200 hover:text-white font-bold transition-all hover:scale-102 cursor-pointer group"
+                        title="LinkedIn: in/emirhan-yılmaz"
+                      >
+                        <Linkedin size={12} className="text-blue-400 shrink-0" />
+                        <span className="truncate text-[11px]">LinkedIn</span>
+                        <ExternalLink size={9} className="text-blue-400/40 ml-auto shrink-0 group-hover:text-white" />
                       </a>
 
                       <a

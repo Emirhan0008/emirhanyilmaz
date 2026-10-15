@@ -28,6 +28,7 @@ export const profileData = {
     details: "Büyük Dil Modelleri (LLM), Gemini Multimodal Vision API, Doğal Dil İşleme (NLP), terapötik diyalog sistemleri ve bilişsel modelleme üzerine aktif üretim ve mimari geliştirme."
   },
   github: "https://github.com/Emirhan0008",
+  linkedin: "https://www.linkedin.com/in/emirhan-y%C4%B1lmaz-3357b5109",
   email: "emirhan0008@gmail.com",
   whatsapp: "Emirhan_yilmaz08",
   telegram: "t.me/emirhanyilmazrpd",

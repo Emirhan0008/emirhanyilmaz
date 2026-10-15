@@ -831,6 +831,7 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
                 <div className="space-y-1 text-white/90 text-xs">
                   <div>$Email    = <span className="text-emerald-300">&quot;emirhan0008@gmail.com&quot;</span></div>
                   <div>$GitHub   = <span className="text-emerald-300">&quot;https://github.com/Emirhan0008&quot;</span></div>
+                  <div>$LinkedIn = <span className="text-sky-300">&quot;https://www.linkedin.com/in/emirhan-yılmaz-3357b5109&quot;</span></div>
                   <div>$Location = <span className="text-emerald-300">&quot;Türkiye&quot;</span></div>
                   <div className="pt-2 text-white/60 text-[11px]">
                     # Doğrudan terminal üzerinden mesaj göndermek için:
@@ -1437,6 +1438,8 @@ export const PowerShellTerminalWorkspace: React.FC<PowerShellTerminalWorkspacePr
       let url = '';
       if (target === 'github' || target.includes('github.com')) {
         url = 'https://github.com/Emirhan0008';
+      } else if (target === 'linkedin' || target.includes('linkedin.com')) {
+        url = 'https://www.linkedin.com/in/emirhan-y%C4%B1lmaz-3357b5109';
       } else if (target === 'instagram' || target.includes('instagram.com')) {
         url = 'https://instagram.com';
       } else if (target.startsWith('http')) {

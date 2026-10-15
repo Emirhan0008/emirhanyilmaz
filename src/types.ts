@@ -75,6 +75,7 @@ export interface ProfileData {
     details: string;
   };
   github: string;
+  linkedin?: string;
   email: string;
   whatsapp: string;
   telegram: string;
