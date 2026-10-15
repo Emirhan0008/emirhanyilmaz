@@ -4379,15 +4379,15 @@ export default function App() {
                                 </button>
                               )}
                             </div>
-                            <div className="relative w-full rounded-xl bg-black/60 border border-white/15 focus-within:border-emerald-400/80 focus-within:ring-1 focus-within:ring-emerald-400/50 transition-all p-1.5">
+                            <div className="relative w-full rounded-xl bg-black/60 border border-white/15 focus-within:border-emerald-400/80 focus-within:ring-1 focus-within:ring-emerald-400/50 transition-all p-2">
                               <textarea 
                                 required
-                                rows={2}
+                                rows={4}
                                 maxLength={3500}
                                 placeholder={t.contact.messagePlaceholder}
                                 value={formData.message}
                                 onChange={e => setFormData({ ...formData, message: e.target.value })}
-                                className="w-full h-16 min-h-[48px] max-h-24 bg-transparent text-xs text-white placeholder-white/40 resize-y font-sans overflow-y-auto leading-relaxed focus:outline-hidden"
+                                className="w-full h-28 sm:h-32 min-h-[96px] max-h-64 bg-transparent text-xs text-white placeholder-white/40 resize-y font-sans overflow-y-auto leading-relaxed focus:outline-hidden"
                               />
                             </div>
                           </div>
