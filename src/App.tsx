@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, FormEvent, UIEvent } from 'react';
+import { useState, useEffect, useMemo, useRef, type RefObject, FormEvent, UIEvent } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, 
@@ -176,10 +176,12 @@ function GmailIcon({ size = 16, className = "" }: { size?: number; className?: s
 
 function ScrollDownIndicator({ 
   containerRef, 
-  lang = 'tr' 
+  lang = 'tr',
+  className = ''
 }: { 
-  containerRef: React.RefObject<HTMLDivElement | null>; 
-  lang?: 'tr' | 'en' 
+  containerRef: RefObject<HTMLDivElement | null>; 
+  lang?: 'tr' | 'en';
+  className?: string;
 }) {
   const [canScrollDown, setCanScrollDown] = useState(false);
 
@@ -188,8 +190,8 @@ function ScrollDownIndicator({
     if (!el) return;
 
     const checkOverflow = () => {
-      const isScrollable = el.scrollHeight - el.clientHeight > 45;
-      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 35;
+      const isScrollable = el.scrollHeight - el.clientHeight > 40;
+      const isNearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 30;
       setCanScrollDown(isScrollable && !isNearBottom);
     };
 
@@ -212,19 +214,26 @@ function ScrollDownIndicator({
 
   if (!canScrollDown) return null;
 
+  const label = lang === 'tr' ? 'AŞAĞI KAYDIR' : 'SCROLL DOWN';
+
   return (
-    <div className="sticky bottom-2 left-0 right-0 flex justify-center pointer-events-none z-30 pb-0.5 select-none animate-fadeIn">
+    <div className={`sticky bottom-0 left-0 right-0 flex justify-center items-end pointer-events-none z-30 pb-2.5 pt-6 bg-gradient-to-t from-zinc-950/85 via-zinc-950/30 to-transparent select-none animate-fadeIn mt-auto ${className}`}>
       <button
         type="button"
         onClick={(e) => {
           e.stopPropagation();
-          containerRef.current?.scrollBy({ top: 220, behavior: 'smooth' });
+          containerRef.current?.scrollBy({ top: 240, behavior: 'smooth' });
         }}
-        className="pointer-events-auto inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-950/90 hover:bg-zinc-900 border border-emerald-500/40 hover:border-emerald-400 text-[10px] text-zinc-300 hover:text-white font-medium shadow-xl backdrop-blur-md transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer group"
-        title={lang === 'tr' ? 'Aşağı kaydır' : 'Scroll down'}
+        className="pointer-events-auto inline-flex items-center gap-2 px-2 py-1 text-zinc-300 hover:text-emerald-300 transition-all duration-300 cursor-pointer group focus:outline-hidden"
+        title={label}
       >
-        <ChevronDown size={12} className="text-emerald-400 group-hover:translate-y-0.5 transition-transform animate-bounce" />
-        <span className="tracking-wide">{lang === 'tr' ? 'Aşağı Kaydır' : 'Scroll Down'}</span>
+        <span className="font-mono text-[10px] sm:text-[11px] font-medium tracking-[0.28em] drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] group-hover:tracking-[0.32em] transition-all">
+          {label}
+        </span>
+        <ChevronDown 
+          size={13} 
+          className="text-emerald-400 group-hover:text-emerald-300 group-hover:translate-y-0.5 transition-all animate-bounce shrink-0 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]" 
+        />
       </button>
     </div>
   );
@@ -2006,9 +2015,9 @@ export default function App() {
             </div>
           )}
 
-          <header className="flex items-center justify-between z-10 mb-4 lg:mb-5 shrink-0">
+          <header className="flex items-center justify-between gap-1.5 sm:gap-2 z-10 mb-4 lg:mb-5 shrink-0 min-w-0">
             <div 
-              className="flex items-center gap-3 cursor-pointer group select-none"
+              className="flex items-center gap-2 sm:gap-2.5 cursor-pointer group select-none shrink min-w-0"
               onClick={() => {
                 setSelectedProject(null);
                 setSelectedArticle(null);
@@ -2017,7 +2026,7 @@ export default function App() {
               title="Emirhan Yılmaz Ana Sayfa"
             >
               {/* Separate Brand Logo with transparent background */}
-              <div className="w-10 h-10 transition-transform duration-300 group-hover:scale-110 shrink-0 flex items-center justify-center">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 transition-transform duration-300 group-hover:scale-110 shrink-0 flex items-center justify-center">
                 <img 
                   src={profile.logo} 
                   alt="Emirhan Yılmaz Logo" 
@@ -2025,13 +2034,21 @@ export default function App() {
                   referrerPolicy="no-referrer"
                 />
               </div>
-              <span className="text-xl font-semibold tracking-tight text-white transition-opacity duration-300 group-hover:opacity-95 truncate hidden sm:inline-block max-w-[140px] xl:max-w-none">
+              <span className="text-sm sm:text-base lg:text-lg xl:text-xl font-semibold tracking-tight text-white transition-opacity duration-300 group-hover:opacity-95 truncate hidden sm:inline-block max-w-[85px] md:max-w-[105px] xl:max-w-none">
                 {profile.name.split(' ')[0]} <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-white/95 to-white/80">{profile.name.split(' ').slice(1).join(' ')}</span>
               </span>
             </div>
 
             {/* Desktop Navigation Tabs */}
-            <nav id="main-nav" aria-label="Ana Gezinti Menüsü" className="hidden md:flex items-center gap-0.5 sm:gap-1 p-1 bg-zinc-900/90 border border-white/10 rounded-full text-xs shrink-0 backdrop-blur-md max-w-full overflow-x-auto scrollbar-none">
+            <nav 
+              id="main-nav" 
+              aria-label="Ana Gezinti Menüsü" 
+              className={`hidden md:flex items-center gap-0.5 p-0.5 sm:p-1 bg-zinc-900/90 border border-white/10 rounded-full text-xs shrink-0 backdrop-blur-md ${
+                theme === 'terminal' 
+                  ? 'border-emerald-500/40 bg-zinc-950/95 font-sans' 
+                  : ''
+              }`}
+            >
               {navItems.map(item => {
                 const isActive = activeTab === item.id;
                 return (
@@ -2042,18 +2059,18 @@ export default function App() {
                       setActiveTab(item.id);
                       setMobileMenuOpen(false);
                     }}
-                    className={`px-2.5 sm:px-3 lg:px-3.5 py-1 rounded-full transition-all duration-200 font-medium cursor-pointer whitespace-nowrap text-[11px] sm:text-xs ${
+                    className={`px-2 sm:px-2.5 lg:px-3 py-1 rounded-full transition-all duration-200 font-medium cursor-pointer whitespace-nowrap text-[10.5px] sm:text-[11px] lg:text-xs shrink-0 ${
                       isActive 
                         ? (theme === 'terminal'
                             ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/60 shadow-xs font-semibold'
                             : 'bg-white/15 text-white font-semibold shadow-xs')
                         : (theme === 'terminal'
-                            ? 'text-emerald-400/70 hover:text-emerald-300 hover:bg-emerald-950/30'
+                            ? 'text-emerald-400/80 hover:text-emerald-300 hover:bg-emerald-950/30'
                             : 'text-zinc-400 hover:text-white hover:bg-white/5')
                     }`}
                     id={`nav-btn-${item.id}`}
                   >
-                    {theme === 'terminal' ? (isActive ? `> ${item.label}` : item.label) : item.label}
+                    {theme === 'terminal' ? (isActive ? `>${item.label}` : item.label) : item.label}
                   </button>
                 );
               })}
@@ -2165,11 +2182,12 @@ export default function App() {
                 /* DETAIL VIEW 1: ACTIVE PROJECT DETAIL VIEW IN LEFT PANEL */
                 <motion.div
                   key={`left-project-${currentSelectedProject.id}`}
+                  ref={leftProjectDetailRef}
                   initial={{ opacity: 0, scale: 0.98, x: -15 }}
                   animate={{ opacity: 1, scale: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 0.98, x: -15 }}
                   transition={{ duration: 0.3 }}
-                  className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1.5 min-h-0 select-text"
+                  className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1.5 min-h-0 select-text relative"
                 >
                   {/* Top Bar Navigation with Geri Dön button & Direct URL Sharing */}
                   <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/10 shrink-0 sticky top-0 bg-black/60 backdrop-blur-md z-20 py-1">
@@ -2710,16 +2728,20 @@ export default function App() {
                       </div>
                     )}
                   </div>
+
+                  {/* Scroll Down Indicator */}
+                  <ScrollDownIndicator containerRef={leftProjectDetailRef} lang={lang} />
                 </motion.div>
               ) : currentSelectedArticle ? (
                 /* DETAIL VIEW 2: ACTIVE ARTICLE READER IN LEFT PANEL */
                 <motion.div
                   key={`left-article-${currentSelectedArticle.id}`}
+                  ref={leftArticleDetailRef}
                   initial={{ opacity: 0, scale: 0.98, x: -15 }}
                   animate={{ opacity: 1, scale: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 0.98, x: -15 }}
                   transition={{ duration: 0.3 }}
-                  className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1.5 min-h-0 select-text"
+                  className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1.5 min-h-0 select-text relative"
                 >
                   <div className="flex items-center justify-between gap-3 pb-3 border-b border-white/10 shrink-0 sticky top-0 bg-black/60 backdrop-blur-md z-20 py-1">
                     <button
@@ -2837,16 +2859,20 @@ export default function App() {
                       </div>
                     )}
                   </div>
+
+                  {/* Scroll Down Indicator */}
+                  <ScrollDownIndicator containerRef={leftArticleDetailRef} lang={lang} />
                 </motion.div>
               ) : (
                 /* DEFAULT VIEW: HERO / PROFILE DISPLAY */
                 <motion.div 
                   key="hero-profile-content"
+                  ref={leftProfileScrollRef}
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -12 }}
                   transition={{ duration: 0.3 }}
-                  className="flex-1 flex flex-col justify-between overflow-y-auto pr-1"
+                  className="flex-1 flex flex-col justify-between overflow-y-auto pr-1 relative"
                 >
                   <div className="flex flex-col items-start gap-5 lg:gap-6 max-w-xl py-2">
                     <div className="flex items-center gap-4">
@@ -3036,6 +3062,9 @@ export default function App() {
                       </div>
                     </div>
                   </footer>
+
+                  {/* Scroll Down Indicator */}
+                  <ScrollDownIndicator containerRef={leftProfileScrollRef} lang={lang} />
                 </motion.div>
               )}
             </AnimatePresence>
@@ -3252,344 +3281,213 @@ export default function App() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.4 }}
-                  className="flex-1 flex flex-col gap-3.5 overflow-y-auto pr-1 min-h-0 scrollbar-thin scrollbar-thumb-white/20"
+                  className="flex-1 flex flex-col min-h-0 rounded-3xl bg-zinc-950/85 border border-white/10 shadow-2xl backdrop-blur-2xl overflow-hidden relative select-text"
                 >
-                  {/* Executive Competencies & Domains Card (Dürüst, Net ve Hibrit Zorlaması Olmayan Yapı) */}
-                  <div className="p-4 sm:p-5 liquid-glass rounded-2xl flex flex-col gap-3.5 border border-white/10 hover:border-white/20 transition-all bg-black/40 backdrop-blur-xl">
-                    <div className="flex items-center justify-between pb-2 border-b border-white/10">
-                      <span className="text-[10px] tracking-wider text-emerald-400 uppercase font-extrabold flex items-center gap-1.5">
-                        <Compass size={13} className="text-emerald-400" />
-                        {lang === 'tr' ? 'UZMANLIK ALANLARI VE YETKİNLİKLER' : 'CORE COMPETENCIES & DOMAINS'}
-                      </span>
-                      <span className="text-[9px] px-2.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-300 font-mono font-bold border border-emerald-500/30">
-                        {lang === 'tr' ? 'PDR · YAZILIM · YAPAY ZEKA' : 'COUNSELING · SOFTWARE · AI'}
-                      </span>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <h3 className="text-sm sm:text-base font-extrabold text-white leading-snug">
-                        {lang === 'tr'
-                          ? 'Psikolojik Danışmanlık, Yazılım Geliştirme ve Yapay Zeka Sistemleri.'
-                          : 'Psychological Counseling, Software Engineering & Applied AI Systems.'}
-                      </h3>
-                      <p className="text-xs text-white/85 leading-relaxed font-normal">
-                        {lang === 'tr'
-                          ? 'Yeteneklerimi yapay bir hibrit potasında zorla karıştırmadan, her uzmanlık alanımı bağımsız ve profesyonel standartlarda yürütüyorum: Aksaray Üniversitesi PDR mezuniyeti ve 3 yıllık saha tecrübesiyle psikolojik danışmanlık ve pedagojik süreçler; Python ve React/TypeScript ile sistem otomasyonları ve yazılım geliştirme; modern LLM ve Vision API\'leriyle ise pratik yapay zeka araçları.'
-                          : 'Executing distinct competencies independently with professional rigor: counseling psychology and educational guidance backed by a PDR degree and 3 years in special education; robust software engineering via Python, React, and automated workflows; alongside practical AI integrations with modern LLMs.'}
-                      </p>
-                    </div>
-
-                    {/* 3 Clear, Separated Core Pillars (Net, Bağımsız Yetkinlikler) */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1 border-t border-white/5">
-                      {/* Pillar 1: PDR & Pedagoji */}
-                      <div className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors flex flex-col gap-1.5">
-                        <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-bold">
-                          <Brain size={14} className="shrink-0" />
-                          <span>{lang === 'tr' ? 'Psikolojik Danışmanlık' : 'Counseling Psychology'}</span>
-                        </div>
-                        <ul className="text-[10px] text-white/75 space-y-1 font-medium">
-                          <li className="flex items-start gap-1">
-                            <span className="text-emerald-400">•</span>
-                            <span>{lang === 'tr' ? 'Aksaray Üniv. PDR Mezuniyeti' : 'PDR Counseling Degree'}</span>
-                          </li>
-                          <li className="flex items-start gap-1">
-                            <span className="text-emerald-400">•</span>
-                            <span>{lang === 'tr' ? '3 Yıl Özel Eğitim Saha Pratiği' : '3 Yrs Special Ed Practice'}</span>
-                          </li>
-                          <li className="flex items-start gap-1">
-                            <span className="text-emerald-400">•</span>
-                            <span>{lang === 'tr' ? 'Bireysel Danışma & BEP Tasarımı' : 'Individual Counseling & IEP'}</span>
-                          </li>
-                        </ul>
+                  {/* SCROLLABLE INNER MASTER CONTENT (Clipped to permanent rounded-3xl corners) */}
+                  <div 
+                    ref={rightProfileScrollRef}
+                    className="flex-1 overflow-y-auto p-5 sm:p-7 pr-3.5 sm:pr-5 flex flex-col gap-6 select-text scrollbar-thin scrollbar-thumb-white/20 relative"
+                  >
+                    
+                    {/* Panel Header & Value Proposition */}
+                    <div className="flex flex-col gap-3.5 pb-5 border-b border-white/10">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 text-[10.5px] font-mono font-bold border border-emerald-500/30">
+                          <Compass size={13} className="text-emerald-400" />
+                          <span>{lang === 'tr' ? 'BİLİŞSEL PSİKOLOJİ & PDR DESTEKLİ YAPAY ZEKA MİMARİSİ' : 'PDR & COGNITIVE PSYCHOLOGY BACKED AI ARCHITECTURE'}</span>
+                        </span>
+                        <span className="text-[10px] px-3 py-1 rounded-full bg-white/5 text-zinc-300 font-mono border border-white/10">
+                          {lang === 'tr' ? 'BİLİŞSEL UX · TÜKETİCİ DAVRANIŞLARI · AI MİMARİSİ' : 'COGNITIVE UX · CONSUMER BEHAVIOR · AI SYSTEMS'}
+                        </span>
                       </div>
 
-                      {/* Pillar 2: Yazılım & Otomasyon */}
-                      <div className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors flex flex-col gap-1.5">
-                        <div className="flex items-center gap-1.5 text-sky-400 text-xs font-bold">
-                          <Code2 size={14} className="shrink-0" />
-                          <span>{lang === 'tr' ? 'Yazılım & Otomasyon' : 'Software & Automation'}</span>
-                        </div>
-                        <ul className="text-[10px] text-white/75 space-y-1 font-medium">
-                          <li className="flex items-start gap-1">
-                            <span className="text-sky-400">•</span>
-                            <span>{lang === 'tr' ? 'Python Botları & Veri Otomasyonu' : 'Python Bots & Data Automation'}</span>
-                          </li>
-                          <li className="flex items-start gap-1">
-                            <span className="text-sky-400">•</span>
-                            <span>{lang === 'tr' ? 'React, TypeScript & Modern Web' : 'React, TypeScript & Web Apps'}</span>
-                          </li>
-                          <li className="flex items-start gap-1">
-                            <span className="text-sky-400">•</span>
-                            <span>{lang === 'tr' ? 'Kiosk, Donanım & Çevrim Dışı Sistem' : 'Kiosk, Hardware & Offline-First'}</span>
-                          </li>
-                        </ul>
-                      </div>
-
-                      {/* Pillar 3: Yapay Zeka */}
-                      <div className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors flex flex-col gap-1.5">
-                        <div className="flex items-center gap-1.5 text-teal-400 text-xs font-bold">
-                          <Sparkles size={14} className="shrink-0" />
-                          <span>{lang === 'tr' ? 'Yapay Zeka & LLM' : 'AI & LLM Systems'}</span>
-                        </div>
-                        <ul className="text-[10px] text-white/75 space-y-1 font-medium">
-                          <li className="flex items-start gap-1">
-                            <span className="text-teal-400">•</span>
-                            <span>{lang === 'tr' ? 'Marmara Üniv. AI/ML Sertifikası' : 'Marmara Univ. AI/ML Cert.'}</span>
-                          </li>
-                          <li className="flex items-start gap-1">
-                            <span className="text-teal-400">•</span>
-                            <span>{lang === 'tr' ? 'LLM Promptlama & Sistem Mimarisi' : 'LLM Prompting & System Arch.'}</span>
-                          </li>
-                          <li className="flex items-start gap-1">
-                            <span className="text-teal-400">•</span>
-                            <span>{lang === 'tr' ? 'Gemini Vision & Çok Modlu Çözüm' : 'Gemini Vision & Multimodal'}</span>
-                          </li>
-                        </ul>
+                      <div className="space-y-2">
+                        <h3 className="text-lg sm:text-2xl font-extrabold text-white tracking-tight leading-snug">
+                          {lang === 'tr'
+                            ? 'Bilişsel Bilim, Tüketici Karar Mimarisi & Otonom Yapay Zeka Sistemleri.'
+                            : 'Cognitive Science, Consumer Decision Architecture & Applied AI Systems.'}
+                        </h3>
+                        <p className="text-xs sm:text-[13px] text-zinc-300 leading-relaxed font-normal">
+                          {lang === 'tr'
+                            ? 'Aksaray Üniversitesi PDR lisansı ve 3 yıllık saha tecrübemden gelen insan davranışı & pedagoji derinliğini; yapay zeka ürünlerinde sürtünmesiz kullanıcı deneyimi (UX), karar mimarisi ve tüketici tutundurma modellerine dönüştürüyorum. Yapay zeka sistemlerinde karar yorgunluğunu sıfırlayan, kullanıcı zihninin algı filtreleriyle tam uyumlu çalışan ve Python/React altyapısıyla desteklenen yeni nesil dijital deneyimler inşa ediyorum.'
+                            : 'Translating psychological counseling depth and 3 years of clinical field practice into frictionless AI UX, cognitive choice architecture, and consumer retention dynamics. Engineering robust autonomous workflows with Python, React 19, and Gemini 2.5 SDK that align seamlessly with human mental models.'}
+                        </p>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Education & Certification Card */}
-                  <div className="p-4 sm:p-5 liquid-glass rounded-2xl border border-white/10 hover:border-white/20 transition-all flex flex-col gap-3">
-                    <div className="flex items-center justify-between pb-1 border-b border-white/5">
-                      <span className="text-[9px] tracking-wider text-emerald-400 uppercase font-bold">
-                        {lang === 'tr' ? 'EĞİTİM & UZMANLIK' : 'EDUCATION & CREDENTIALS'}
-                      </span>
-                      {isAdmin && (
+                    {/* Integrated Methodology Flow (Single Cohesive Progression Stream) */}
+                    <div className="space-y-3.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10.5px] uppercase font-bold tracking-wider text-emerald-400 flex items-center gap-1.5 font-mono">
+                          <Brain size={13} />
+                          <span>{lang === 'tr' ? 'BİLİŞSEL UX & ÜRÜN MİMARİSİ YAKLAŞIMI' : 'COGNITIVE UX & PRODUCT ARCHITECTURE FRAMEWORK'}</span>
+                        </span>
+                        <span className="text-[10px] text-zinc-400 font-mono">Metodoloji &amp; Uygulama</span>
+                      </div>
+
+                      {/* Continuous Flow Strip */}
+                      <div className="flex flex-col gap-2.5 p-4 rounded-2xl bg-white/[0.02] border border-white/10">
+                        
+                        {/* Flow Item 1 */}
+                        <div className="flex items-start gap-3.5 pb-3 border-b border-white/5">
+                          <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-300 font-mono text-xs font-bold shrink-0 mt-0.5">
+                            01
+                          </div>
+                          <div className="space-y-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-xs sm:text-sm font-bold text-white">
+                                {lang === 'tr' ? 'Bilişsel Yükü Optimize Etme & Karar Ergonomisi' : 'Cognitive Load Reduction & Choice Ergonomics'}
+                              </h4>
+                              <span className="text-[9.5px] px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-mono hidden sm:inline">PDR Uzmanlığı</span>
+                            </div>
+                            <p className="text-[11.5px] text-zinc-300 leading-relaxed">
+                              {lang === 'tr'
+                                ? 'AI çıktılarının karar felcine (analysis paralysis) yol açmasını engellemek için kademeli bilgi aktarımı (progressive disclosure), net eylem patikaları ve zihinsel model senkronizasyonu.'
+                                : 'Applying progressive disclosure and mental model alignment so complex AI outputs never cause decision fatigue or friction.'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Flow Item 2 */}
+                        <div className="flex items-start gap-3.5 pb-3 border-b border-white/5">
+                          <div className="w-8 h-8 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-300 font-mono text-xs font-bold shrink-0 mt-0.5">
+                            02
+                          </div>
+                          <div className="space-y-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-xs sm:text-sm font-bold text-white">
+                                {lang === 'tr' ? 'Tüketici Davranışı & İnsan-AI Güven Modelleri' : 'Consumer Behavior & Human-AI Trust Dynamics'}
+                              </h4>
+                              <span className="text-[9.5px] px-2 py-0.2 rounded-full bg-sky-500/20 text-sky-300 font-mono hidden sm:inline">Davranışsal Psikoloji</span>
+                            </div>
+                            <p className="text-[11.5px] text-zinc-300 leading-relaxed">
+                              {lang === 'tr'
+                                ? 'Kullanıcının yapay zekaya karşı aşırı bağımlılık veya temelsiz güvensizlik duymasını engelleyen, şeffaf geri bildirim halkaları ve kullanıcıyı rasyonel tercihlere yönlendiren etik davranışsal tetikleyiciler (nudges).'
+                                : 'Calibrating user-AI trust through transparent feedback loops, ethical behavioral nudges, and consumer retention mechanics.'}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Flow Item 3 */}
+                        <div className="flex items-start gap-3.5">
+                          <div className="w-8 h-8 rounded-xl bg-teal-500/15 border border-teal-500/30 flex items-center justify-center text-teal-300 font-mono text-xs font-bold shrink-0 mt-0.5">
+                            03
+                          </div>
+                          <div className="space-y-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-xs sm:text-sm font-bold text-white">
+                                {lang === 'tr' ? 'Otonom AI İstem Hatları & Tam Yığın Mühendislik' : 'Autonomous AI Pipelines & Fullstack Engineering'}
+                              </h4>
+                              <span className="text-[9.5px] px-2 py-0.2 rounded-full bg-teal-500/20 text-teal-300 font-mono hidden sm:inline">Mühendislik</span>
+                            </div>
+                            <p className="text-[11.5px] text-zinc-300 leading-relaxed">
+                              {lang === 'tr'
+                                ? 'Python 3.12, React 19, TypeScript ve Gemini 2.5 SDK ile otonom istem hatları, bağlamsal RAG, tool-calling ajanları ve çevrim dışı öncelikli mobil sistemler.'
+                                : 'Building scalable agentic pipelines, multimodal LLM workflows, and resilient cross-platform apps with Python and modern TypeScript.'}
+                            </p>
+                          </div>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    {/* Integrated Education & Credentials Strip */}
+                    <div className="space-y-3 pt-2 border-t border-white/10">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 font-mono">
+                          {lang === 'tr' ? 'AKADEMİK & LİSANSÜSTÜ TEMELLER' : 'ACADEMIC & POSTGRADUATE FOUNDATION'}
+                        </span>
+                        {isAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setAdminEditorTab('profile');
+                              setShowAdminEditor(true);
+                            }}
+                            className="px-2.5 py-0.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                          >
+                            <Edit3 size={11} />
+                            <span>{lang === 'tr' ? 'Düzenle' : 'Edit'}</span>
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-emerald-400 shrink-0">
+                            <GraduationCap size={16} />
+                          </div>
+                          <div className="space-y-0.5">
+                            <span className="text-[9px] uppercase font-bold tracking-wider text-emerald-400">
+                              {lang === 'tr' ? 'LİSANS EĞİTİMİ & 3 YIL SAHA PRATİĞİ' : 'UNDERGRADUATE & 3 YRS FIELD PRACTICE'}
+                            </span>
+                            <h4 className="text-xs sm:text-sm font-bold text-white">{currentProfile.education.school}</h4>
+                            <p className="text-[11px] text-zinc-300 font-medium">{currentProfile.education.degree}</p>
+                            <p className="text-[10px] text-zinc-400 leading-relaxed">{currentProfile.education.details}</p>
+                          </div>
+                        </div>
+
+                        <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/10 flex items-start gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-teal-400 shrink-0">
+                            <Brain size={16} />
+                          </div>
+                          <div className="space-y-0.5">
+                            <span className="text-[9px] uppercase font-bold tracking-wider text-teal-400">
+                              {lang === 'tr' ? 'LİSANSÜSTÜ / AKADEMİK SERTİFİKA' : 'ACADEMIC CERTIFICATION'}
+                            </span>
+                            <h4 className="text-xs sm:text-sm font-bold text-white">{currentProfile.aiProfile.title}</h4>
+                            <p className="text-[11px] text-zinc-300 font-medium">{currentProfile.aiProfile.certification}</p>
+                            <p className="text-[10px] text-zinc-400 leading-relaxed">{currentProfile.aiProfile.details}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Master Action Strip (Direct Jump to Work & Consult) */}
+                    <div className="pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2.5">
+                      <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={() => {
-                            setAdminEditorTab('profile');
-                            setShowAdminEditor(true);
+                            soundEngine.playTabSwitch();
+                            setActiveTab('projects');
                           }}
-                          className="px-2 py-0.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-[9px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                          className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-lg hover:scale-102"
                         >
-                          <Edit3 size={10} />
-                          <span>{lang === 'tr' ? 'Düzenle' : 'Edit'}</span>
+                          <FolderKanban size={13} />
+                          <span>{lang === 'tr' ? 'Projeleri İncele' : 'View Projects'}</span>
                         </button>
-                      )}
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white shrink-0">
-                        <GraduationCap size={16} />
-                      </div>
-                      <div className="space-y-0.5">
-                        <span className="text-[9px] tracking-wider text-white/95 uppercase font-bold">
-                          {lang === 'tr' ? 'EĞİTİM & AKADEMİK' : 'ACADEMIC EDUCATION'}
-                        </span>
-                        <h3 className="text-base font-extrabold text-white">{currentProfile.education.school}</h3>
-                        <p className="text-xs text-white font-bold leading-relaxed">
-                          {currentProfile.education.degree}
-                        </p>
-                        <p className="text-xs text-white/95 font-medium leading-relaxed">
-                          {currentProfile.education.details}
-                        </p>
-                      </div>
-                    </div>
 
-                    <div className="h-[1px] bg-white/10 w-full" />
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white shrink-0">
-                        <Brain size={16} />
-                      </div>
-                      <div className="space-y-0.5">
-                        <span className="text-[9px] tracking-wider text-white/95 uppercase font-bold">
-                          {lang === 'tr' ? 'UZMANLIK SERTİFİKASI' : 'CREDENTIALS & CERTIFICATION'}
-                        </span>
-                        <h4 className="text-sm font-extrabold text-white">{currentProfile.aiProfile.title}</h4>
-                        <p className="text-xs text-white font-bold">{currentProfile.aiProfile.certification}</p>
-                        <p className="text-xs text-white/95 font-medium leading-relaxed">
-                          {currentProfile.aiProfile.details}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Feature Section Box (Experience & Skills & Mini Project Highlight) */}
-                  <div className="p-4 sm:p-5 liquid-glass rounded-2xl border border-white/10 hover:border-white/20 transition-all flex flex-col gap-3">
-                    
-                    {/* Header with Switcher */}
-                    <div className="flex items-center justify-between border-b border-white/5 pb-2">
-                      <span className="text-[9px] tracking-widest text-emerald-400 uppercase font-bold">
-                        {lang === 'tr' ? 'PROFESYONEL ODAK' : 'PROFESSIONAL FOCUS'}
-                      </span>
-                      <div className="flex gap-1 p-0.5 rounded-full bg-white/5 border border-white/10">
                         <button
-                          onClick={() => setProfileViewMode('summary')}
-                          className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wide uppercase transition-all cursor-pointer ${
-                            profileViewMode === 'summary' 
-                              ? 'bg-white/15 text-white' 
-                              : 'text-white/60 hover:text-white/90'
-                          }`}
+                          type="button"
+                          onClick={() => {
+                            soundEngine.playTabSwitch();
+                            setActiveTab('articles');
+                          }}
+                          className="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer border border-white/10"
                         >
-                          {lang === 'tr' ? 'Özet' : 'Summary'}
-                        </button>
-                        <button
-                          onClick={() => setProfileViewMode('timeline')}
-                          className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wide uppercase transition-all cursor-pointer ${
-                            profileViewMode === 'timeline' 
-                              ? 'bg-white/15 text-white' 
-                              : 'text-white/60 hover:text-white/90'
-                          }`}
-                        >
-                          {lang === 'tr' ? 'Serüven' : 'Journey'}
+                          <FileText size={13} className="text-emerald-400" />
+                          <span>{lang === 'tr' ? 'Makaleleri Oku' : 'Read Articles'}</span>
                         </button>
                       </div>
-                    </div>
 
-                    <AnimatePresence mode="wait">
-                      {profileViewMode === 'summary' ? (
-                        /* Double Mini Cards Side-by-Side */
-                        <motion.div
-                          key="profile-summary-cards"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.2 }}
-                          className="grid grid-cols-2 gap-3"
-                        >
-                          {/* Special Edu Card */}
-                          <div className="p-3.5 sm:p-4 liquid-glass rounded-xl border border-white/10 hover:border-white/20 flex flex-col gap-2 group transition-all hover:bg-white/5">
-                            <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-white transition-transform group-hover:scale-110">
-                              <Wand2 size={14} />
-                            </div>
-                            <div>
-                              <h4 className="text-[10px] text-white/95 uppercase tracking-widest font-bold">
-                                {lang === 'tr' ? 'SAHA DENEYİMİ' : 'FIELD EXPERIENCE'}
-                              </h4>
-                              <span className="text-xs sm:text-sm font-extrabold text-white block mt-0.5">{currentProfile.experience.title}</span>
-                              <p className="text-[10px] sm:text-[11px] text-white font-medium mt-1 leading-relaxed line-clamp-3">
-                                {currentProfile.experience.description}
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Python & AI Card */}
-                          <div className="p-3.5 sm:p-4 liquid-glass rounded-xl border border-white/10 hover:border-white/20 flex flex-col gap-2 group transition-all hover:bg-white/5">
-                            <div className="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center text-white transition-transform group-hover:scale-110">
-                              <BookOpen size={14} />
-                            </div>
-                            <div>
-                              <h4 className="text-[10px] text-white/95 uppercase tracking-widest font-bold">
-                                {lang === 'tr' ? 'YAZILIM & YAPAY ZEKA' : 'SOFTWARE & AI'}
-                              </h4>
-                              <span className="text-xs sm:text-sm font-extrabold text-white block mt-0.5">{currentProfile.softwareProfile.level}</span>
-                              <p className="text-[10px] sm:text-[11px] text-white font-medium mt-1 leading-relaxed line-clamp-3">
-                                {currentProfile.softwareProfile.skills.slice(0, 3).join(', ')} {lang === 'tr' ? 've sistem otomasyonları.' : 'and system automations.'}
-                              </p>
-                            </div>
-                          </div>
-                        </motion.div>
-                      ) : (
-                        /* Gorgeous Career Timeline */
-                        <motion.div
-                          key="profile-timeline"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.2 }}
-                          className="space-y-4 py-1 max-h-[160px] overflow-y-auto pr-1"
-                        >
-                          {/* Node 1 */}
-                          <div className="flex gap-3 relative pl-4 border-l border-white/10">
-                            <div className="absolute -left-[4.5px] top-1.5 w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]" />
-                            <div className="space-y-0.5">
-                              <span className="text-[9px] font-extrabold text-emerald-400 font-mono">
-                                {lang === 'tr' ? 'GÜNCEL (1-2 YILDIR GELİŞİM)' : 'CURRENT (1-2 YRS ACTIVE)'}
-                              </span>
-                              <h4 className="text-xs font-bold text-white">
-                                {lang === 'tr' ? 'Yazılım & Yapay Zeka Geliştiricisi (1-2 Yıl)' : 'Software & AI Developer (1-2 Yrs)'}
-                              </h4>
-                              <p className="text-[10px] text-white/75 leading-relaxed">
-                                {lang === 'tr' 
-                                  ? '1-2 yıldır Python otomasyonları, Gemini API istem mühendisliği ve React Native mobil projeleri üzerine yoğunlaşıyorum.' 
-                                  : 'Engineering Python automations, Gemini API prompt workflows, and React Native mobile applications.'}
-                              </p>
-                            </div>
-                          </div>
-                          {/* Node 2 */}
-                          <div className="flex gap-3 relative pl-4 border-l border-white/10">
-                            <div className="absolute -left-[4.5px] top-1.5 w-2 h-2 rounded-full bg-white/40" />
-                            <div className="space-y-0.5">
-                              <span className="text-[9px] font-extrabold text-white/50 font-mono">2023 - 2026</span>
-                              <h4 className="text-xs font-bold text-white">
-                                {lang === 'tr' ? 'Özel Eğitim Öğretmenliği (3 Yıl)' : 'Special Education Teacher (3 Yrs)'}
-                              </h4>
-                              <p className="text-[10px] text-white/75 leading-relaxed">
-                                {lang === 'tr' 
-                                  ? 'Bireyselleştirilmiş eğitim planları (BEP) ve teknoloji entegrasyonu.' 
-                                  : 'Individualized Education Programs (IEP) and assistive tech integration.'}
-                              </p>
-                            </div>
-                          </div>
-                          {/* Node 3 */}
-                          <div className="flex gap-3 relative pl-4 border-l border-white/10">
-                            <div className="absolute -left-[4.5px] top-1.5 w-2 h-2 rounded-full bg-white/40" />
-                            <div className="space-y-0.5">
-                              <span className="text-[9px] font-extrabold text-white/50 font-mono">2022</span>
-                              <h4 className="text-xs font-bold text-white">
-                                {lang === 'tr' ? 'Yapay Zeka Sertifikasyonu' : 'AI & Machine Learning Certification'}
-                              </h4>
-                              <p className="text-[10px] text-white/75 leading-relaxed">
-                                {lang === 'tr' 
-                                  ? 'Marmara Üni. Yapay Zeka & Makine Öğrenmesi Başarı Eğitimi.' 
-                                  : 'Marmara University AI & Machine Learning Graduate Certification.'}
-                              </p>
-                            </div>
-                          </div>
-                          {/* Node 4 */}
-                          <div className="flex gap-3 relative pl-4">
-                            <div className="absolute -left-[4.5px] top-1.5 w-2 h-2 rounded-full bg-white/40" />
-                            <div className="space-y-0.5">
-                              <span className="text-[9px] font-extrabold text-white/50 font-mono">2021</span>
-                              <h4 className="text-xs font-bold text-white">
-                                {lang === 'tr' ? 'PDR Lisans Mezuniyeti' : 'B.S. in Counseling & Guidance'}
-                              </h4>
-                              <p className="text-[10px] text-white/75 leading-relaxed">
-                                {lang === 'tr' 
-                                  ? 'Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık mezuniyeti.' 
-                                  : 'Graduated from Aksaray University Guidance & Psychological Counseling.'}
-                              </p>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                    {/* Mini Featured Project Bottom Highlight */}
-                    <div 
-                      onClick={() => setSelectedProject(mappedProjects[0])}
-                      className="p-4 liquid-glass rounded-2xl border border-white/10 hover:border-emerald-400/40 flex items-center justify-between gap-4 cursor-pointer group hover:bg-white/5 transition-all"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-12 rounded-lg overflow-hidden shrink-0 border border-white/20">
-                          <img 
-                            src={mappedProjects[0].image} 
-                            alt={mappedProjects[0].title} 
-                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            referrerPolicy="no-referrer"
-                            onError={(e) => {
-                              const original = projects.find(p => p.id === mappedProjects[0].id);
-                              if (original) e.currentTarget.src = original.image;
-                            }}
-                          />
-                        </div>
-                        <div>
-                          <span className="text-[9px] uppercase tracking-wider text-emerald-400 font-bold">
-                            {lang === 'tr' ? 'Öne Çıkan Proje' : 'Featured Project'}
-                          </span>
-                          <h4 className="text-sm font-extrabold text-white group-hover:text-white">{mappedProjects[0].title}</h4>
-                          <p className="text-xs text-white line-clamp-1">{mappedProjects[0].description}</p>
-                        </div>
-                      </div>
-                      
-                      <button className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white transition-transform duration-300 group-hover:scale-110">
-                        <span className="text-lg font-medium leading-none">+</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          soundEngine.playGlassClick();
+                          setShowEstimatorModal(true);
+                        }}
+                        className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-teal-600/40 to-emerald-600/40 hover:from-teal-600/60 hover:to-emerald-600/60 text-emerald-200 border border-emerald-500/40 font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Wand2 size={13} className="text-emerald-300" />
+                        <span>{lang === 'tr' ? 'Proje Mimarisi & Teklif' : 'Architecture & Estimate'}</span>
                       </button>
                     </div>
 
                   </div>
+
+                  {/* Scroll Down Indicator */}
+                  <ScrollDownIndicator containerRef={rightProfileScrollRef} lang={lang} />
                 </motion.div>
               )}
 
@@ -3603,7 +3501,7 @@ export default function App() {
                   transition={{ duration: 0.4 }}
                   className="flex-1 flex flex-col gap-6 min-h-0 relative"
                 >
-                  <div className="p-6 liquid-glass spinning-glow-border rounded-3xl flex flex-col gap-4 min-h-0 flex-1 relative">
+                  <div className="p-4 sm:p-6 liquid-glass spinning-glow-border rounded-3xl flex flex-col gap-4 min-h-0 flex-1 relative overflow-hidden">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="space-y-0.5">
                         <span className="text-[10px] uppercase tracking-wider text-emerald-400 font-extrabold">
@@ -3852,8 +3750,9 @@ export default function App() {
                       </div>
                     ) : (
                       <div 
+                        ref={rightProjectsScrollRef}
                         onScroll={handleProjectsScroll}
-                        className="flex-1 overflow-y-auto pr-1 projects-catalog-grid scrollbar-thin scrollbar-thumb-white/20"
+                        className="flex-1 overflow-y-auto pr-1 projects-catalog-grid scrollbar-thin scrollbar-thumb-white/20 relative"
                       >
                         {filteredProjects.map((project, idx) => (
                           <motion.div
@@ -4048,23 +3947,11 @@ export default function App() {
                             </div>
                           </motion.div>
                         ))}
+
+                        {/* Scroll Down Indicator */}
+                        <ScrollDownIndicator containerRef={rightProjectsScrollRef} lang={lang} />
                       </div>
                     )}
-
-                    {/* Floating Scroll Down Indicator */}
-                    <AnimatePresence>
-                      {filteredProjects.length > 4 && showDesktopScrollIndicator && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 10, x: "-50%" }}
-                          animate={{ opacity: 1, y: 0, x: "-50%" }}
-                          exit={{ opacity: 0, y: 10, x: "-50%" }}
-                          className="absolute bottom-6 left-1/2 px-4 py-2 bg-black/90 backdrop-blur-md rounded-full border border-white/10 shadow-xl flex items-center gap-2 text-[10px] text-white font-extrabold tracking-wider uppercase animate-bounce pointer-events-none z-20"
-                        >
-                          <span>{lang === 'tr' ? 'DAHA FAZLA PROJE İÇİN AŞAĞI KAYDIRIN' : 'SCROLL DOWN FOR MORE PROJECTS'}</span>
-                          <span className="text-sm">↕</span>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
 
                   </div>
                 </motion.div>
@@ -4078,9 +3965,12 @@ export default function App() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.4 }}
-                  className="flex-1 flex flex-col gap-3 min-h-0 relative"
+                  className="flex-1 flex flex-col min-h-0 rounded-3xl liquid-glass spinning-glow-border overflow-hidden relative"
                 >
-                  <div className="p-4 sm:p-5 liquid-glass spinning-glow-border rounded-2xl flex flex-col gap-3 min-h-0 flex-1 relative overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20">
+                  <div 
+                    ref={rightArticlesScrollRef}
+                    className="p-4 sm:p-5 flex flex-col gap-3 min-h-0 flex-1 relative overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-white/20"
+                  >
                     <div className="space-y-0.5">
                       <span className="text-[9px] uppercase tracking-wider text-emerald-400 font-extrabold">{t.hero.name.toUpperCase()} · {t.nav.articles.toUpperCase()}</span>
                       <h2 className="text-lg sm:text-xl font-extrabold text-white">{t.articles.heading}</h2>
@@ -4204,6 +4094,9 @@ export default function App() {
                         </motion.div>
                       ))}
                     </div>
+
+                    {/* Scroll Down Indicator */}
+                    <ScrollDownIndicator containerRef={rightArticlesScrollRef} lang={lang} />
                   </div>
                 </motion.div>
               )}
@@ -4216,9 +4109,12 @@ export default function App() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -20 }}
                   transition={{ duration: 0.4 }}
-                  className="flex-1 flex flex-col min-h-0 h-full overflow-y-auto overflow-x-hidden pr-1 scrollbar-thin scrollbar-thumb-white/20"
+                  className="flex-1 flex flex-col min-h-0 h-full rounded-3xl liquid-glass spinning-glow-border overflow-hidden relative"
                 >
-                  <div className="p-3.5 sm:p-4.5 liquid-glass spinning-glow-border rounded-2xl sm:rounded-3xl flex flex-col gap-2.5 sm:gap-3 justify-start min-h-0">
+                  <div 
+                    ref={rightContactScrollRef}
+                    className="p-3.5 sm:p-4.5 flex-1 flex flex-col gap-2.5 sm:gap-3 justify-start min-h-0 overflow-y-auto overflow-x-hidden pr-1 scrollbar-thin scrollbar-thumb-white/20 relative"
+                  >
                     {/* Header */}
                     <div className="space-y-0.5 shrink-0">
                       <div className="flex items-center justify-between gap-2">
@@ -4595,6 +4491,9 @@ export default function App() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Scroll Down Indicator */}
+                  <ScrollDownIndicator containerRef={rightContactScrollRef} lang={lang} />
                 </motion.div>
               )}
             </AnimatePresence>
