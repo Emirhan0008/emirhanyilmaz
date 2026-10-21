@@ -333,6 +333,13 @@ export default function App() {
      }
    }, [lang]);
 
+   // Mobile ergonomic UX: Smoothly scroll to the Left Panel when a project or article is opened on smaller screens (< 1024px)
+   useEffect(() => {
+     if ((selectedProject || selectedArticle) && typeof window !== 'undefined' && window.innerWidth < 1024) {
+       window.scrollTo({ top: 0, behavior: 'smooth' });
+     }
+   }, [selectedProject, selectedArticle]);
+
    const t = translations[lang];
  
    // Dynamic editable states with prototype-pollution safe JSON parsing
@@ -2033,32 +2040,18 @@ export default function App() {
       )}
 
       {/* MAIN CONTAINER */}
-      <div className={`relative z-10 h-auto lg:h-screen lg:max-h-screen w-full flex flex-col lg:flex-row p-4 lg:p-6 gap-6 lg:overflow-hidden transition-all duration-1000 ${isMeltingSite ? "melting-slag-site" : ""}`}>
+      <div className={`relative z-10 h-auto lg:h-screen lg:max-h-screen w-full flex flex-col lg:flex-row p-2.5 sm:p-4 lg:p-6 gap-4 lg:gap-6 lg:overflow-hidden transition-all duration-1000 ${isMeltingSite ? "melting-slag-site" : ""}`}>
         
         {/* LEFT PANEL: Dynamic Viewport & Primary Presenter (Hosts Profile or Active Project / Article Details) */}
         <motion.div 
           layout
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full lg:w-1/2 h-auto lg:h-full lg:max-h-full relative flex flex-col rounded-3xl p-5 lg:p-7 liquid-glass-clear spinning-glow-border overflow-hidden select-text transition-all duration-300 ease-out"
+          className={`w-full lg:w-1/2 h-auto lg:h-full lg:max-h-full relative flex flex-col rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 lg:p-7 liquid-glass-clear spinning-glow-border overflow-hidden select-text transition-all duration-300 ease-out ${
+            activeTab !== 'profile' && !selectedProject && !selectedArticle ? 'order-2 lg:order-1' : 'order-1'
+          }`}
         >
           
-          {/* Left Panel Header / Navigation */}
-          {theme === 'terminal' && (
-            <div className="w-full bg-emerald-950/40 border border-emerald-500/40 px-3 py-1.5 flex items-center justify-between text-[11px] font-mono text-emerald-400 mb-4 rounded-xl select-none shadow-[0_0_12px_rgba(16,185,129,0.12)] shrink-0">
-              <div className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-red-500/80 inline-block shadow-[0_0_5px_rgba(239,68,68,0.5)]" />
-                <span className="w-2.5 h-2.5 rounded-full bg-yellow-500/80 inline-block shadow-[0_0_5px_rgba(234,179,8,0.5)]" />
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block shadow-[0_0_5px_rgba(16,185,129,0.5)]" />
-                <span className="ml-2 text-emerald-300 font-bold tracking-tight">emirhan@portfolio: ~ (bash 80x24)</span>
-              </div>
-              <span className="text-[9px] text-emerald-400 font-mono tracking-wider flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                TTY1_ONLINE
-              </span>
-            </div>
-          )}
-
-          <header className="flex items-center justify-between gap-1.5 sm:gap-2 z-10 mb-4 lg:mb-5 shrink-0 min-w-0">
+          <header className="flex items-center justify-between gap-1.5 sm:gap-2 z-10 mb-3.5 sm:mb-4 lg:mb-5 shrink-0 min-w-0">
             <div 
               className="flex items-center gap-2 sm:gap-2.5 cursor-pointer group select-none shrink min-w-0"
               onClick={() => {
@@ -2088,14 +2081,20 @@ export default function App() {
                 />
               </div>
 
-              {/* Single Compact Identity Line: Name, Role & Admin Control */}
-              <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-sm sm:text-base lg:text-lg font-bold tracking-tight text-white transition-opacity duration-300 group-hover:opacity-95 truncate">
+              {/* Single Compact Identity Line: Name, Role & Admin Control (No alt alta duplicate) */}
+              <div className="flex items-center gap-1.5 min-w-0 flex-nowrap shrink whitespace-nowrap">
+                <span className="text-sm sm:text-base lg:text-lg font-bold tracking-tight text-white transition-opacity duration-300 group-hover:opacity-95 truncate whitespace-nowrap">
                   {profile.name.split(' ')[0]} <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-white/95 to-white/80">{profile.name.split(' ').slice(1).join(' ')}</span>
                 </span>
-                <span className="text-[10.5px] sm:text-xs font-mono text-zinc-400 shrink-0 hidden sm:inline">
+                <span className="text-[10px] sm:text-xs font-mono text-zinc-400 shrink-0 whitespace-nowrap">
                   · PDR &amp; AI
                 </span>
+                {theme === 'terminal' && (
+                  <span className="text-[9px] text-emerald-400 font-mono tracking-wider items-center gap-1 hidden md:inline-flex shrink-0 ml-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    TTY1_ONLINE
+                  </span>
+                )}
                 {isAdmin && (
                   <button
                     type="button"
@@ -2153,8 +2152,9 @@ export default function App() {
             {/* Mobile Navigation Button */}
             <button 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden w-8 h-8 rounded-full liquid-glass flex items-center justify-center text-white/80 hover:text-white"
+              className="md:hidden w-8 h-8 rounded-full liquid-glass flex items-center justify-center text-white/80 hover:text-white active:scale-95 transition-transform"
               id="mobile-menu-toggle"
+              aria-label="Menüyü Aç/Kapat"
             >
               {mobileMenuOpen ? <X size={16} /> : <Menu size={16} />}
             </button>
@@ -2167,13 +2167,22 @@ export default function App() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="absolute top-20 left-6 right-6 z-30 liquid-glass-strong rounded-2xl p-4 flex flex-col gap-2 md:hidden"
+                className="absolute top-16 left-3 right-3 sm:left-6 sm:right-6 z-50 liquid-glass-strong rounded-2xl p-4 flex flex-col gap-2.5 md:hidden shadow-2xl border border-white/15 backdrop-blur-2xl max-h-[85vh] overflow-y-auto"
                 id="mobile-nav-menu"
               >
-                <div className="flex items-center gap-2.5 pb-2.5 mb-1 border-b border-white/10 px-2 select-none">
-                  <img src={profile.logo} alt="Logo" className="w-6 h-6 object-contain drop-shadow-md" />
-                  <span className="font-extrabold text-white text-xs tracking-wider uppercase">{profile.name}</span>
+                <div className="flex items-center justify-between pb-2.5 mb-0.5 border-b border-white/10 px-2 select-none">
+                  <div className="flex items-center gap-2">
+                    <img src={profile.logo} alt="Logo" className="w-5 h-5 object-contain drop-shadow-md" />
+                    <span className="font-extrabold text-white text-xs tracking-wider uppercase">{profile.name}</span>
+                  </div>
+                  <button 
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="w-6 h-6 rounded-full bg-white/5 hover:bg-white/15 flex items-center justify-center text-white/60 hover:text-white"
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
+
                 {navItems.map(item => {
                   const isProjects = item.id === 'projects';
                   const isActive = activeTab === item.id;
@@ -2187,10 +2196,10 @@ export default function App() {
                           setMobileMenuOpen(false);
                         }}
                         animate={{
-                          scale: [1, 1.02, 1],
+                          scale: [1, 1.015, 1],
                           boxShadow: [
                             "0 0 0px rgba(52, 211, 153, 0)",
-                            "0 0 14px rgba(52, 211, 153, 0.6)",
+                            "0 0 14px rgba(52, 211, 153, 0.5)",
                             "0 0 0px rgba(52, 211, 153, 0)"
                           ]
                         }}
@@ -2199,7 +2208,7 @@ export default function App() {
                           repeat: Infinity,
                           ease: "easeInOut"
                         }}
-                        className={`w-full py-2.5 px-4 rounded-xl text-left text-sm transition-all flex items-center justify-between border ${
+                        className={`w-full py-2.5 px-4 rounded-xl text-left text-sm transition-all flex items-center justify-between border cursor-pointer ${
                           isActive 
                             ? 'bg-emerald-500/25 text-emerald-300 font-bold border-emerald-400'
                             : 'bg-emerald-950/40 text-white font-extrabold border-emerald-500/50'
@@ -2224,7 +2233,7 @@ export default function App() {
                         setActiveTab(item.id);
                         setMobileMenuOpen(false);
                       }}
-                      className={`w-full py-2.5 px-4 rounded-xl text-left text-sm transition-all ${
+                      className={`w-full py-2.5 px-4 rounded-xl text-left text-sm transition-all cursor-pointer ${
                         isActive 
                           ? (theme === 'terminal'
                               ? 'bg-emerald-500/20 text-emerald-300 font-mono font-bold border border-emerald-500/40'
@@ -2239,10 +2248,56 @@ export default function App() {
                   );
                 })}
 
-                <div className="pt-2 mt-1 border-t border-white/10 flex items-center justify-between px-2">
-                  <span className="text-xs font-mono text-white/70">
-                    {theme === 'terminal' ? 'CLI Terminal Modu' : 'Modern Cam UI'}
-                  </span>
+                {/* Mobile Quick Interactive Features */}
+                <div className="grid grid-cols-2 gap-1.5 pt-1.5 border-t border-white/10">
+                  <button
+                    onClick={() => {
+                      soundEngine.playGlassClick();
+                      setMobileMenuOpen(false);
+                      setShowEstimatorModal(true);
+                    }}
+                    className="py-2 px-2.5 rounded-xl bg-gradient-to-r from-emerald-600/30 to-teal-600/30 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center justify-center gap-1.5"
+                  >
+                    <Wand2 size={12} />
+                    <span>{lang === 'tr' ? 'Mimar & Teklif' : 'Estimate'}</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      soundEngine.playGlassClick();
+                      setMobileMenuOpen(false);
+                      setShowTechRadarModal(true);
+                    }}
+                    className="py-2 px-2.5 rounded-xl bg-white/5 border border-white/10 text-white/90 text-xs font-bold flex items-center justify-center gap-1.5"
+                  >
+                    <Cpu size={12} className="text-emerald-400" />
+                    <span>{t.nav.techRadar}</span>
+                  </button>
+                </div>
+
+                {/* Mobile Socials Quick Strip */}
+                <div className="flex items-center justify-around py-1.5 px-2 bg-white/5 rounded-xl border border-white/10 text-zinc-300">
+                  <a href="https://github.com/Emirhan0008" target="_blank" rel="noopener noreferrer" className="p-1.5 hover:text-white" title="GitHub">
+                    <Github size={15} />
+                  </a>
+                  <a href="https://www.linkedin.com/in/emirhan-y%C4%B1lmaz-3357b5109" target="_blank" rel="noopener noreferrer" className="p-1.5 hover:text-blue-400" title="LinkedIn">
+                    <LinkedInIcon size={15} />
+                  </a>
+                  <a href={`https://wa.me/?text=${encodeURIComponent(lang === 'tr' ? "Merhaba Emirhan Bey, sitenizden ulaşıyorum." : "Hello Emirhan, reaching out via your portfolio.")}`} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:text-emerald-400" title="WhatsApp">
+                    <WhatsAppIcon size={15} />
+                  </a>
+                  <a href="mailto:emirhan0008@gmail.com" target="_blank" rel="noopener noreferrer" className="p-1.5 hover:text-rose-400" title="Gmail">
+                    <GmailIcon size={15} />
+                  </a>
+                </div>
+
+                {/* Mobile Language and Theme Toggles */}
+                <div className="pt-2 border-t border-white/10 flex items-center justify-between px-2">
+                  <div className="flex items-center gap-1.5">
+                    <LanguageToggle currentLang={lang} onToggle={handleLangToggle} />
+                    <span className="text-[10px] font-mono text-white/60">
+                      {theme === 'terminal' ? 'CLI Mod' : 'Cam UI'}
+                    </span>
+                  </div>
                   <ThemeToggle theme={theme} onToggle={toggleTheme} />
                 </div>
               </motion.div>
@@ -2949,6 +3004,199 @@ export default function App() {
                   className="flex-1 flex flex-col justify-between overflow-y-auto pr-1 relative"
                 >
                   <div className="flex flex-col items-start gap-3.5 lg:gap-4 max-w-xl py-1">
+                    {/* RESPONSIVE TOP BAR & HERO ACTION: Placed at the very top on mobile (Focus Mode selection & user request) */}
+                    <div className="w-full flex flex-col gap-2.5 lg:hidden mb-2">
+                      {/* Top Bar with Socials, Theme/Language and Audio Controls */}
+                      <div className="flex items-center justify-between gap-1.5 w-full">
+                        <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-full overflow-x-auto scrollbar-none transition-all duration-300 max-w-full">
+                          <ThemeToggle theme={theme} onToggle={toggleTheme} className="shrink-0" />
+                          <LanguageToggle currentLang={lang} onToggle={handleLangToggle} className="shrink-0" />
+                          <div className="w-[1px] h-5 bg-white/15 mx-0.5 shrink-0" />
+                          
+                          <a 
+                            href="https://github.com/Emirhan0008" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            onClick={() => soundEngine.playGlassClick()}
+                            className="h-8 w-8 rounded-full glass-reflection-btn glowing-glass-button text-white font-mono text-xs font-bold transition-all shrink-0 flex items-center justify-center active:scale-95 shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
+                            title="GitHub: Emirhan0008"
+                          >
+                            <Github size={15} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.95)]" />
+                          </a>
+
+                          <a 
+                            href="https://www.linkedin.com/in/emirhan-y%C4%B1lmaz-3357b5109" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            onClick={() => soundEngine.playGlassClick()}
+                            className="h-8 w-8 rounded-full glass-reflection-btn bg-blue-600/25 border border-blue-400/50 text-blue-200 hover:text-white shrink-0 flex items-center justify-center active:scale-95"
+                            title="LinkedIn"
+                          >
+                            <LinkedInIcon size={16} />
+                          </a>
+
+                          <a 
+                            href={`https://wa.me/?text=${encodeURIComponent(lang === 'tr' ? "Merhaba Emirhan Bey, sitenizden ulaşıyorum." : "Hello Emirhan, reaching out via your portfolio.")}`}
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            onClick={() => soundEngine.playGlassClick()}
+                            className="h-8 w-8 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-200 shrink-0 flex items-center justify-center active:scale-95"
+                            title="WhatsApp"
+                          >
+                            <WhatsAppIcon size={16} />
+                          </a>
+
+                          <a 
+                            href="mailto:emirhan0008@gmail.com" 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            onClick={() => soundEngine.playGlassClick()}
+                            className="h-8 w-8 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 shrink-0 flex items-center justify-center active:scale-95"
+                            title="Gmail: emirhan0008@gmail.com"
+                          >
+                            <GmailIcon size={16} />
+                          </a>
+
+                          <div className="w-[1px] h-4 bg-white/10 mx-0.5 shrink-0" />
+
+                          <button
+                            onClick={() => {
+                              const muted = soundEngine.toggleMute();
+                              setIsMuted(muted);
+                            }}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
+                              isMuted ? 'text-red-400 hover:bg-red-500/10' : 'text-emerald-400 hover:bg-emerald-500/10'
+                            }`}
+                            title={isMuted ? (lang === 'tr' ? "Ses Efektlerini Aç" : "Unmute") : (lang === 'tr' ? "Ses Efektlerini Kapat" : "Mute")}
+                          >
+                            {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+                          </button>
+
+                          <button
+                            onClick={() => soundEngine.toggleAmbientFocusSoundscape()}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                              isAmbientPlaying ? 'text-emerald-400 bg-emerald-500/20 shadow-[0_0_12px_rgba(52,211,153,0.4)]' : 'text-white/70 hover:bg-white/10'
+                            }`}
+                            title={isAmbientPlaying ? (lang === 'tr' ? "Müziği Durdur" : "Stop Music") : (lang === 'tr' ? "Fon Müziğini Çal" : "Play Music")}
+                          >
+                            <Music size={14} className={isAmbientPlaying ? 'animate-pulse' : ''} />
+                          </button>
+                        </div>
+
+                        {/* Quick Estimator Button on Mobile Top */}
+                        <button
+                          onClick={() => {
+                            soundEngine.playGlassClick();
+                            setShowEstimatorModal(true);
+                          }}
+                          className="p-2 sm:px-2.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs flex items-center gap-1 shadow-md active:scale-95 shrink-0"
+                          title={lang === 'tr' ? 'Proje Mimarisi & Teklif' : 'Architecture & Estimate'}
+                        >
+                          <Wand2 size={13} />
+                          <span className="hidden sm:inline text-[11px]">{lang === 'tr' ? 'Teklif' : 'Estimate'}</span>
+                        </button>
+                      </div>
+
+                      {/* Primary "Projeleri İncele" High-Impact Hero Card */}
+                      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/60 via-zinc-900/80 to-teal-950/60 border border-emerald-500/40 shadow-xl flex flex-col gap-2.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10.5px] font-mono uppercase tracking-wider text-emerald-400 font-extrabold flex items-center gap-1.5">
+                            <Sparkles size={12} className="animate-pulse text-emerald-400" />
+                            {lang === 'tr' ? 'CANLI PORTFOLYO & AI SİSTEMLERİ' : 'LIVE PORTFOLIO & AI SYSTEMS'}
+                          </span>
+                          <span className="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
+                            {mappedProjects.length} {lang === 'tr' ? 'Proje' : 'Projects'}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            soundEngine.playTabSwitch();
+                            setActiveTab('projects');
+                            if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                              setTimeout(() => {
+                                const el = document.getElementById('projects-section-anchor');
+                                el?.scrollIntoView({ behavior: 'smooth' });
+                              }, 120);
+                            }
+                          }}
+                          className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 hover:from-emerald-400 text-zinc-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-emerald-500/25 transition-all cursor-pointer active:scale-98 group"
+                          id="mobile-top-cta-explore-projects"
+                        >
+                          <Code2 size={16} className="text-zinc-950 shrink-0" />
+                          <span className="font-black text-zinc-950">{lang === 'tr' ? 'Projeleri İncele (30+ Canlı Proje)' : 'Explore Projects (30+ Live Projects)'}</span>
+                          <ArrowRight size={15} className="text-zinc-950 shrink-0 group-hover:translate-x-1 transition-transform" />
+                        </button>
+
+                        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pt-0.5">
+                          <button
+                            onClick={() => {
+                              soundEngine.playTabSwitch();
+                              setProjectFilter('Öne Çıkanlar');
+                              setActiveTab('projects');
+                              if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                                setTimeout(() => {
+                                  const el = document.getElementById('projects-section-anchor');
+                                  el?.scrollIntoView({ behavior: 'smooth' });
+                                }, 120);
+                              }
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-emerald-300 border border-emerald-500/25 whitespace-nowrap shrink-0 active:scale-95"
+                          >
+                            ⭐ {lang === 'tr' ? 'Öne Çıkanlar' : 'Highlights'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              soundEngine.playTabSwitch();
+                              setProjectFilter('Yapay Zeka');
+                              setActiveTab('projects');
+                              if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                                setTimeout(() => {
+                                  const el = document.getElementById('projects-section-anchor');
+                                  el?.scrollIntoView({ behavior: 'smooth' });
+                                }, 120);
+                              }
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-sky-300 border border-sky-500/25 whitespace-nowrap shrink-0 active:scale-95"
+                          >
+                            🤖 {lang === 'tr' ? 'Yapay Zeka' : 'AI'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              soundEngine.playTabSwitch();
+                              setProjectFilter('Python & Otomasyon');
+                              setActiveTab('projects');
+                              if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                                setTimeout(() => {
+                                  const el = document.getElementById('projects-section-anchor');
+                                  el?.scrollIntoView({ behavior: 'smooth' });
+                                }, 120);
+                              }
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-amber-300 border border-amber-500/25 whitespace-nowrap shrink-0 active:scale-95"
+                          >
+                            ⚡ {lang === 'tr' ? 'Python & Bot' : 'Python & Bots'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              soundEngine.playTabSwitch();
+                              setCaseStudyOnlyFilter(true);
+                              setActiveTab('projects');
+                              if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+                                setTimeout(() => {
+                                  const el = document.getElementById('projects-section-anchor');
+                                  el?.scrollIntoView({ behavior: 'smooth' });
+                                }, 120);
+                              }
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-teal-300 border border-teal-500/25 whitespace-nowrap shrink-0 active:scale-95"
+                          >
+                            💎 {lang === 'tr' ? 'Mimari Çözüm' : 'Specs'}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Compact Status Badges Strip (Avatar & Name are unified in top header row) */}
                     <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full">
                       <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 bg-zinc-900/80 rounded-full text-[11px] sm:text-xs text-emerald-400 font-medium border border-white/10 shadow-sm">
@@ -3089,7 +3337,7 @@ export default function App() {
                     <blockquote className="text-sm md:text-base font-normal italic leading-relaxed text-white">
                       "{t.hero.visionQuote}"
                     </blockquote>
-                    <div className="flex items-center justify-between gap-3 w-full pt-1">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 w-full pt-1">
                       <div className="flex items-center gap-2">
                         <img src={profile.logo} alt="Logo" className="w-4 h-4 object-contain opacity-80" />
                         <span 
@@ -3099,7 +3347,7 @@ export default function App() {
                           {profile.name.toUpperCase()}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <a 
                           href="https://github.com/Emirhan0008" 
                           target="_blank" 
@@ -3137,13 +3385,16 @@ export default function App() {
         {/* RIGHT PANEL: Browsing Hub & Interface / Catalog Viewport */}
         <motion.div 
           layout
+          id="projects-section-anchor"
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full lg:w-1/2 h-full flex flex-col min-h-0 relative select-text transition-all duration-300 ease-out"
+          className={`w-full lg:w-1/2 h-full flex flex-col min-h-0 relative select-text transition-all duration-300 ease-out ${
+            activeTab !== 'profile' && !selectedProject && !selectedArticle ? 'order-1 lg:order-2' : 'order-2'
+          }`}
         >
 
           {/* Top Bar (Socials, Innovative Actions & Audio Controls) */}
-          <div className="flex flex-wrap items-center justify-between gap-2.5 mb-3 shrink-0">
-            <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-full overflow-x-auto transition-all duration-300">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3 shrink-0">
+            <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-full overflow-x-auto scrollbar-none transition-all duration-300 max-w-full">
               {/* Dual-Theme Skeuomorphic Switch (Normal vs Terminal Mode) */}
               <ThemeToggle theme={theme} onToggle={toggleTheme} className="shrink-0" />
 
@@ -3291,7 +3542,7 @@ export default function App() {
             </div>
 
             {/* Innovative Feature Quick Buttons */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 onClick={() => {
                   soundEngine.playGlassClick();
@@ -3299,7 +3550,7 @@ export default function App() {
                   setSelectedArticle(null);
                   setShowTechRadarModal(true);
                 }}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 liquid-glass hover:bg-white/10 rounded-full text-xs font-bold text-white/90 hover:text-white transition-all cursor-pointer border border-white/10 hover:border-emerald-400/40"
+                className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 liquid-glass hover:bg-white/10 rounded-full text-xs font-bold text-white/90 hover:text-white transition-all cursor-pointer border border-white/10 hover:border-emerald-400/40"
               >
                 <Cpu size={13} className="text-emerald-400" />
                 <span className="hidden sm:inline">{t.nav.techRadar}</span>
@@ -3312,10 +3563,11 @@ export default function App() {
                   setSelectedArticle(null);
                   setShowEstimatorModal(true);
                 }}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-full text-xs font-extrabold text-white transition-all cursor-pointer shadow-lg hover:scale-105 border border-emerald-300/30"
+                className="inline-flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-full text-xs font-extrabold text-white transition-all cursor-pointer shadow-lg hover:scale-105 border border-emerald-300/30"
               >
                 <Wand2 size={13} />
-                <span>{lang === 'tr' ? 'Proje Mimarisi & Teklif' : 'Architecture & Estimate'}</span>
+                <span className="hidden sm:inline">{lang === 'tr' ? 'Proje Mimarisi & Teklif' : 'Architecture & Estimate'}</span>
+                <span className="sm:hidden">{lang === 'tr' ? 'Mimar & Teklif' : 'Estimate'}</span>
               </button>
             </div>
           </div>
@@ -3655,14 +3907,14 @@ export default function App() {
                       </div>
 
                       {/* Category & Status Filter Pills */}
-                      <div className="flex flex-wrap gap-1.5 p-1 liquid-glass rounded-xl border border-white/10 text-[10px]">
+                      <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-xl border border-white/10 text-[10px] overflow-x-auto scrollbar-none flex-nowrap py-1.5 max-w-full">
                         <button
                           type="button"
                           onClick={() => {
                             soundEngine.playTabSwitch();
                             setCaseStudyOnlyFilter(!caseStudyOnlyFilter);
                           }}
-                          className={`px-2.5 py-1 rounded-md transition-all font-bold cursor-pointer flex items-center gap-1 border ${
+                          className={`px-2.5 py-1 rounded-md transition-all font-bold cursor-pointer flex items-center gap-1 border shrink-0 ${
                             caseStudyOnlyFilter
                               ? 'bg-emerald-500 text-black border-emerald-400 font-extrabold shadow-sm'
                               : 'text-emerald-300 border-emerald-500/40 hover:text-white hover:bg-emerald-500/20'
@@ -3687,7 +3939,7 @@ export default function App() {
                               setProjectFilter(cat.id);
                               if (cat.id !== 'Tümü') setCaseStudyOnlyFilter(false);
                             }}
-                            className={`px-2.5 py-1 rounded-md transition-all font-bold cursor-pointer ${
+                            className={`px-2.5 py-1 rounded-md transition-all font-bold cursor-pointer shrink-0 ${
                               !caseStudyOnlyFilter && projectFilter === cat.id 
                                 ? 'bg-white/20 text-white font-extrabold shadow-xs' 
                                 : 'text-white/75 hover:text-white hover:bg-white/10'
@@ -4104,7 +4356,8 @@ export default function App() {
                               </span>
                               {selectedArticle?.id === article.id && (
                                 <span className="px-2 py-0.5 rounded-full bg-emerald-500 text-black text-[9px] font-extrabold shadow-sm">
-                                  {lang === 'tr' ? '👈 Solda Açık' : '👈 Open on Left'}
+                                  <span className="hidden lg:inline">{lang === 'tr' ? '👈 Solda Açık' : '👈 Open on Left'}</span>
+                                  <span className="lg:hidden">{lang === 'tr' ? '👆 Yukarıda Açık' : '👆 Open Above'}</span>
                                 </span>
                               )}
                             </div>

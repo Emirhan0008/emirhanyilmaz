@@ -454,7 +454,7 @@ export function InteractiveCatCompanion({
       {/* MODERN GLASS SPEECH DIALOG & FLOATING INPUT */}
       <AnimatePresence>
         {dialogOpen && (
-          <div className={`pointer-events-none absolute bottom-[76px] w-[320px] sm:w-[380px] flex flex-col items-center gap-2.5 z-20 ${containerAlignClass}`}>
+          <div className={`pointer-events-none absolute bottom-[76px] w-[320px] sm:w-[380px] max-w-[calc(100vw-24px)] flex flex-col items-center gap-2.5 z-20 ${containerAlignClass}`}>
             
             {/* Bubble Stack */}
             <div className="w-full flex flex-col gap-2.5 items-center">
