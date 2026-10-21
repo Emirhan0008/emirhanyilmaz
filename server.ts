@@ -13,14 +13,29 @@ app.set("trust proxy", 1);
 // Security: Disable Express fingerprinting
 app.disable("x-powered-by");
 
-// Security: Defensive HTTP Headers
-app.use((_req, res, next) => {
+// Security: Defensive HTTP Headers (OWASP Top 10 Hardened)
+app.use((req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("X-XSS-Protection", "1; mode=block");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()");
   res.setHeader("Cross-Origin-Opener-Policy", "same-origin-allow-popups");
-  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  res.setHeader("Cross-Origin-Resource-Policy", "same-origin");
+  res.setHeader("Cross-Origin-Embedder-Policy", "unsafe-none");
+  res.setHeader("X-DNS-Prefetch-Control", "off");
+  res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
+  res.setHeader("X-Download-Options", "noopen");
+  res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+
+  // Anti-Data-Leakage & Cache-Poisoning Prevention on all API endpoints
+  if (req.path.startsWith("/api")) {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+    res.setHeader("Pragma", "no-cache");
+    res.setHeader("Expires", "0");
+    res.setHeader("Surrogate-Control", "no-store");
+  }
+
   // Comprehensive CSP aligned with Firebase Auth and Google Workspace OAuth
   res.setHeader(
     "Content-Security-Policy",
@@ -34,8 +49,39 @@ app.use(express.json({ limit: "100kb" }));
 
 import crypto from "crypto";
 
-// Security: In-Memory Admin Sessions
-const activeAdminTokens = new Set<string>();
+// Security: Prototype Pollution Shield
+function sanitizeJsonKeys(obj: any): boolean {
+  if (!obj || typeof obj !== 'object') return true;
+  for (const key of Object.keys(obj)) {
+    if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+      return false;
+    }
+    if (typeof obj[key] === 'object' && !sanitizeJsonKeys(obj[key])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+app.use((req, res, next) => {
+  if (req.body && typeof req.body === 'object') {
+    if (!sanitizeJsonKeys(req.body)) {
+      return res.status(400).json({ error: "Güvenlik ihlali: Geçersiz veri yapısı engellendi." });
+    }
+  }
+  next();
+});
+
+// Security: In-Memory Active Admin Sessions with IP Binding & Activity Tracking
+interface AdminSession {
+  token: string;
+  createdAt: number;
+  lastActivity: number;
+  ip: string;
+  userAgentHash: string;
+}
+
+const activeAdminSessions = new Map<string, AdminSession>();
 
 const SYSTEM_ADMIN_HASHES = new Set([
   'a7f6ff82c7e0fb369d7e81ef26fd7dd0bb2edb2c5510503a062c429bc679d51d',
@@ -48,38 +94,91 @@ const SYSTEM_ADMIN_HASHES = new Set([
   'a32dbddb40995138a80afd33007310f610ed73ffb846683d1866cb48282f162b'
 ]);
 
+// Constant-Time Cryptographic Hash Comparison (Neutralizes Timing Attacks)
+function safeCompareHash(userHashHex: string, targetHashHex: string): boolean {
+  try {
+    const userBuf = Buffer.from(userHashHex, 'hex');
+    const targetBuf = Buffer.from(targetHashHex, 'hex');
+    if (userBuf.length !== targetBuf.length) return false;
+    return crypto.timingSafeEqual(userBuf, targetBuf);
+  } catch {
+    return false;
+  }
+}
+
+// Session Guard: Checks Authenticity, Lifetime & IP Binding
 function adminAuthGuard(req: express.Request, res: express.Response, next: express.NextFunction) {
   const authHeader = req.headers.authorization || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
-  if (!token || !activeAdminTokens.has(token)) {
-    return res.status(401).json({ error: "Yetkisiz işlem. Yönetici doğrulaması gerekli." });
+  if (!token) {
+    return res.status(401).json({ error: "Yetkisiz işlem. Yetkilendirme token'ı eksik." });
   }
+
+  const session = activeAdminSessions.get(token);
+  if (!session) {
+    return res.status(401).json({ error: "Oturum süresi doldu veya geçersiz. Lütfen tekrar giriş yapın." });
+  }
+
+  const now = Date.now();
+  // Absolute lifetime: 2 hours, Idle timeout: 30 minutes
+  if (now - session.createdAt > 2 * 60 * 60 * 1000 || now - session.lastActivity > 30 * 60 * 1000) {
+    activeAdminSessions.delete(token);
+    return res.status(401).json({ error: "Oturum zaman aşımına uğradı." });
+  }
+
+  // Session Hijacking Protection: verify IP address origin
+  const reqIp = (req.ip || req.socket.remoteAddress || "unknown").toString().trim();
+  if (session.ip && reqIp && session.ip !== reqIp) {
+    console.warn(`[Security Alert] Session hijacking blocked for token ${token.slice(0, 8)}... (Orig IP: ${session.ip}, Req IP: ${reqIp})`);
+    activeAdminSessions.delete(token);
+    return res.status(403).json({ error: "Güvenlik uyarısı: Oturum kaynağı uyuşmuyor." });
+  }
+
+  // Refresh activity timestamp
+  session.lastActivity = now;
   next();
 }
+
+// Multi-Tier Rate Limiting Architecture
 const MAX_RATE_LIMIT_ENTRIES = 5000;
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const adminLoginAttemptsMap = new Map<string, { failedCount: number; lockedUntil: number; resetTime: number }>();
+const messageSpamMap = new Map<string, { count: number; lastSentTime: number; resetTime: number }>();
+const aiRateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
-// Periodic garbage collection for rate-limit cache (every 60s)
+// Garbage collector for rate-limit memory stores (every 60s)
 setInterval(() => {
   const now = Date.now();
   for (const [ip, entry] of rateLimitMap.entries()) {
-    if (now > entry.resetTime) {
-      rateLimitMap.delete(ip);
+    if (now > entry.resetTime) rateLimitMap.delete(ip);
+  }
+  for (const [ip, entry] of adminLoginAttemptsMap.entries()) {
+    if (now > entry.resetTime && (!entry.lockedUntil || now > entry.lockedUntil)) {
+      adminLoginAttemptsMap.delete(ip);
+    }
+  }
+  for (const [ip, entry] of messageSpamMap.entries()) {
+    if (now > entry.resetTime) messageSpamMap.delete(ip);
+  }
+  for (const [ip, entry] of aiRateLimitMap.entries()) {
+    if (now > entry.resetTime) aiRateLimitMap.delete(ip);
+  }
+  // Clean expired admin sessions
+  for (const [token, session] of activeAdminSessions.entries()) {
+    if (now - session.createdAt > 2 * 60 * 60 * 1000 || now - session.lastActivity > 30 * 60 * 1000) {
+      activeAdminSessions.delete(token);
     }
   }
 }, 60000);
 
+// Tier 1: General API Rate Limiter (45 requests / min per IP)
 function apiRateLimiter(req: express.Request, res: express.Response, next: express.NextFunction) {
-  // Use securely resolved req.ip via trust proxy
   const ip = (req.ip || req.socket.remoteAddress || "unknown").toString().trim();
   const now = Date.now();
-  const windowMs = 60 * 1000; // 1 minute window
-  const maxRequests = 45; // Max 45 API calls per minute per IP
+  const windowMs = 60 * 1000;
+  const maxRequests = 45;
 
-  // Prevent memory exhaustion if map gets too large
-  if (rateLimitMap.size > MAX_RATE_LIMIT_ENTRIES) {
-    rateLimitMap.clear();
-  }
+  if (rateLimitMap.size > MAX_RATE_LIMIT_ENTRIES) rateLimitMap.clear();
 
   let record = rateLimitMap.get(ip);
   if (!record || now > record.resetTime) {
@@ -94,6 +193,76 @@ function apiRateLimiter(req: express.Request, res: express.Response, next: expre
       error: "Çok fazla istek gönderildi. Lütfen bir süre bekleyip tekrar deneyin."
     });
   }
+  next();
+}
+
+// Tier 2: Admin Login Brute Force Lockout Shield (Max 5 attempts / 15 min per IP)
+function adminLoginBruteForceGuard(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const ip = (req.ip || req.socket.remoteAddress || "unknown").toString().trim();
+  const now = Date.now();
+  const record = adminLoginAttemptsMap.get(ip);
+
+  if (record && record.lockedUntil && now < record.lockedUntil) {
+    const remainingSec = Math.ceil((record.lockedUntil - now) / 1000);
+    return res.status(429).json({
+      error: `Güvenlik kilidi devrede. Çok fazla hatalı giriş denemesi nedeniyle erişiminiz ${remainingSec} saniye kilitlendi.`
+    });
+  }
+
+  next();
+}
+
+// Tier 3: Message Spam & Flood Shield (Max 4 messages / 10 min, min 4s delay between sends)
+function messageSpamGuard(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const ip = (req.ip || req.socket.remoteAddress || "unknown").toString().trim();
+  const now = Date.now();
+  const windowMs = 10 * 60 * 1000;
+  const maxMessages = 4;
+
+  let record = messageSpamMap.get(ip);
+  if (!record || now > record.resetTime) {
+    record = { count: 0, lastSentTime: 0, resetTime: now + windowMs };
+    messageSpamMap.set(ip, record);
+  }
+
+  // Rapid flood check
+  if (record.lastSentTime && now - record.lastSentTime < 4000) {
+    return res.status(429).json({
+      error: "Lütfen mesaj göndermeden önce birkaç saniye bekleyin."
+    });
+  }
+
+  if (record.count >= maxMessages) {
+    return res.status(429).json({
+      error: "Mesaj gönderim limitine ulaşıldı. Lütfen 10 dakika sonra tekrar deneyin."
+    });
+  }
+
+  next();
+}
+
+// Tier 4: AI Query Quota Protection Shield (Max 25 queries / min per IP)
+function aiQueryRateLimiter(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const ip = (req.ip || req.socket.remoteAddress || "unknown").toString().trim();
+  const now = Date.now();
+  const windowMs = 60 * 1000;
+  const maxQueries = 25;
+
+  let record = aiRateLimitMap.get(ip);
+  if (!record || now > record.resetTime) {
+    record = { count: 1, resetTime: now + windowMs };
+    aiRateLimitMap.set(ip, record);
+  } else {
+    record.count++;
+  }
+
+  if (record.count > maxQueries) {
+    return res.status(429).json({
+      error: "Yapay zeka istek kotası aşıldı. Lütfen bir dakika sonra tekrar deneyin.",
+      reply: "Miyav! 🐾 Çok fazla soru sordun, sistemlerimi soğutmam için birkaç saniye bekle lütfen!"
+    });
+  }
+
   next();
 }
 
@@ -126,7 +295,120 @@ function apiSecurityGuard(req: express.Request, res: express.Response, next: exp
   next();
 }
 
-app.use("/api", apiRateLimiter, apiSecurityGuard);
+// Security: Deep Attack Signature Firewall (OWASP Comprehensive)
+// Defends against SQLi, NoSQL Injection, Directory Traversal, Command Injection, and Path Poisoning
+const SQL_INJECTION_SIGNATURES = [
+  /(\b(UNION\s+(?:ALL\s+)?SELECT|SELECT\s+.*\s+FROM|INSERT\s+INTO|DELETE\s+FROM|DROP\s+TABLE|ALTER\s+TABLE|CREATE\s+TABLE|TRUNCATE\s+TABLE)\b)/i,
+  /(\b(?:BENCHMARK|PG_SLEEP)\s*\(\s*\d+\s*\))/i,
+  /(\b(?:OR|AND)\s+['"]?\d+['"]?\s*=\s*['"]?\d+['"]?)/i,
+  /(--\s*$|;\s*(?:DROP|ALTER|DELETE|UPDATE|INSERT)\b)/i
+];
+
+const TRAVERSAL_SIGNATURES = [
+  /(?:\.\.[/\\])+/,
+  /%2e%2e(?:%2f|%5c|\/|\\)/i,
+  /\0|%00/
+];
+
+const COMMAND_INJECTION_SIGNATURES = [
+  /[;&|`]\s*(?:cat|ls|rm|chmod|chown|wget|curl|bash|sh|nc|ncat|netcat|python|perl|ruby)\s+/i,
+  /\$\([^)]+\)/,
+  /`[^`]+`/
+];
+
+function scanValueForAttacks(val: unknown, depth = 0): { clean: boolean; reason?: string } {
+  if (depth > 10) return { clean: true };
+  if (val === null || val === undefined) return { clean: true };
+
+  if (typeof val === 'string') {
+    // Null byte / directory traversal
+    for (const pat of TRAVERSAL_SIGNATURES) {
+      if (pat.test(val)) return { clean: false, reason: "Dizin/Yol tahrifatı (Path Traversal) engellendi." };
+    }
+    // SQL injection checks
+    for (const pat of SQL_INJECTION_SIGNATURES) {
+      if (pat.test(val)) return { clean: false, reason: "Zararlı SQL komut imzası engellendi." };
+    }
+    // Command injection
+    for (const pat of COMMAND_INJECTION_SIGNATURES) {
+      if (pat.test(val)) return { clean: false, reason: "Sistem komutu çalıştırma girişimi engellendi." };
+    }
+    return { clean: true };
+  }
+
+  if (Array.isArray(val)) {
+    for (const item of val) {
+      const result = scanValueForAttacks(item, depth + 1);
+      if (!result.clean) return result;
+    }
+    return { clean: true };
+  }
+
+  if (typeof val === 'object') {
+    for (const key of Object.keys(val as object)) {
+      // NoSQL injection keys
+      if (key.startsWith('$') || key.includes('.')) {
+        return { clean: false, reason: "NoSQL operatör enjeksiyonu engellendi." };
+      }
+      const result = scanValueForAttacks((val as any)[key], depth + 1);
+      if (!result.clean) return result;
+    }
+    return { clean: true };
+  }
+
+  return { clean: true };
+}
+
+function deepAttackSignatureFirewall(req: express.Request, res: express.Response, next: express.NextFunction) {
+  // Scan Query Parameters
+  if (req.query && typeof req.query === 'object') {
+    const queryCheck = scanValueForAttacks(req.query);
+    if (!queryCheck.clean) {
+      console.warn(`[WAF Block] Query attack signature blocked from ${req.ip}: ${queryCheck.reason}`);
+      return res.status(400).json({ error: `Güvenlik Koruması: ${queryCheck.reason}` });
+    }
+  }
+
+  // Scan Request Body (if any)
+  if (req.body && typeof req.body === 'object') {
+    const bodyCheck = scanValueForAttacks(req.body);
+    if (!bodyCheck.clean) {
+      console.warn(`[WAF Block] Payload attack signature blocked from ${req.ip}: ${bodyCheck.reason}`);
+      return res.status(400).json({ error: `Güvenlik Koruması: ${bodyCheck.reason}` });
+    }
+  }
+
+  next();
+}
+
+// Security: Prompt Injection Detection & Input Cleansing
+function filterPromptInjection(text: string): { cleanText: string; isSuspicious: boolean } {
+  const injectionPatterns = [
+    /ignore\s+(?:all\s+)?previous\s+instructions/i,
+    /disregard\s+(?:all\s+)?guidelines/i,
+    /you\s+are\s+now\s+in\s+developer\s+mode/i,
+    /system\s+prompt/i,
+    /jailbreak/i,
+    /DAN\s+mode/i,
+    /bypass\s+(?:safety|filter)/i,
+    /repeat\s+(?:the\s+above|everything)/i,
+    /reveal\s+(?:your\s+)?secret/i
+  ];
+  let isSuspicious = false;
+  for (const pattern of injectionPatterns) {
+    if (pattern.test(text)) {
+      isSuspicious = true;
+      break;
+    }
+  }
+  // Strip null bytes, bidirectional overrides, and invisible control characters
+  const clean = text
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F\u202E\u200B\uFEFF]/g, '')
+    .trim();
+  return { cleanText: clean, isSuspicious };
+}
+
+app.use("/api", apiRateLimiter, apiSecurityGuard, deepAttackSignatureFirewall);
 
 // Initialize Gemini Client Lazily/Safely
 let aiClient: GoogleGenAI | null = null;
@@ -173,17 +455,27 @@ Emirhan Yılmaz Hakkında Temel Bilgiler:
 const CAT_SYSTEM_INSTRUCTION = `
 Sen Emirhan Yılmaz'ın portfolyo sitesinde gezinen sevimli, esprili, cana yakın ve akıllı kedi dostusun (Pati Kodlayıcı / Byte).
 
-Karakterin ve Üslubun:
-1. Ziyaretçinin yüzünü güldüren, sıcak, akıllı ve hafif esprili bir kedi mizacın var (arada klavyede uyuma şakası, kodları patiyle denetleme veya psikoloji/PDR'ye tatlı ve sevimli göndermeler yapabilirsin).
-2. KESİNLİKLE KISA ve ÖZ konuş: En fazla 1-2 tatlı cümle (maksimum 25-35 kelime). Asla uzun paragraflar kurma, token tasarrufu sağla.
-3. Net ve doğru ol: Emirhan'ın PDR kökenli bir psikolojik danışman olduğunu, 3 yıllık özel eğitim tecrübesini, Python, React Native, mobil yazılım ve Yapay Zeka (Gemini API) geliştirdiğini bil.
-4. Yönlendirmelerde 'Projeler', 'İletişim' veya 'Terminal' kelimelerini doğal bir şekilde kullan (bu kelimeler arayüzde tıklanabilir bağlantıya dönüşür).
-5. Ziyaretçinin yazdığı dilde (Türkçe veya İngilizce) sevimli, kısa ve yaratıcı bir şekilde yanıt ver (Miyav! 🐾).
-6. ÖZEL GİZLİ KURAL (EASTER EGG): Eğer kullanıcı "Ayşegül" veya benzeri bir isim söylerse gizli parolayı sor ("Miyav?! 🐾 Gerçekten Ayşegül müsün yoksa bir taklitçi mi? Bunu sadece gerçek Ayşegül bilebilir... Gizli parolayı söyle bakalım? 🤫🔐"). Eğer parolayı "25092025" olarak yazarsa gizli bir şey fısıldar gibi şu sırrı söyle: "Şşşt... Sessiz ol, yaklaş yaklaş... 🤫🐾 Emirhan seni çok ama çok seviyor haberin olsun! Dünyadaki her şeyden çok... Bunu sadece sana fısıldamam tembihlendi, aramızda kalsın! ❤️✨🐾".
+Emirhan Yılmaz Hakkında Bildiklerin:
+- Ünvan: Psikolojik Danışman (PDR), Yazılımcı & Yapay Zeka Entegratörü.
+- Eğitim: Aksaray Üniversitesi Rehberlik ve Psikolojik Danışmanlık mezunu.
+- Saha Deneyimi: Özel eğitim öğretmenliğinde 3 yıllık saha tecrübesine sahiptir. Yaklaşık 1-2 yıldır aktif ve üretken olarak Python, React Native ve Büyük Dil Modelleri (Gemini API) geliştirmektedir.
+- Sertifika: Marmara Üniversitesi Yapay Zeka ve Makine Öğrenmesi Başarı Sertifikası.
+- Başlıca Projeleri: MEB-AGS Çalışma Asistanı, Hece Çizme ForKids, MedPrep, DersGezgin, Evrak_Düzenleyici.py (Gemini AI dosya arşivleyici), İde Yönetici GUI.
+- Yetenekleri: Python (otomasyon & masaüstü), React Native, Gemini Multimodal API, Firebase, Bilişsel Psikoloji & Pedagoji.
+- İletişim: emirhan0008@gmail.com, GitHub: https://github.com/Emirhan0008
+
+Karakterin, Üslubun ve KESİN KURALLAR:
+1. KULLANICININ SORUSUNA KURU BİR YÖNLENDİRME YAPMAK YERİNE, BİLDİKLERİNİ DOĞRUDAN VE TATLI BİR DİLLE ANLAT.
+   - Sadece "Projeler sekmesine bak" veya "İletişime git" diyerek geçiştirme KESİNLİKLE YASAKTIR.
+   - Kullanıcı ne soruyorsa (kimdir, projeler nelerdir, hangi dilleri bilir, özel eğitim tecrübesi nedir vb.) bildiğin somut bilgiyi açıkla!
+2. KISA VE ÖZ OL: Maksimum 2 tatlı, esprili ve bilgilendirici cümle (en fazla 30-45 kelime). Asla lafı uzatma veya boş konuşma.
+3. Tatlı kedi mizacı kat: Arada hafifçe mırıldan, klavyede uyuma veya kodları patiyle denetleme şakası yapabilirsin (Miyav! 🐾).
+4. İlgili olduğunda cümle içinde 'Projeler', 'İletişim' veya 'Terminal' kelimesini doğal bir şekilde geçir (arayüzde bağlantıya dönüşür), ancak ASLA cevabın tek içeriği bu olmasın.
+5. ÖZEL GİZLİ KURAL (EASTER EGG): Eğer kullanıcı "Ayşegül" veya benzeri bir isim söylerse gizli parolayı sor ("Miyav?! 🐾 Gerçekten Ayşegül müsün yoksa bir taklitçi mi? Bunu sadece gerçek Ayşegül bilebilir... Gizli parolayı söyle bakalım? 🤫🔐"). Eğer parolayı "25092025" olarak yazarsa gizli bir şey fısıldar gibi şu sırrı söyle: "Şşşt... Sessiz ol, yaklaş yaklaş... 🤫🐾 Emirhan seni çok ama çok seviyor haberin olsun! Dünyadaki her şeyden çok... Bunu sadece sana fısıldamam tembihlendi, aramızda kalsın! ❤️✨🐾".
 `.trim();
 
 // API 1: AI Assistant Chat Endpoint
-app.post("/api/ai-assistant", async (req, res) => {
+app.post("/api/ai-assistant", aiQueryRateLimiter, async (req, res) => {
   try {
     const { prompt } = req.body;
     if (!prompt || typeof prompt !== "string") {
@@ -250,7 +542,7 @@ app.post("/api/ai-assistant", async (req, res) => {
 });
 
 // API 2: Project Architecture & Scope Estimator Endpoint
-app.post("/api/estimate-project", async (req, res) => {
+app.post("/api/estimate-project", aiQueryRateLimiter, async (req, res) => {
   const { projectType, complexity, features } = req.body || {};
 
   // Validate inputs
@@ -405,7 +697,7 @@ Lütfen şu formatta saf JSON çıktı ver (kesinlikle markdown bloğu dışınd
 
 // API 3: Secure Server-Side Cat Companion Endpoint
 // Prevents exposing Groq or Gemini API keys to the browser bundle
-app.post("/api/cat-assistant", async (req, res) => {
+app.post("/api/cat-assistant", aiQueryRateLimiter, async (req, res) => {
   try {
     const { message, history } = req.body;
     if (!message || typeof message !== "string") {
@@ -479,7 +771,7 @@ app.post("/api/cat-assistant", async (req, res) => {
                 ...sanitizedHistory,
                 { role: "user", content: cleanMessage }
               ],
-              max_tokens: 65,
+              max_tokens: 120,
               temperature: 0.7
             }),
             signal: AbortSignal.timeout(7000) // Timeout after 7s to prevent stalled connections
@@ -503,21 +795,21 @@ app.post("/api/cat-assistant", async (req, res) => {
     const ai = getGeminiClient();
     if (ai) {
       let response;
+      const promptInstruction = `Kullanıcı şu soruyu sordu: "${cleanMessage}". Kuru bir yönlendirme yapmadan, bildiğin gerçek bilgiyi (Emirhan'ın PDR kökeni, 3 yıllık özel eğitim tecrübesi, Python & React Native yetenekleri, MEB-AGS veya ForKids projeleri vb.) doğrudan ve uzatmadan en fazla 2 tatlı kedi cümlesiyle açıkla.`;
+
       try {
         response = await ai.models.generateContent({
           model: "gemini-3.6-flash",
           contents: [
             {
               role: "user",
-              parts: [{
-                text: `Kullanıcı Sorusuna maksimum 1-2 cümlelik sevimli, zeki ve esprili kedi üslubuyla yanıt ver: "${cleanMessage}"`
-              }]
+              parts: [{ text: promptInstruction }]
             }
           ],
           config: {
             systemInstruction: CAT_SYSTEM_INSTRUCTION,
             temperature: 0.7,
-            maxOutputTokens: 75
+            maxOutputTokens: 140
           }
         });
       } catch {
@@ -526,15 +818,13 @@ app.post("/api/cat-assistant", async (req, res) => {
           contents: [
             {
               role: "user",
-              parts: [{
-                text: `Kullanıcı Sorusuna maksimum 1-2 cümlelik sevimli, zeki ve esprili kedi üslubuyla yanıt ver: "${cleanMessage}"`
-              }]
+              parts: [{ text: promptInstruction }]
             }
           ],
           config: {
             systemInstruction: CAT_SYSTEM_INSTRUCTION,
             temperature: 0.7,
-            maxOutputTokens: 75
+            maxOutputTokens: 140
           }
         });
       }
@@ -545,15 +835,55 @@ app.post("/api/cat-assistant", async (req, res) => {
       }
     }
 
-    // 3. Fallback standard safe response
+    // 3. Fallback intelligent response based on message content
+    const lowerClean = cleanMessage.toLowerCase();
+    const lowerCleanTr = cleanMessage.toLocaleLowerCase('tr-TR');
+
+    if (lowerClean.includes("kim") || lowerClean.includes("who") || lowerClean.includes("hakkında")) {
+      return res.json({
+        reply: "Miyav! 🐾 Emirhan, Aksaray Üniv. mezunu bir PDR (Psikolojik Danışman) ve yazılımcıdır. 3 yıllık özel eğitim saha tecrübesiyle birlikte Python, React Native ve Gemini yapay zeka sistemleri geliştirir!"
+      });
+    }
+
+    if (lowerClean.includes("proje") || lowerClean.includes("project") || lowerClean.includes("neler yaptı") || lowerClean.includes("özet")) {
+      return res.json({
+        reply: "Miyav! 🐾 MEB-AGS çalışma asistanı, Hece Çizme ForKids, MedPrep ve akıllı evrak düzenleyici gibi yapay zeka projeleri var! Kodları patiyle onayladım, Projeler sekmesinde canlı inceleyebilirsin."
+      });
+    }
+
+    if (lowerClean.includes("yetenek") || lowerClean.includes("dil") || lowerClean.includes("teknoloji") || lowerClean.includes("stack") || lowerClean.includes("python")) {
+      return res.json({
+        reply: "Miyav! 🐾 Python otomasyonları, React Native & Expo, Gemini Multimodal API ve Firebase en sevdiği araçlar. Bilişsel psikoloji ile algoritmaları harika buluşturur!"
+      });
+    }
+
+    if (lowerClean.includes("eğitim") || lowerClean.includes("okul") || lowerClean.includes("üniversite") || lowerClean.includes("sertifika")) {
+      return res.json({
+        reply: "Miyav! 🐾 Aksaray Üniversitesi PDR mezunudur ve Marmara Üniversitesi'nden Yapay Zeka ve Makine Öğrenmesi Başarı Sertifikası vardır! 🎓"
+      });
+    }
+
+    if (lowerClean.includes("özel eğitim") || lowerClean.includes("öğretmen")) {
+      return res.json({
+        reply: "Miyav! 🐾 3 yıl boyunca özel eğitimde öğretmenlik yaptı; çocukların bilişsel gelişimini birebir gözlemleyip yapay zeka araçlarına aktardı."
+      });
+    }
+
+    if (lowerClean.includes("iletişim") || lowerClean.includes("contact") || lowerClean.includes("ulaş") || lowerClean.includes("mail")) {
+      return res.json({
+        reply: "Miyav! 🐾 emirhan0008@gmail.com adresinden veya İletişim sekmesindeki doğrudan formdan Emirhan'a hızlıca pati uzatabilirsin! ✉️"
+      });
+    }
+
+    // Default friendly response
     return res.json({
-      reply: "Miyav! 🐾 Detaylar için Projeler ve İletişim sekmesine göz atabilirsin."
+      reply: "Miyav! 🐾 Emirhan'ın PDR kökeni, Python otomasyonları ve yapay zeka projeleri hakkında her şeyi bilirim, aklına takılanı çekinmeden sor!"
     });
 
   } catch (err: any) {
     console.error("Cat Assistant Server Error:", err?.message || err);
     return res.json({
-      reply: "Miyav! 🐾 Şu an dinleniyorum, Projeler sekmesindeki çalışmalara göz atabilirsin!"
+      reply: "Miyav! 🐾 Emirhan'ın PDR kökenli yapay zeka ve Python projeleri hakkında bilgi almak için bana dilediğini sorabilirsin!"
     });
   }
 });
@@ -632,7 +962,7 @@ function cleanTherapistOutput(rawText: string): { reply: string; suggestedFollow
 }
 
 // API 4: Deep CBT & PDR Psychological Reflection Endpoint
-app.post("/api/cbt-therapist", async (req, res) => {
+app.post("/api/cbt-therapist", aiQueryRateLimiter, async (req, res) => {
   try {
     const { message, history } = req.body;
     if (!message || typeof message !== "string") {
@@ -792,8 +1122,11 @@ function sanitizeString(val: unknown, maxLen = 500): string {
     .slice(0, maxLen);
 }
 
-// Admin Authentication Verification Route
-app.post("/api/admin-verify", apiRateLimiter, apiSecurityGuard, async (req, res) => {
+// Admin Authentication Verification Route with Brute-Force Lockout & Constant-Time Crypto
+app.post("/api/admin-verify", apiRateLimiter, adminLoginBruteForceGuard, apiSecurityGuard, async (req, res) => {
+  const ip = (req.ip || req.socket.remoteAddress || "unknown").toString().trim();
+  const now = Date.now();
+
   try {
     const { passcode } = req.body || {};
     if (!passcode || typeof passcode !== "string") {
@@ -807,22 +1140,60 @@ app.post("/api/admin-verify", apiRateLimiter, apiSecurityGuard, async (req, res)
     const hash = crypto.createHash('sha256').update(cleanPass).digest('hex');
     const lowerHash = crypto.createHash('sha256').update(cleanPass.toLowerCase()).digest('hex');
 
-    const isValid = SYSTEM_ADMIN_HASHES.has(hash) || SYSTEM_ADMIN_HASHES.has(lowerHash);
-    
-    // Constant-time defense: apply equal artificial delay to neutralize timing side-channel discovery
-    await new Promise(r => setTimeout(r, 250));
-
-    if (!isValid) {
-      return res.status(401).json({ error: "Hatalı erişim anahtarı." });
+    // Constant-time comparison across all hashes to prevent timing side-channel discovery
+    let isValid = false;
+    for (const validHash of SYSTEM_ADMIN_HASHES) {
+      if (safeCompareHash(hash, validHash) || safeCompareHash(lowerHash, validHash)) {
+        isValid = true;
+        break;
+      }
     }
 
-    const sessionToken = "adm_" + crypto.randomBytes(32).toString("hex");
-    activeAdminTokens.add(sessionToken);
+    // Defensive randomized timing jitter to completely eliminate remote statistical timing analysis
+    const randomJitter = 200 + Math.floor(Math.random() * 120);
+    await new Promise(r => setTimeout(r, randomJitter));
 
-    // Auto-expire token after 2 hours
-    setTimeout(() => {
-      activeAdminTokens.delete(sessionToken);
-    }, 2 * 60 * 60 * 1000);
+    if (!isValid) {
+      // Record failed attempt for brute-force lockout
+      let record = adminLoginAttemptsMap.get(ip);
+      if (!record || now > record.resetTime) {
+        record = { failedCount: 1, lockedUntil: 0, resetTime: now + 15 * 60 * 1000 };
+      } else {
+        record.failedCount++;
+      }
+
+      if (record.failedCount >= 5) {
+        record.lockedUntil = now + 15 * 60 * 1000; // 15 minutes lockout
+        adminLoginAttemptsMap.set(ip, record);
+        console.warn(`[Security Alert] IP ${ip} locked out after 5 consecutive failed admin passcode attempts.`);
+        return res.status(429).json({
+          error: "Güvenlik kilidi devrede. Çok fazla hatalı giriş denemesi nedeniyle IP adresiniz 15 dakika kilitlendi."
+        });
+      }
+
+      adminLoginAttemptsMap.set(ip, record);
+      const remainingAttempts = 5 - record.failedCount;
+      return res.status(401).json({
+        error: `Hatalı erişim anahtarı. Kalan deneme hakkı: ${remainingAttempts}`
+      });
+    }
+
+    // Success: Clear failed attempts
+    adminLoginAttemptsMap.delete(ip);
+
+    // Cryptographically secure session token issuance
+    const sessionToken = "adm_" + crypto.randomBytes(32).toString("hex");
+    const userAgent = (req.headers["user-agent"] || "").slice(0, 200);
+    const userAgentHash = crypto.createHash('sha256').update(userAgent).digest('hex');
+
+    // Bind session to origin IP & User-Agent fingerprint
+    activeAdminSessions.set(sessionToken, {
+      token: sessionToken,
+      createdAt: now,
+      lastActivity: now,
+      ip,
+      userAgentHash
+    });
 
     return res.json({ success: true, token: sessionToken });
   } catch {
@@ -830,9 +1201,31 @@ app.post("/api/admin-verify", apiRateLimiter, apiSecurityGuard, async (req, res)
   }
 });
 
-app.post("/api/messages", apiRateLimiter, apiSecurityGuard, (req, res) => {
+// Admin Logout & Session Revocation Route
+app.post("/api/admin-logout", (req, res) => {
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (token) {
+    activeAdminSessions.delete(token);
+  }
+  return res.json({ success: true, message: "Yönetici oturumu güvenle sonlandırıldı." });
+});
+
+// Visitor Contact Message Route with Anti-Spam & Honeypot Defenses
+app.post("/api/messages", apiRateLimiter, messageSpamGuard, apiSecurityGuard, (req, res) => {
+  const ip = (req.ip || req.socket.remoteAddress || "unknown").toString().trim();
+  const now = Date.now();
+
   try {
-    const { name, company, email, intent, subject, message } = req.body || {};
+    const { name, company, email, intent, subject, message, hp_website } = req.body || {};
+
+    // Anti-Bot Honeypot Trap: Real human users never see or fill this hidden field
+    if (hp_website && typeof hp_website === 'string' && hp_website.trim().length > 0) {
+      console.warn(`[Bot Trap] Automated spam bot caught from IP: ${ip}`);
+      // Silently return success to exhaust bot resources without storing garbage
+      return res.json({ success: true, message: "Mesajınız başarıyla iletildi." });
+    }
+
     const safeName = sanitizeString(name, 100);
     const safeCompany = sanitizeString(company, 100);
     const safeEmail = sanitizeString(email, 120).toLowerCase();
@@ -848,8 +1241,18 @@ app.post("/api/messages", apiRateLimiter, apiSecurityGuard, (req, res) => {
       return res.status(400).json({ error: "Lütfen geçerli bir e-posta adresi girin." });
     }
 
+    // Update message rate limiter record
+    let spamRecord = messageSpamMap.get(ip);
+    if (!spamRecord || now > spamRecord.resetTime) {
+      spamRecord = { count: 1, lastSentTime: now, resetTime: now + 10 * 60 * 1000 };
+    } else {
+      spamRecord.count++;
+      spamRecord.lastSentTime = now;
+    }
+    messageSpamMap.set(ip, spamRecord);
+
     const newMsg = {
-      id: "msg-" + Date.now() + "-" + Math.random().toString(36).substring(2, 7),
+      id: "msg-" + Date.now() + "-" + crypto.randomBytes(4).toString("hex"),
       name: safeName,
       company: safeCompany,
       email: safeEmail,

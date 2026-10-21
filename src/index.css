@@ -107,6 +107,74 @@
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
 }
 
+/* ==========================================================================
+   AUTHENTIC SKEUOMORPHIC GLASS REFLECTION & LIGHT SWEEP
+   ========================================================================== */
+@keyframes glass-sheen-sweep {
+  0% {
+    transform: translateX(-180%) skewX(-20deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  35%, 100% {
+    transform: translateX(300%) skewX(-20deg);
+    opacity: 0;
+  }
+}
+
+.glass-reflection-btn {
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Curved top glass highlight bevel */
+.glass-reflection-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.32) 0%, rgba(255, 255, 255, 0.05) 100%);
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Prismatic glass light reflection beam */
+.glass-reflection-btn::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.12) 20%,
+    rgba(255, 255, 255, 0.7) 50%,
+    rgba(255, 255, 255, 0.12) 80%,
+    transparent 100%
+  );
+  transform: translateX(-180%) skewX(-22deg);
+  pointer-events: none;
+  z-index: 2;
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+  animation: glass-sheen-sweep 6.5s infinite ease-in-out;
+}
+
+.glass-reflection-btn:hover::after {
+  transform: translateX(320%) skewX(-22deg);
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 1;
+}
+
 @property --border-angle {
   syntax: "<angle>";
   inherits: true;

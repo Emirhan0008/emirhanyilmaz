@@ -2,13 +2,10 @@ import { useState, useEffect, useMemo, useRef, type RefObject, FormEvent, UIEven
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, 
-  Download, 
   Wand2, 
-  BookOpen, 
   ArrowRight, 
   ArrowLeft,
   Instagram, 
-  Linkedin,
   Menu, 
   X, 
   GraduationCap, 
@@ -35,12 +32,11 @@ import {
   ExternalLink,
   Search,
   FileText,
-  MessageSquare,
-  Phone,
   Volume2,
   VolumeX,
   Music,
   SkipForward,
+  SkipBack,
   Pause,
   Play,
   Cpu,
@@ -54,9 +50,7 @@ import {
   Heart,
   SlidersHorizontal,
   ArrowUpDown,
-  Check,
   Target,
-  Lightbulb,
   Compass,
   Zap,
   Users,
@@ -143,6 +137,45 @@ function WhatsAppIcon({ size = 16, className = "" }: { size?: number; className?
       <path
         d="M17.52 14.33C17.22 14.18 15.75 13.45 15.48 13.35C15.21 13.25 15.01 13.2 14.81 13.5C14.61 13.8 14.04 14.47 13.87 14.67C13.69 14.86 13.52 14.89 13.22 14.74C12.92 14.59 11.96 14.28 10.82 13.26C9.93 12.47 9.33 11.49 9.16 11.19C8.98 10.89 9.14 10.73 9.29 10.58C9.43 10.45 9.59 10.23 9.74 10.06C9.89 9.88 9.94 9.76 10.04 9.56C10.14 9.36 10.09 9.18 10.01 9.03C9.94 8.88 9.34 7.41 9.09 6.81C8.85 6.22 8.61 6.3 8.43 6.29C8.26 6.28 8.06 6.28 7.86 6.28C7.66 6.28 7.34 6.35 7.07 6.65C6.79 6.95 6.02 7.67 6.02 9.14C6.02 10.61 7.09 12.03 7.24 12.23C7.39 12.43 9.34 15.43 12.33 16.72C13.04 17.03 13.6 17.21 14.03 17.35C14.75 17.58 15.4 17.55 15.92 17.47C16.5 17.38 17.7 16.74 17.95 16.04C18.2 15.34 18.2 14.74 18.12 14.62C18.05 14.49 17.82 14.48 17.52 14.33Z"
         fill="#FFFFFF"
+      />
+    </svg>
+  );
+}
+
+function LinkedInIcon({ size = 16, className = "", monochrome = false }: { size?: number; className?: string; monochrome?: boolean }) {
+  if (monochrome) {
+    return (
+      <svg 
+        width={size} 
+        height={size} 
+        viewBox="0 0 24 24" 
+        fill="currentColor" 
+        className={className}
+        role="img"
+        aria-label="LinkedIn"
+      >
+        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      role="img"
+      aria-label="LinkedIn"
+    >
+      {/* Official LinkedIn brand blue tile (#0A66C2) */}
+      <rect width="24" height="24" rx="4" fill="#0A66C2" />
+      {/* Official LinkedIn 'in' lettermark in pure white */}
+      <path 
+        fill="#FFFFFF" 
+        d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452z" 
       />
     </svg>
   );
@@ -536,6 +569,15 @@ export default function App() {
    };
 
    const handleAdminLogout = () => {
+     const token = sessionStorage.getItem('adm_srv_tok') || '';
+     if (token) {
+       fetch('/api/admin-logout', {
+         method: 'POST',
+         headers: {
+           'Authorization': `Bearer ${token}`
+         }
+       }).catch(() => {});
+     }
      setIsAdmin(false);
      localStorage.removeItem('emirhan_admin_logged_in');
      sessionStorage.removeItem('adm_srv_tok');
@@ -2026,18 +2068,49 @@ export default function App() {
               }}
               title="Emirhan Yılmaz Ana Sayfa"
             >
-              {/* Separate Brand Logo with transparent background */}
-              <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 transition-transform duration-300 group-hover:scale-110 shrink-0 flex items-center justify-center">
+              {/* Profile Avatar with Live Availability Badge & Easter Egg Click */}
+              <div className="relative w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full p-0.5 bg-zinc-900/90 border border-white/20 shrink-0 transition-transform duration-300 group-hover:scale-105 shadow-md">
                 <img 
-                  src={profile.logo} 
-                  alt="Emirhan Yılmaz Logo" 
-                  className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.35)] group-hover:drop-shadow-[0_0_14px_rgba(56,189,248,0.7)]"
+                  src={profile.avatar} 
+                  alt="Emirhan Yılmaz" 
+                  onClick={(e) => {
+                    handleAvatarEasterClick();
+                  }}
+                  className="w-full h-full object-cover rounded-full"
                   referrerPolicy="no-referrer"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/profile-photo.jpg';
+                  }}
+                />
+                <span 
+                  className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-500 border-2 border-zinc-950 shadow-[0_0_6px_rgba(16,185,129,0.9)]" 
+                  title={lang === 'tr' ? 'Çevrim İçi & Aktif' : 'Online & Active'} 
                 />
               </div>
-              <span className="text-sm sm:text-base lg:text-lg xl:text-xl font-semibold tracking-tight text-white transition-opacity duration-300 group-hover:opacity-95 truncate hidden sm:inline-block max-w-[85px] md:max-w-[105px] xl:max-w-none">
-                {profile.name.split(' ')[0]} <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-white/95 to-white/80">{profile.name.split(' ').slice(1).join(' ')}</span>
-              </span>
+
+              {/* Single Compact Identity Line: Name, Role & Admin Control */}
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-sm sm:text-base lg:text-lg font-bold tracking-tight text-white transition-opacity duration-300 group-hover:opacity-95 truncate">
+                  {profile.name.split(' ')[0]} <span className="font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-white/95 to-white/80">{profile.name.split(' ').slice(1).join(' ')}</span>
+                </span>
+                <span className="text-[10.5px] sm:text-xs font-mono text-zinc-400 shrink-0 hidden sm:inline">
+                  · PDR &amp; AI
+                </span>
+                {isAdmin && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAdminEditorTab('profile');
+                      setShowAdminEditor(true);
+                    }}
+                    className="px-2 py-0.5 rounded-md bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-[9.5px] font-bold flex items-center gap-1 transition-all cursor-pointer ml-1"
+                  >
+                    <Edit3 size={10} />
+                    <span>{lang === 'tr' ? 'Düzenle' : 'Edit'}</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Desktop Navigation Tabs */}
@@ -2875,47 +2948,24 @@ export default function App() {
                   transition={{ duration: 0.3 }}
                   className="flex-1 flex flex-col justify-between overflow-y-auto pr-1 relative"
                 >
-                  <div className="flex flex-col items-start gap-5 lg:gap-6 max-w-xl py-2">
-                    <div className="flex items-center gap-4">
-                      <div className="w-20 h-20 rounded-full p-1 bg-zinc-900 border border-white/10 flex items-center justify-center overflow-hidden transition-transform duration-300 hover:scale-105 shadow-xl relative select-none">
-                        <img 
-                          src={profile.avatar} 
-                          alt="Emirhan Yılmaz Avatar"
-                          onClick={handleAvatarEasterClick}
-                          style={{ cursor: "pointer" }} 
-                          className="w-full h-full object-cover rounded-full"
-                          referrerPolicy="no-referrer"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/profile-photo.jpg';
-                          }}
-                        />
+                  <div className="flex flex-col items-start gap-3.5 lg:gap-4 max-w-xl py-1">
+                    {/* Compact Status Badges Strip (Avatar & Name are unified in top header row) */}
+                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full">
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 bg-zinc-900/80 rounded-full text-[11px] sm:text-xs text-emerald-400 font-medium border border-white/10 shadow-sm">
+                        <Brain size={12} className="text-emerald-400 shrink-0" />
+                        <span className="truncate">PDR (Psikolojik Danışmanlık) &amp; Yapay Zeka</span>
                       </div>
-                      {isAdmin && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setAdminEditorTab('profile');
-                            setShowAdminEditor(true);
-                          }}
-                          className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-                        >
-                          <Edit3 size={13} />
-                          <span>{lang === 'tr' ? 'Profili Düzenle' : 'Edit Profile'}</span>
-                        </button>
-                      )}
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 bg-emerald-500/10 rounded-full text-[11px] sm:text-xs text-emerald-300 font-medium border border-emerald-500/25 select-none">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                        <span className="truncate">{lang === 'tr' ? 'Yeni Projeler İçin Müsait' : 'Available for Collaboration'}</span>
+                      </div>
+                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 bg-zinc-900/80 rounded-full text-[11px] sm:text-xs text-zinc-300 font-medium border border-white/10 shadow-sm">
+                        <GraduationCap size={12} className="text-sky-400 shrink-0" />
+                        <span className="truncate">{lang === 'tr' ? 'Aksaray Üniv. PDR · 3 Yıl Özel Eğitim' : 'Aksaray Univ. GPC · 3 Yrs Special Ed'}</span>
+                      </div>
                     </div>
 
-                    <div className="space-y-3.5">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-zinc-900/80 rounded-full text-xs text-emerald-400 font-medium border border-white/10">
-                          <Brain size={12} className="text-emerald-400" />
-                          <span>PDR (Psikolojik Danışmanlık) &amp; Yapay Zeka</span>
-                        </div>
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-500/10 rounded-full text-xs text-emerald-300 font-medium border border-emerald-500/25 select-none">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                          <span>{lang === 'tr' ? 'Yeni Projeler İçin Müsait' : 'Available for Work & Collaboration'}</span>
-                        </div>
-                      </div>
+                    <div className="space-y-3.5 w-full">
 
                       <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight leading-[1.12] text-white">
                         {lang === 'tr' ? (
@@ -3067,7 +3117,7 @@ export default function App() {
                           className="inline-flex items-center gap-1.5 text-[11px] font-mono text-white/80 hover:text-blue-400 transition-colors font-bold px-2.5 py-1 rounded-full bg-white/5 hover:bg-white/10 border border-white/10"
                           title="LinkedIn Profilini İncele"
                         >
-                          <Linkedin size={12} className="text-blue-400" />
+                          <LinkedInIcon size={13} className="shrink-0" />
                           <span>LinkedIn</span>
                           <ExternalLink size={10} className="opacity-60" />
                         </a>
@@ -3102,36 +3152,40 @@ export default function App() {
 
               <div className="w-[1px] h-5 bg-white/15 mx-0.5 shrink-0" />
 
-              {/* GitHub - Expandable on Hover with Glowing Glass Effect */}
+              {/* GitHub - Expandable on Hover with Glowing Glass Effect & Reflection Sheen */}
               <a 
                 href="https://github.com/Emirhan0008" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 onClick={() => soundEngine.playGlassClick()}
-                className="h-8 px-2.5 hover:px-3.5 rounded-full glowing-glass-button text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer active:scale-95 z-10"
+                className="h-8 px-2.5 hover:px-3.5 rounded-full glass-reflection-btn glowing-glass-button text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group cursor-pointer active:scale-95 z-10 shadow-[0_2px_10px_rgba(0,0,0,0.5)] hover:shadow-[0_0_18px_rgba(255,255,255,0.35)]"
                 title="GitHub: Emirhan0008"
               >
-                <Github size={15} className="shrink-0 text-white group-hover:text-emerald-300 transition-colors drop-shadow-[0_0_8px_rgba(255,255,255,0.95)]" />
-                <div className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
-                  <span className="text-[11px] font-semibold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">github.com/Emirhan0008</span>
-                  <ExternalLink size={10} className="shrink-0 opacity-80 group-hover:opacity-100 text-white" />
-                </div>
+                <span className="relative z-10 flex items-center">
+                  <Github size={15} className="shrink-0 text-white group-hover:text-emerald-300 transition-colors drop-shadow-[0_0_8px_rgba(255,255,255,0.95)]" />
+                  <span className="max-w-0 opacity-0 group-hover:max-w-[200px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
+                    <span className="text-[11px] font-semibold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">github.com/Emirhan0008</span>
+                    <ExternalLink size={10} className="shrink-0 opacity-80 group-hover:opacity-100 text-white" />
+                  </span>
+                </span>
               </a>
 
-              {/* LinkedIn - Expandable on Hover */}
+              {/* LinkedIn - Expandable on Hover with Glass Reflection Sheen */}
               <a 
                 href="https://www.linkedin.com/in/emirhan-y%C4%B1lmaz-3357b5109" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 onClick={() => soundEngine.playGlassClick()}
-                className="h-8 px-2.5 hover:px-3.5 rounded-full bg-blue-600/20 hover:bg-blue-600/35 border border-blue-500/40 hover:border-blue-400/80 text-blue-200 hover:text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group overflow-hidden cursor-pointer shadow-sm shadow-blue-950/40 hover:shadow-[0_0_16px_rgba(37,99,235,0.4)] hover:scale-105 active:scale-95"
+                className="h-8 px-2.5 hover:px-3.5 rounded-full glass-reflection-btn bg-blue-600/25 hover:bg-blue-600/40 border border-blue-400/50 hover:border-blue-300 text-blue-200 hover:text-white font-mono text-xs font-bold transition-all duration-300 shrink-0 flex items-center justify-center group cursor-pointer shadow-sm shadow-blue-950/40 hover:shadow-[0_0_20px_rgba(37,99,235,0.55)] hover:scale-105 active:scale-95 z-10"
                 title="LinkedIn: in/emirhan-yılmaz-3357b5109"
               >
-                <Linkedin size={15} className="shrink-0 text-blue-400 group-hover:text-blue-200 transition-colors drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
-                <div className="max-w-0 opacity-0 group-hover:max-w-[220px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
-                  <span className="text-[11px] font-semibold text-blue-100">in/emirhan-yılmaz</span>
-                  <ExternalLink size={10} className="shrink-0 opacity-70 group-hover:opacity-100" />
-                </div>
+                <span className="relative z-10 flex items-center">
+                  <LinkedInIcon size={16} className="shrink-0 transition-transform duration-300 group-hover:scale-110 drop-shadow-[0_0_8px_rgba(10,102,194,0.8)]" />
+                  <span className="max-w-0 opacity-0 group-hover:max-w-[220px] group-hover:opacity-100 group-hover:ml-1.5 flex items-center gap-1.5 transition-all duration-300 ease-out overflow-hidden whitespace-nowrap">
+                    <span className="text-[11px] font-semibold text-blue-100">in/emirhan-yılmaz</span>
+                    <ExternalLink size={10} className="shrink-0 opacity-70 group-hover:opacity-100" />
+                  </span>
+                </span>
               </a>
 
               {/* Instagram - Expandable on Hover (Hesap yok, yakında) */}
@@ -4492,7 +4546,7 @@ export default function App() {
                         className="py-1.5 px-2.5 rounded-xl bg-blue-950/40 hover:bg-blue-900/40 border border-blue-500/30 flex items-center justify-center gap-1.5 text-xs text-blue-200 hover:text-white font-bold transition-all hover:scale-102 cursor-pointer group"
                         title="LinkedIn: in/emirhan-yılmaz"
                       >
-                        <Linkedin size={12} className="text-blue-400 shrink-0" />
+                        <LinkedInIcon size={13} className="shrink-0" />
                         <span className="truncate text-[11px]">LinkedIn</span>
                         <ExternalLink size={9} className="text-blue-400/40 ml-auto shrink-0 group-hover:text-white" />
                       </a>
@@ -4811,57 +4865,109 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* Floating Cybernetic Music Mini-Player Pill */}
+      {/* Floating Cybernetic Music Mini-Player Pill (Slim, Low-Profile, Wide & Centered/Anchored) */}
       <AnimatePresence>
         {isAmbientPlaying && (
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            initial={{ opacity: 0, y: 10, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 left-6 z-[140] flex items-center gap-3 px-4 py-2.5 rounded-full liquid-glass-strong border border-emerald-500/30 shadow-[0_0_24px_rgba(16,185,129,0.2)] backdrop-blur-xl"
+            exit={{ opacity: 0, y: 10, scale: 0.98 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed bottom-2 sm:bottom-2.5 left-2 right-2 sm:left-4 sm:right-auto md:left-6 z-[190] h-7 sm:h-7.5 px-2.5 sm:px-3.5 rounded-full liquid-glass-strong border border-emerald-500/40 bg-zinc-950/85 shadow-[0_6px_24px_rgba(0,0,0,0.75),0_0_16px_rgba(16,185,129,0.22)] backdrop-blur-2xl flex items-center gap-2 sm:gap-3 w-auto sm:min-w-[480px] md:min-w-[640px] lg:min-w-[820px] max-w-[calc(100vw-1rem)] md:max-w-4xl lg:max-w-5xl select-none group"
           >
-            {/* Animated Equalizer Wave */}
-            <div className="flex items-end gap-0.5 h-3.5 w-4 shrink-0">
+            {/* Animated Equalizer Wave (Low profile) */}
+            <div className="flex items-end gap-0.5 h-2.5 w-3 shrink-0" title="Ses Çalıyor">
               <span className="w-0.5 bg-emerald-400 rounded-full animate-[bounce_0.8s_infinite]" style={{ height: '70%' }} />
               <span className="w-0.5 bg-emerald-400 rounded-full animate-[bounce_1.1s_infinite_0.2s]" style={{ height: '100%' }} />
               <span className="w-0.5 bg-emerald-400 rounded-full animate-[bounce_0.9s_infinite_0.4s]" style={{ height: '50%' }} />
             </div>
 
-            <div className="flex flex-col text-left">
-              <span className="text-[10px] font-extrabold text-white tracking-wide flex items-center gap-1.5">
+            {/* Single-line Track Title, Genre & Subtitle */}
+            <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 overflow-hidden whitespace-nowrap">
+              <span className="text-[10px] sm:text-[11px] font-bold text-white tracking-wide shrink-0">
                 {currentMusicTrack.title}
-                <span className="px-1.5 py-0.5 text-[8px] bg-emerald-500/20 text-emerald-300 rounded font-mono font-bold tracking-tight uppercase">
-                  {currentMusicTrack.genre || 'CYBER'}
-                </span>
               </span>
-              <span className="text-[9px] text-white/50 font-medium truncate max-w-[150px]">
+              <span className="px-1.5 py-0.2 text-[6.5px] sm:text-[7.5px] bg-emerald-500/20 text-emerald-300 rounded font-mono font-bold tracking-tight uppercase shrink-0 border border-emerald-500/25">
+                {currentMusicTrack.genre || 'CYBER'}
+              </span>
+              <span className="text-[9px] text-zinc-500 shrink-0 hidden sm:inline">•</span>
+              <span className="text-[8.5px] sm:text-[9.5px] text-zinc-300/80 font-normal truncate hidden sm:inline">
                 {currentMusicTrack.subtitle}
               </span>
             </div>
 
-            {/* Next Track Button */}
-            <button
-              onClick={() => {
-                soundEngine.playGlassClick();
-                soundEngine.nextTrack();
-              }}
-              className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white flex items-center justify-center transition-all cursor-pointer"
-              title="Sonraki Siber Parçaya Geç"
-            >
-              <SkipForward size={12} />
-            </button>
+            {/* Controls Strip (Slim & Compact) */}
+            <div className="flex items-center gap-1 shrink-0 ml-auto pl-1.5 sm:pl-2 border-l border-white/10">
+              {/* Previous Track Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  soundEngine.playGlassClick();
+                  const prev = soundEngine.prevTrack();
+                  setCurrentMusicTrack(prev);
+                }}
+                className="w-5 h-5 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                title="Önceki Parça"
+              >
+                <SkipBack size={9} />
+              </button>
 
-            {/* Pause / Stop */}
-            <button
-              onClick={() => {
-                soundEngine.playGlassClick();
-                soundEngine.toggleAmbientFocusSoundscape();
-              }}
-              className="w-7 h-7 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 flex items-center justify-center transition-all cursor-pointer"
-              title="Müziği Durdur"
-            >
-              <Pause size={12} />
-            </button>
+              {/* Pause / Play Toggle */}
+              <button
+                type="button"
+                onClick={() => {
+                  soundEngine.playGlassClick();
+                  soundEngine.toggleAmbientFocusSoundscape();
+                }}
+                className="w-5 h-5 rounded-full bg-emerald-500/25 hover:bg-emerald-500/40 text-emerald-300 hover:text-white flex items-center justify-center transition-all cursor-pointer border border-emerald-500/30"
+                title="Müziği Duraklat"
+              >
+                <Pause size={9} />
+              </button>
+
+              {/* Next Track Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  soundEngine.playGlassClick();
+                  const next = soundEngine.nextTrack();
+                  setCurrentMusicTrack(next);
+                }}
+                className="w-5 h-5 rounded-full bg-white/5 hover:bg-white/15 text-white/70 hover:text-white flex items-center justify-center transition-all cursor-pointer"
+                title="Sonraki Parça"
+              >
+                <SkipForward size={9} />
+              </button>
+
+              {/* Mute Toggle */}
+              <button
+                type="button"
+                onClick={() => {
+                  soundEngine.playGlassClick();
+                  const muted = soundEngine.toggleMute();
+                  setIsMuted(muted);
+                }}
+                className={`w-5 h-5 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                  isMuted ? 'bg-red-500/20 text-red-300' : 'bg-white/5 hover:bg-white/15 text-white/70 hover:text-white'
+                }`}
+                title={isMuted ? "Sesi Aç" : "Sesi Kapat"}
+              >
+                {isMuted ? <VolumeX size={9} /> : <Volume2 size={9} />}
+              </button>
+
+              {/* Close / Hide Pill */}
+              <button
+                type="button"
+                onClick={() => {
+                  soundEngine.playGlassClick();
+                  soundEngine.toggleAmbientFocusSoundscape();
+                }}
+                className="w-4.5 h-4.5 rounded-full hover:bg-white/15 text-white/40 hover:text-white flex items-center justify-center transition-all cursor-pointer ml-0.5"
+                title="Kapat"
+              >
+                <X size={9} />
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

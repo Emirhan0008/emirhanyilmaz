@@ -523,6 +523,20 @@ class SoundEngine {
     return track;
   }
 
+  public prevTrack(): MusicTrack {
+    this.currentTrackIndex = (this.currentTrackIndex - 1 + TECH_TRACKS.length) % TECH_TRACKS.length;
+    const track = TECH_TRACKS[this.currentTrackIndex];
+    const audio = this.getOrCreateAudio();
+    if (audio) {
+      audio.src = track.src;
+      if (this.isMusicPlaying) {
+        audio.play().catch(() => {});
+      }
+    }
+    this.notify();
+    return track;
+  }
+
   public getCurrentTrack(): MusicTrack {
     return TECH_TRACKS[this.currentTrackIndex];
   }

@@ -291,8 +291,8 @@ export function InteractiveCatCompanion({
       setBehavior('curious-front');
 
       const fallbackReply = isEn
-        ? "Purr... I couldn't reach the AI cloud right now, but feel free to explore the Projects or Contact tab! 🐾"
-        : "Mırrr... Şu an yapay zeka bulutuna ulaşamadım, ama Projeler sekmesini mutlaka incele! 🐾";
+        ? "Purr... Emirhan is a counselor & dev crafting AI and mobile apps like MEB-AGS and ForKids! Ask me anything! 🐾"
+        : "Mırrr... Emirhan; PDR temelli 3 yıllık özel eğitim tecrübesiyle Python, React Native ve Gemini yapay zeka sistemleri geliştirir! Aklına takılanı çekinmeden sorabilirsin 🐾";
 
       addBubbleStrictMaxTwo({
         id: `cat-${Date.now()}`,
