@@ -54,6 +54,7 @@ import {
   Compass,
   Zap,
   Users,
+  User,
   Mic,
   Building,
   Award
@@ -2040,15 +2041,13 @@ export default function App() {
       )}
 
       {/* MAIN CONTAINER */}
-      <div className={`relative z-10 h-auto lg:h-screen lg:max-h-screen w-full flex flex-col lg:flex-row p-2.5 sm:p-4 lg:p-6 gap-4 lg:gap-6 lg:overflow-hidden transition-all duration-1000 ${isMeltingSite ? "melting-slag-site" : ""}`}>
+      <div className={`relative z-10 h-auto lg:h-screen lg:max-h-screen w-full max-w-full overflow-x-hidden flex flex-col lg:flex-row p-2.5 sm:p-4 lg:p-6 gap-4 lg:gap-6 lg:overflow-hidden transition-all duration-1000 ${isMeltingSite ? "melting-slag-site" : ""}`}>
         
         {/* LEFT PANEL: Dynamic Viewport & Primary Presenter (Hosts Profile or Active Project / Article Details) */}
         <motion.div 
           layout
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className={`w-full lg:w-1/2 h-auto lg:h-full lg:max-h-full relative flex flex-col rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 lg:p-7 liquid-glass-clear spinning-glow-border overflow-hidden select-text transition-all duration-300 ease-out ${
-            activeTab !== 'profile' && !selectedProject && !selectedArticle ? 'order-2 lg:order-1' : 'order-1'
-          }`}
+          className="w-full lg:w-1/2 h-auto lg:h-full lg:max-h-full relative flex flex-col rounded-2xl sm:rounded-3xl p-3 sm:p-5 lg:p-7 liquid-glass-clear spinning-glow-border overflow-hidden select-text transition-all duration-300 ease-out order-1"
         >
           
           <header className="flex items-center justify-between gap-1.5 sm:gap-2 z-10 mb-3.5 sm:mb-4 lg:mb-5 shrink-0 min-w-0">
@@ -2303,6 +2302,188 @@ export default function App() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* RESPONSIVE UNIFIED TOP BAR & EXPLORE PROJECTS STRIP (Mobile only, pinned below header) */}
+          <div className="w-full flex flex-col gap-1.5 lg:hidden mb-2.5 shrink-0 z-10">
+            {/* Row 1: Compact Socials & Global Controls Pill */}
+            <div className="flex items-center justify-between gap-1 w-full p-1 liquid-glass rounded-full overflow-x-auto scrollbar-none max-w-full">
+              <ThemeToggle theme={theme} onToggle={toggleTheme} className="shrink-0" />
+              <LanguageToggle currentLang={lang} onToggle={handleLangToggle} className="shrink-0" />
+              
+              <div className="w-[1px] h-4 bg-white/15 mx-0.5 shrink-0" />
+
+              <a 
+                href="https://github.com/Emirhan0008" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                onClick={() => soundEngine.playGlassClick()}
+                className="h-7 w-7 rounded-full glass-reflection-btn glowing-glass-button text-white font-mono text-xs font-bold transition-all shrink-0 flex items-center justify-center active:scale-95 shadow-sm"
+                title="GitHub: Emirhan0008"
+              >
+                <Github size={13} className="text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.9)]" />
+              </a>
+
+              <a 
+                href="https://www.linkedin.com/in/emirhan-y%C4%B1lmaz-3357b5109" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                onClick={() => soundEngine.playGlassClick()}
+                className="h-7 w-7 rounded-full glass-reflection-btn bg-blue-600/25 border border-blue-400/50 text-blue-200 shrink-0 flex items-center justify-center active:scale-95 shadow-sm"
+                title="LinkedIn"
+              >
+                <LinkedInIcon size={14} />
+              </a>
+
+              <a 
+                href={`https://wa.me/?text=${encodeURIComponent(lang === 'tr' ? "Merhaba Emirhan Bey, sitenizden ulaşıyorum." : "Hello Emirhan, reaching out via your portfolio.")}`}
+                target="_blank" 
+                rel="noopener noreferrer" 
+                onClick={() => soundEngine.playGlassClick()}
+                className="h-7 w-7 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-200 shrink-0 flex items-center justify-center active:scale-95 shadow-sm"
+                title="WhatsApp"
+              >
+                <WhatsAppIcon size={14} />
+              </a>
+
+              <a 
+                href="mailto:emirhan0008@gmail.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                onClick={() => soundEngine.playGlassClick()}
+                className="h-7 w-7 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 shrink-0 flex items-center justify-center active:scale-95 shadow-sm"
+                title="Gmail: emirhan0008@gmail.com"
+              >
+                <GmailIcon size={14} />
+              </a>
+
+              <div className="w-[1px] h-4 bg-white/10 mx-0.5 shrink-0" />
+
+              <button
+                onClick={() => {
+                  const muted = soundEngine.toggleMute();
+                  setIsMuted(muted);
+                }}
+                className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
+                  isMuted ? 'text-red-400 hover:bg-red-500/10' : 'text-emerald-400 hover:bg-emerald-500/10'
+                }`}
+                title={isMuted ? (lang === 'tr' ? "Ses Aç" : "Unmute") : (lang === 'tr' ? "Ses Kapat" : "Mute")}
+              >
+                {isMuted ? <VolumeX size={13} /> : <Volume2 size={13} />}
+              </button>
+
+              <button
+                onClick={() => soundEngine.toggleAmbientFocusSoundscape()}
+                className={`w-7 h-7 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 ${
+                  isAmbientPlaying ? 'text-emerald-400 bg-emerald-500/20 shadow-[0_0_10px_rgba(52,211,153,0.4)]' : 'text-white/70 hover:bg-white/10'
+                }`}
+                title={isAmbientPlaying ? (lang === 'tr' ? "Müziği Durdur" : "Stop Music") : (lang === 'tr' ? "Fon Müziği" : "Play Music")}
+              >
+                <Music size={13} className={isAmbientPlaying ? 'animate-pulse' : ''} />
+              </button>
+
+              <button
+                onClick={() => {
+                  soundEngine.playGlassClick();
+                  setShowEstimatorModal(true);
+                }}
+                className="h-7 px-2 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-[10.5px] flex items-center gap-1 shadow-sm active:scale-95 shrink-0"
+                title={lang === 'tr' ? 'Proje Mimarisi & Teklif' : 'Architecture & Estimate'}
+              >
+                <Wand2 size={11} />
+                <span>{lang === 'tr' ? 'Teklif' : 'Offer'}</span>
+              </button>
+            </div>
+
+            {/* Row 2: Compact "Projeleri İncele" & Quick Filter Chips */}
+            <div className="flex items-center gap-1.5 w-full">
+              <button
+                onClick={() => {
+                  soundEngine.playTabSwitch();
+                  setSelectedProject(null);
+                  setSelectedArticle(null);
+                  setActiveTab('projects');
+                  setTimeout(() => {
+                    const el = document.getElementById('projects-section-anchor');
+                    el?.scrollIntoView({ behavior: 'smooth' });
+                  }, 80);
+                }}
+                className={`flex-1 py-1.5 px-3 rounded-xl transition-all cursor-pointer flex items-center justify-between shadow-md active:scale-98 ${
+                  activeTab === 'projects'
+                    ? 'bg-emerald-500/20 border border-emerald-400 text-emerald-300 font-extrabold text-xs'
+                    : 'bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 hover:from-emerald-400 text-zinc-950 font-black text-xs'
+                }`}
+                id="mobile-top-cta-explore-projects"
+              >
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <Code2 size={13} className="shrink-0" />
+                  <span className="truncate">
+                    {lang === 'tr' ? `Projeleri İncele (${mappedProjects.length}+)` : `Explore Projects (${mappedProjects.length}+)`}
+                  </span>
+                </div>
+                <ArrowRight size={13} className="shrink-0" />
+              </button>
+
+              <div className="flex items-center gap-1 overflow-x-auto scrollbar-none shrink-0">
+                <button
+                  onClick={() => {
+                    soundEngine.playTabSwitch();
+                    setProjectFilter('Öne Çıkanlar');
+                    setSelectedProject(null);
+                    setSelectedArticle(null);
+                    setActiveTab('projects');
+                    setTimeout(() => {
+                      document.getElementById('projects-section-anchor')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 80);
+                  }}
+                  className={`px-2 py-1.5 rounded-xl text-[10px] font-bold whitespace-nowrap active:scale-95 transition-all border ${
+                    projectFilter === 'Öne Çıkanlar' && activeTab === 'projects'
+                      ? 'bg-emerald-500/25 text-emerald-300 border-emerald-400'
+                      : 'bg-zinc-900/80 text-emerald-300/90 border-emerald-500/30 hover:bg-emerald-500/10'
+                  }`}
+                >
+                  ⭐ {lang === 'tr' ? 'Öne Çıkan' : 'Top'}
+                </button>
+                <button
+                  onClick={() => {
+                    soundEngine.playTabSwitch();
+                    setProjectFilter('Yapay Zeka');
+                    setSelectedProject(null);
+                    setSelectedArticle(null);
+                    setActiveTab('projects');
+                    setTimeout(() => {
+                      document.getElementById('projects-section-anchor')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 80);
+                  }}
+                  className={`px-2 py-1.5 rounded-xl text-[10px] font-bold whitespace-nowrap active:scale-95 transition-all border ${
+                    projectFilter === 'Yapay Zeka' && activeTab === 'projects'
+                      ? 'bg-sky-500/25 text-sky-300 border-sky-400'
+                      : 'bg-zinc-900/80 text-sky-300/90 border-sky-500/30 hover:bg-sky-500/10'
+                  }`}
+                >
+                  🤖 AI
+                </button>
+                <button
+                  onClick={() => {
+                    soundEngine.playTabSwitch();
+                    setProjectFilter('Python & Otomasyon');
+                    setSelectedProject(null);
+                    setSelectedArticle(null);
+                    setActiveTab('projects');
+                    setTimeout(() => {
+                      document.getElementById('projects-section-anchor')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 80);
+                  }}
+                  className={`px-2 py-1.5 rounded-xl text-[10px] font-bold whitespace-nowrap active:scale-95 transition-all border ${
+                    projectFilter === 'Python & Otomasyon' && activeTab === 'projects'
+                      ? 'bg-amber-500/25 text-amber-300 border-amber-400'
+                      : 'bg-zinc-900/80 text-amber-300/90 border-amber-500/30 hover:bg-amber-500/10'
+                  }`}
+                >
+                  ⚡ Python
+                </button>
+              </div>
+            </div>
+          </div>
 
           {/* Left Panel Body: Dynamic Viewport (Displays Details on selection, or Hero Profile) */}
           <div className="flex-1 flex flex-col justify-between z-10 overflow-hidden relative min-h-0">
@@ -3004,209 +3185,48 @@ export default function App() {
                   className="flex-1 flex flex-col justify-between overflow-y-auto pr-1 relative"
                 >
                   <div className="flex flex-col items-start gap-3.5 lg:gap-4 max-w-xl py-1">
-                    {/* RESPONSIVE TOP BAR & HERO ACTION: Placed at the very top on mobile (Focus Mode selection & user request) */}
-                    <div className="w-full flex flex-col gap-2.5 lg:hidden mb-2">
-                      {/* Top Bar with Socials, Theme/Language and Audio Controls */}
-                      <div className="flex items-center justify-between gap-1.5 w-full">
-                        <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-full overflow-x-auto scrollbar-none transition-all duration-300 max-w-full">
-                          <ThemeToggle theme={theme} onToggle={toggleTheme} className="shrink-0" />
-                          <LanguageToggle currentLang={lang} onToggle={handleLangToggle} className="shrink-0" />
-                          <div className="w-[1px] h-5 bg-white/15 mx-0.5 shrink-0" />
-                          
-                          <a 
-                            href="https://github.com/Emirhan0008" 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            onClick={() => soundEngine.playGlassClick()}
-                            className="h-8 w-8 rounded-full glass-reflection-btn glowing-glass-button text-white font-mono text-xs font-bold transition-all shrink-0 flex items-center justify-center active:scale-95 shadow-[0_2px_10px_rgba(0,0,0,0.5)]"
-                            title="GitHub: Emirhan0008"
-                          >
-                            <Github size={15} className="text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.95)]" />
-                          </a>
-
-                          <a 
-                            href="https://www.linkedin.com/in/emirhan-y%C4%B1lmaz-3357b5109" 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            onClick={() => soundEngine.playGlassClick()}
-                            className="h-8 w-8 rounded-full glass-reflection-btn bg-blue-600/25 border border-blue-400/50 text-blue-200 hover:text-white shrink-0 flex items-center justify-center active:scale-95"
-                            title="LinkedIn"
-                          >
-                            <LinkedInIcon size={16} />
-                          </a>
-
-                          <a 
-                            href={`https://wa.me/?text=${encodeURIComponent(lang === 'tr' ? "Merhaba Emirhan Bey, sitenizden ulaşıyorum." : "Hello Emirhan, reaching out via your portfolio.")}`}
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            onClick={() => soundEngine.playGlassClick()}
-                            className="h-8 w-8 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-200 shrink-0 flex items-center justify-center active:scale-95"
-                            title="WhatsApp"
-                          >
-                            <WhatsAppIcon size={16} />
-                          </a>
-
-                          <a 
-                            href="mailto:emirhan0008@gmail.com" 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            onClick={() => soundEngine.playGlassClick()}
-                            className="h-8 w-8 rounded-full bg-rose-500/20 border border-rose-500/40 text-rose-300 shrink-0 flex items-center justify-center active:scale-95"
-                            title="Gmail: emirhan0008@gmail.com"
-                          >
-                            <GmailIcon size={16} />
-                          </a>
-
-                          <div className="w-[1px] h-4 bg-white/10 mx-0.5 shrink-0" />
-
-                          <button
-                            onClick={() => {
-                              const muted = soundEngine.toggleMute();
-                              setIsMuted(muted);
-                            }}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors cursor-pointer shrink-0 ${
-                              isMuted ? 'text-red-400 hover:bg-red-500/10' : 'text-emerald-400 hover:bg-emerald-500/10'
-                            }`}
-                            title={isMuted ? (lang === 'tr' ? "Ses Efektlerini Aç" : "Unmute") : (lang === 'tr' ? "Ses Efektlerini Kapat" : "Mute")}
-                          >
-                            {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                          </button>
-
-                          <button
-                            onClick={() => soundEngine.toggleAmbientFocusSoundscape()}
-                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 ${
-                              isAmbientPlaying ? 'text-emerald-400 bg-emerald-500/20 shadow-[0_0_12px_rgba(52,211,153,0.4)]' : 'text-white/70 hover:bg-white/10'
-                            }`}
-                            title={isAmbientPlaying ? (lang === 'tr' ? "Müziği Durdur" : "Stop Music") : (lang === 'tr' ? "Fon Müziğini Çal" : "Play Music")}
-                          >
-                            <Music size={14} className={isAmbientPlaying ? 'animate-pulse' : ''} />
-                          </button>
+                    {/* On mobile, when activeTab is not 'profile', show a compact banner so the user can easily jump back */}
+                    {activeTab !== 'profile' && (
+                      <div className="lg:hidden w-full p-2.5 rounded-xl bg-zinc-900/80 border border-emerald-500/30 flex items-center justify-between gap-2 shadow-md mb-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-white truncate">
+                              {activeTab === 'projects' ? (lang === 'tr' ? '📁 Projeler Kataloğu' : '📁 Projects Catalog') :
+                               activeTab === 'articles' ? (lang === 'tr' ? '✍️ Makaleler & Yazılar' : '✍️ Articles') :
+                               activeTab === 'lab' ? (lang === 'tr' ? '🧪 AI Laboratuvarı' : '🧪 AI Lab') :
+                               (lang === 'tr' ? '✉️ İletişim & Randevu' : '✉️ Contact')}
+                            </p>
+                            <p className="text-[10px] text-zinc-400 truncate">
+                              {lang === 'tr' ? 'Aşağı kaydırarak inceleyebilirsiniz' : 'Scroll down to explore'}
+                            </p>
+                          </div>
                         </div>
-
-                        {/* Quick Estimator Button on Mobile Top */}
-                        <button
-                          onClick={() => {
-                            soundEngine.playGlassClick();
-                            setShowEstimatorModal(true);
-                          }}
-                          className="p-2 sm:px-2.5 rounded-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-xs flex items-center gap-1 shadow-md active:scale-95 shrink-0"
-                          title={lang === 'tr' ? 'Proje Mimarisi & Teklif' : 'Architecture & Estimate'}
-                        >
-                          <Wand2 size={13} />
-                          <span className="hidden sm:inline text-[11px]">{lang === 'tr' ? 'Teklif' : 'Estimate'}</span>
-                        </button>
-                      </div>
-
-                      {/* Primary "Projeleri İncele" High-Impact Hero Card */}
-                      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/60 via-zinc-900/80 to-teal-950/60 border border-emerald-500/40 shadow-xl flex flex-col gap-2.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10.5px] font-mono uppercase tracking-wider text-emerald-400 font-extrabold flex items-center gap-1.5">
-                            <Sparkles size={12} className="animate-pulse text-emerald-400" />
-                            {lang === 'tr' ? 'CANLI PORTFOLYO & AI SİSTEMLERİ' : 'LIVE PORTFOLIO & AI SYSTEMS'}
-                          </span>
-                          <span className="text-[9.5px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30">
-                            {mappedProjects.length} {lang === 'tr' ? 'Proje' : 'Projects'}
-                          </span>
-                        </div>
-
                         <button
                           onClick={() => {
                             soundEngine.playTabSwitch();
-                            setActiveTab('projects');
-                            if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-                              setTimeout(() => {
-                                const el = document.getElementById('projects-section-anchor');
-                                el?.scrollIntoView({ behavior: 'smooth' });
-                              }, 120);
-                            }
+                            setActiveTab('profile');
                           }}
-                          className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 hover:from-emerald-400 text-zinc-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-emerald-500/25 transition-all cursor-pointer active:scale-98 group"
-                          id="mobile-top-cta-explore-projects"
+                          className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[10.5px] font-bold text-emerald-300 flex items-center gap-1 shrink-0 border border-emerald-500/25 cursor-pointer active:scale-95"
                         >
-                          <Code2 size={16} className="text-zinc-950 shrink-0" />
-                          <span className="font-black text-zinc-950">{lang === 'tr' ? 'Projeleri İncele (30+ Canlı Proje)' : 'Explore Projects (30+ Live Projects)'}</span>
-                          <ArrowRight size={15} className="text-zinc-950 shrink-0 group-hover:translate-x-1 transition-transform" />
+                          <User size={11} />
+                          <span>{lang === 'tr' ? 'Profil' : 'Profile'}</span>
                         </button>
+                      </div>
+                    )}
 
-                        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pt-0.5">
-                          <button
-                            onClick={() => {
-                              soundEngine.playTabSwitch();
-                              setProjectFilter('Öne Çıkanlar');
-                              setActiveTab('projects');
-                              if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-                                setTimeout(() => {
-                                  const el = document.getElementById('projects-section-anchor');
-                                  el?.scrollIntoView({ behavior: 'smooth' });
-                                }, 120);
-                              }
-                            }}
-                            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-emerald-300 border border-emerald-500/25 whitespace-nowrap shrink-0 active:scale-95"
-                          >
-                            ⭐ {lang === 'tr' ? 'Öne Çıkanlar' : 'Highlights'}
-                          </button>
-                          <button
-                            onClick={() => {
-                              soundEngine.playTabSwitch();
-                              setProjectFilter('Yapay Zeka');
-                              setActiveTab('projects');
-                              if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-                                setTimeout(() => {
-                                  const el = document.getElementById('projects-section-anchor');
-                                  el?.scrollIntoView({ behavior: 'smooth' });
-                                }, 120);
-                              }
-                            }}
-                            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-sky-300 border border-sky-500/25 whitespace-nowrap shrink-0 active:scale-95"
-                          >
-                            🤖 {lang === 'tr' ? 'Yapay Zeka' : 'AI'}
-                          </button>
-                          <button
-                            onClick={() => {
-                              soundEngine.playTabSwitch();
-                              setProjectFilter('Python & Otomasyon');
-                              setActiveTab('projects');
-                              if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-                                setTimeout(() => {
-                                  const el = document.getElementById('projects-section-anchor');
-                                  el?.scrollIntoView({ behavior: 'smooth' });
-                                }, 120);
-                              }
-                            }}
-                            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-amber-300 border border-amber-500/25 whitespace-nowrap shrink-0 active:scale-95"
-                          >
-                            ⚡ {lang === 'tr' ? 'Python & Bot' : 'Python & Bots'}
-                          </button>
-                          <button
-                            onClick={() => {
-                              soundEngine.playTabSwitch();
-                              setCaseStudyOnlyFilter(true);
-                              setActiveTab('projects');
-                              if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-                                setTimeout(() => {
-                                  const el = document.getElementById('projects-section-anchor');
-                                  el?.scrollIntoView({ behavior: 'smooth' });
-                                }, 120);
-                              }
-                            }}
-                            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[10px] font-bold text-teal-300 border border-teal-500/25 whitespace-nowrap shrink-0 active:scale-95"
-                          >
-                            💎 {lang === 'tr' ? 'Mimari Çözüm' : 'Specs'}
-                          </button>
+                    {/* Extended Profile Details & Bio (On mobile, only rendered when activeTab is profile) */}
+                    <div className={`${activeTab !== 'profile' ? 'hidden lg:flex' : 'flex'} flex-col gap-3.5 lg:gap-4 w-full`}>
+                      {/* Compact Status Badges Strip (Avatar & Name are unified in top header row) */}
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full">
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 bg-zinc-900/80 rounded-full text-[11px] sm:text-xs text-emerald-400 font-medium border border-white/10 shadow-sm">
+                          <Brain size={12} className="text-emerald-400 shrink-0" />
+                          <span className="truncate">PDR (Psikolojik Danışmanlık) &amp; Yapay Zeka</span>
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Compact Status Badges Strip (Avatar & Name are unified in top header row) */}
-                    <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full">
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 bg-zinc-900/80 rounded-full text-[11px] sm:text-xs text-emerald-400 font-medium border border-white/10 shadow-sm">
-                        <Brain size={12} className="text-emerald-400 shrink-0" />
-                        <span className="truncate">PDR (Psikolojik Danışmanlık) &amp; Yapay Zeka</span>
-                      </div>
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 bg-emerald-500/10 rounded-full text-[11px] sm:text-xs text-emerald-300 font-medium border border-emerald-500/25 select-none">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span className="truncate">{lang === 'tr' ? 'Yeni Projeler İçin Müsait' : 'Available for Collaboration'}</span>
-                      </div>
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 bg-emerald-500/10 rounded-full text-[11px] sm:text-xs text-emerald-300 font-medium border border-emerald-500/25 select-none">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                          <span className="truncate">{lang === 'tr' ? 'Yeni Projeler İçin Müsait' : 'Available for Collaboration'}</span>
+                        </div>
                       <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 bg-zinc-900/80 rounded-full text-[11px] sm:text-xs text-zinc-300 font-medium border border-white/10 shadow-sm">
                         <GraduationCap size={12} className="text-sky-400 shrink-0" />
                         <span className="truncate">{lang === 'tr' ? 'Aksaray Üniv. PDR · 3 Yıl Özel Eğitim' : 'Aksaray Univ. GPC · 3 Yrs Special Ed'}</span>
@@ -3328,9 +3348,10 @@ export default function App() {
                       </a>
                     </div>
                   </div>
+                </div>
 
                   {/* Left Panel Bottom Quote - shown in profile mode */}
-                  <footer className="mt-auto pt-6 border-t border-white/5 z-10 flex flex-col gap-3.5 shrink-0">
+                  <footer className={`${activeTab !== 'profile' ? 'hidden lg:flex' : 'flex'} mt-auto pt-6 border-t border-white/5 z-10 flex-col gap-3.5 shrink-0`}>
                     <span className="text-[10px] tracking-[0.25em] uppercase text-white/60 font-semibold">
                       {t.hero.visionLabel}
                     </span>
@@ -3387,13 +3408,11 @@ export default function App() {
           layout
           id="projects-section-anchor"
           transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-          className={`w-full lg:w-1/2 h-full flex flex-col min-h-0 relative select-text transition-all duration-300 ease-out ${
-            activeTab !== 'profile' && !selectedProject && !selectedArticle ? 'order-1 lg:order-2' : 'order-2'
-          }`}
+          className="w-full lg:w-1/2 h-full flex flex-col min-h-0 relative select-text transition-all duration-300 ease-out order-2"
         >
 
-          {/* Top Bar (Socials, Innovative Actions & Audio Controls) */}
-          <div className="flex flex-wrap items-center justify-between gap-2 mb-3 shrink-0">
+          {/* Top Bar (Socials, Innovative Actions & Audio Controls) - Desktop Viewport (Mobile uses unified top strip above) */}
+          <div className="hidden lg:flex flex-wrap items-center justify-between gap-2 mb-3 shrink-0">
             <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-full overflow-x-auto scrollbar-none transition-all duration-300 max-w-full">
               {/* Dual-Theme Skeuomorphic Switch (Normal vs Terminal Mode) */}
               <ThemeToggle theme={theme} onToggle={toggleTheme} className="shrink-0" />
@@ -4854,7 +4873,7 @@ export default function App() {
 
       {/* SECURE ADMIN INBOX PANEL OVERLAY */}
       {isAdmin && (
-        <div className="fixed bottom-6 right-6 z-[160] flex flex-col items-end gap-3 select-text">
+        <div className="fixed bottom-6 right-4 sm:right-6 z-[160] flex flex-col items-end gap-3 select-text max-w-[calc(100vw-2rem)]">
           {/* Expanded Panel */}
           <AnimatePresence>
             {showAdminInbox && (
@@ -4862,7 +4881,7 @@ export default function App() {
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                className="w-[340px] sm:w-[460px] h-[480px] liquid-glass-strong border border-white/15 rounded-[2rem] shadow-2xl p-5 flex flex-col gap-4 overflow-hidden text-left"
+                className="w-[340px] sm:w-[460px] max-w-[calc(100vw-2rem)] h-[480px] liquid-glass-strong border border-white/15 rounded-[2rem] shadow-2xl p-5 flex flex-col gap-4 overflow-hidden text-left"
               >
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-white/10 pb-3 select-none">

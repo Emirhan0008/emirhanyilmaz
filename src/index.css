@@ -7,6 +7,11 @@
   --radius-custom: 1rem;
 }
 
+html, body, #root {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 /* 1. STANDART CAM GÖRÜNÜMÜ (Sol Panel Tonuna Eşitlendi) */
 .liquid-glass {
   background: rgba(10, 10, 15, 0.72); 
