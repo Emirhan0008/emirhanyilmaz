@@ -253,7 +253,13 @@ Bu mimari kapsam doğrultusunda uygunluğunuzu ve detaylı proje takvimini gör�
   const handleOpenWhatsApp = () => {
     soundEngine.playGlassClick();
     const text = encodeURIComponent(buildSummaryMessage());
-    window.open(`https://wa.me/?text=${text}`, '_blank', 'noopener,noreferrer');
+    const link = document.createElement('a');
+    link.href = `https://wa.me/?text=${text}`;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleCopyReport = () => {

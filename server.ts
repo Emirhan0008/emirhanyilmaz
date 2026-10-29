@@ -37,9 +37,14 @@ app.use((req, res, next) => {
   }
 
   // Comprehensive CSP aligned with Firebase Auth and Google Workspace OAuth
+  const isDev = process.env.NODE_ENV !== "production";
+  const scriptSrc = isDev
+    ? "'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://*.firebaseapp.com"
+    : "'self' 'unsafe-inline' https://apis.google.com https://accounts.google.com https://*.firebaseapp.com";
+
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://accounts.google.com https://*.firebaseapp.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; frame-src 'self' https://commanding-spanner-567s8.firebaseapp.com https://accounts.google.com https://*.firebaseapp.com; connect-src 'self' https: ws: wss:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors *;"
+    `default-src 'self'; script-src ${scriptSrc}; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; frame-src 'self' https://commanding-spanner-567s8.firebaseapp.com https://accounts.google.com https://*.firebaseapp.com; connect-src 'self' https: ws: wss:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors *;`
   );
   next();
 });
@@ -281,10 +286,10 @@ function apiSecurityGuard(req: express.Request, res: express.Response, next: exp
     if (origin && host) {
       try {
         const originUrl = new URL(origin);
-        // Allow same host or valid development preview hosts
         const isSameHost = originUrl.host === host;
-        const isRunApp = originUrl.hostname.endsWith(".run.app") || originUrl.hostname === "localhost" || originUrl.hostname === "127.0.0.1";
-        if (!isSameHost && !isRunApp) {
+        const isLocalhost = originUrl.hostname === "localhost" || originUrl.hostname === "127.0.0.1";
+        const isCurrentAppletHost = host && originUrl.hostname === host.split(":")[0];
+        if (!isSameHost && !isLocalhost && !isCurrentAppletHost) {
           return res.status(403).json({ error: "Yetkisiz çapraz kaynak isteği engellendi." });
         }
       } catch {

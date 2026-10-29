@@ -1,0 +1,159 @@
+{
+  "audit_metadata": {
+    "framework": "cloudflare/security-audit-skill",
+    "version": "1.0.0",
+    "repository": "Emirhan Yılmaz Portfolio & AI Hub",
+    "timestamp": "2026-10-27T13:58:00Z",
+    "coverage_percentage": 100.0,
+    "auditor": "Cloudflare Security Audit Autonomous Suite"
+  },
+  "units": [
+    {
+      "id": "UNIT-01",
+      "path": "server.ts",
+      "type": "backend_gateway",
+      "lines_of_code": 1314,
+      "status": "reviewed",
+      "attack_classes": [
+        "Authentication & Session Management",
+        "Injection (SQLi, NoSQL, Command, Path Traversal)",
+        "Cross-Site Scripting (XSS) & Headers",
+        "Denial of Service (Rate Limiting, Payload Exhaustion)",
+        "Origin & Host Validation (CSRF, SSRF)",
+        "Prompt Injection & AI Sandboxing",
+        "Prototype Pollution"
+      ],
+      "findings_count": 2,
+      "remediated": true
+    },
+    {
+      "id": "UNIT-02",
+      "path": "package.json",
+      "type": "dependency_manifest",
+      "lines_of_code": 43,
+      "status": "reviewed",
+      "attack_classes": [
+        "Known Vulnerabilities (CVE / GHSA)",
+        "Outdated Packages",
+        "Dependency Confusion & Supply Chain"
+      ],
+      "findings_count": 3,
+      "remediated": true
+    },
+    {
+      "id": "UNIT-03",
+      "path": "src/utils/sanitize.ts",
+      "type": "security_sanitizer",
+      "lines_of_code": 200,
+      "status": "reviewed",
+      "attack_classes": [
+        "DOM XSS",
+        "Protocol-based script execution (javascript:, data:)",
+        "CRLF / Header Injection in URLs",
+        "Prototype Pollution Defense in JSON parser",
+        "SVG-based script vectors"
+      ],
+      "findings_count": 0,
+      "remediated": true
+    },
+    {
+      "id": "UNIT-04",
+      "path": "src/utils/validationSchemas.ts",
+      "type": "schema_validator",
+      "lines_of_code": 95,
+      "status": "reviewed",
+      "attack_classes": [
+        "Zod Oversized Constrained Collection DoS",
+        "Type Confusion",
+        "Format Validation"
+      ],
+      "findings_count": 1,
+      "remediated": true
+    },
+    {
+      "id": "UNIT-05",
+      "path": "src/App.tsx",
+      "type": "frontend_root_orchestrator",
+      "lines_of_code": 5492,
+      "status": "reviewed",
+      "attack_classes": [
+        "Client-Side State Tampering (Admin Privilege Escalation)",
+        "DOM XSS via Unescaped Rendering",
+        "Reverse Tabnabbing (target=_blank rel checks)",
+        "Open Redirects via Hash or Query",
+        "Local Storage PII & Token Leakage"
+      ],
+      "findings_count": 1,
+      "remediated": true
+    },
+    {
+      "id": "UNIT-06",
+      "path": "src/components/ProjectEstimator.tsx",
+      "type": "frontend_calculator",
+      "lines_of_code": 514,
+      "status": "reviewed",
+      "attack_classes": [
+        "window.open Iframe Sandbox Bypass",
+        "Mailto / URL CRLF Injection",
+        "Clipboard API Access"
+      ],
+      "findings_count": 1,
+      "remediated": true
+    },
+    {
+      "id": "UNIT-07",
+      "path": "src/components/PowerShellTerminalWorkspace.tsx",
+      "type": "cli_emulator",
+      "lines_of_code": 2209,
+      "status": "reviewed",
+      "attack_classes": [
+        "Command Injection / Subprocess Spawning",
+        "DOM XSS via Terminal Output",
+        "Memory Exhaustion via Long History"
+      ],
+      "findings_count": 0,
+      "remediated": true
+    },
+    {
+      "id": "UNIT-08",
+      "path": "src/components/AdminEditorModal.tsx",
+      "type": "admin_portal",
+      "lines_of_code": 1820,
+      "status": "reviewed",
+      "attack_classes": [
+        "Privilege Escalation",
+        "Cross-Site Scripting in Project Inputs",
+        "Unauthorized Local Storage Mutation"
+      ],
+      "findings_count": 0,
+      "remediated": true
+    },
+    {
+      "id": "UNIT-09",
+      "path": "src/components/ZenCbtTherapyWidget.tsx",
+      "type": "ai_interactive_widget",
+      "lines_of_code": 450,
+      "status": "reviewed",
+      "attack_classes": [
+        "Prompt Injection via Chat History",
+        "Client-Side Secret Exposure",
+        "Content Injection into UI"
+      ],
+      "findings_count": 0,
+      "remediated": true
+    },
+    {
+      "id": "UNIT-10",
+      "path": "src/components/InteractiveCatCompanion.tsx",
+      "type": "ai_interactive_widget",
+      "lines_of_code": 380,
+      "status": "reviewed",
+      "attack_classes": [
+        "Jailbreak & Prompt Exfiltration",
+        "XSS in Speech Bubbles"
+      ],
+      "findings_count": 0,
+      "remediated": true
+    }
+  ]
+}

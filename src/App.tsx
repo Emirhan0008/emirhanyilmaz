@@ -307,8 +307,19 @@ export default function App() {
    const rightArticlesScrollRef = useRef<HTMLDivElement>(null);
    const rightContactScrollRef = useRef<HTMLDivElement>(null);
 
-   // Multi-language (i18n) Support
+   // Multi-language (i18n) Support with immediate URL detection
    const [lang, setLang] = useState<Language>(() => {
+     if (typeof window !== 'undefined') {
+       const path = window.location.pathname.toLowerCase();
+       if (path.startsWith('/en') || path === '/en') return 'en';
+       if (path.startsWith('/tr') || path === '/tr') return 'tr';
+       try {
+         const searchParams = new URLSearchParams(window.location.search);
+         const qLang = searchParams.get('lang')?.toLowerCase();
+         if (qLang === 'en') return 'en';
+         if (qLang === 'tr') return 'tr';
+       } catch {}
+     }
      try {
        const saved = localStorage.getItem('emirhan_portfolio_lang');
        return saved === 'en' ? 'en' : 'tr';
@@ -323,6 +334,14 @@ export default function App() {
      try {
        localStorage.setItem('emirhan_portfolio_lang', newLang);
      } catch {}
+     if (typeof window !== 'undefined') {
+       const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
+       const cleanSubPath = currentPath.replace(/^\/(tr|en)(\/|$)/i, '/');
+       const targetUrl = cleanSubPath === '/' ? `/${newLang}` : `/${newLang}${cleanSubPath}`;
+       if (window.location.pathname !== targetUrl) {
+         window.history.pushState(null, '', targetUrl + window.location.search + window.location.hash);
+       }
+     }
    };
 
    useEffect(() => {
@@ -386,7 +405,9 @@ export default function App() {
    // Cryptographically secured Admin Mode with rate-limiting & brute-force lockouts
    const [isAdmin, setIsAdmin] = useState(() => {
      try {
-       return localStorage.getItem('emirhan_admin_logged_in') === 'true';
+       const hasFlag = localStorage.getItem('emirhan_admin_logged_in') === 'true';
+       const hasToken = typeof window !== 'undefined' && !!sessionStorage.getItem('adm_srv_tok');
+       return hasFlag && hasToken;
      } catch {
        return false;
      }
@@ -1310,47 +1331,85 @@ export default function App() {
     if (typeof window === 'undefined') return;
 
     const handleRouteFromLocation = () => {
-      const pathname = window.location.pathname.replace(/\/+$/, '') || '/';
+      const rawPathname = window.location.pathname.replace(/\/+$/, '') || '/';
       const hash = window.location.hash.toLowerCase();
 
       if (hash === '#admin' || hash === '#login') {
         if (!isAdmin) setShowAdminModal(true);
       }
 
-      if (pathname === '/projects') {
+      // Detect language from URL path (/tr/... or /en/...) or search param ?lang=...
+      let detectedLang: Language | null = null;
+      let cleanPath = rawPathname;
+
+      const langMatch = rawPathname.match(/^\/(tr|en)(\/.*)?$/i);
+      if (langMatch) {
+        detectedLang = langMatch[1].toLowerCase() as Language;
+        cleanPath = langMatch[2] || '/';
+        if (!cleanPath.startsWith('/')) cleanPath = '/' + cleanPath;
+      } else {
+        try {
+          const searchParams = new URLSearchParams(window.location.search);
+          const qLang = searchParams.get('lang')?.toLowerCase();
+          if (qLang === 'en' || qLang === 'tr') {
+            detectedLang = qLang as Language;
+          }
+        } catch {}
+      }
+
+      if (detectedLang && detectedLang !== lang) {
+        setLang(detectedLang);
+        try {
+          localStorage.setItem('emirhan_portfolio_lang', detectedLang);
+        } catch {}
+      }
+
+      const activeLang = detectedLang || lang;
+
+      if (cleanPath === '/projects') {
         setActiveTab('projects');
         setSelectedProject(null);
-        document.title = `Projeler — ${profile.name} | Portfolyo`;
-      } else if (pathname.startsWith('/projects/')) {
-        const pId = decodeURIComponent(pathname.replace('/projects/', '').trim());
+        document.title = activeLang === 'en'
+          ? `Projects — ${currentProfile.name} | Portfolio`
+          : `Projeler — ${currentProfile.name} | Portfolyo`;
+      } else if (cleanPath.startsWith('/projects/')) {
+        const pId = decodeURIComponent(cleanPath.replace('/projects/', '').trim());
         const found = mappedProjects.find(p => p.id === pId || p.id.toLowerCase() === pId.toLowerCase());
         setActiveTab('projects');
         if (found) {
           setSelectedProject(found);
-          document.title = `${found.title} — ${profile.name} | Projeler`;
+          document.title = activeLang === 'en'
+            ? `${found.title} — ${currentProfile.name} | Projects`
+            : `${found.title} — ${currentProfile.name} | Projeler`;
         }
-      } else if (pathname === '/articles') {
+      } else if (cleanPath === '/articles') {
         setActiveTab('articles');
         setSelectedArticle(null);
-        document.title = `Makaleler & Yazılar — ${profile.name}`;
-      } else if (pathname.startsWith('/articles/')) {
-        const aId = decodeURIComponent(pathname.replace('/articles/', '').trim());
+        document.title = activeLang === 'en'
+          ? `Articles & Writings — ${currentProfile.name}`
+          : `Makaleler & Yazılar — ${currentProfile.name}`;
+      } else if (cleanPath.startsWith('/articles/')) {
+        const aId = decodeURIComponent(cleanPath.replace('/articles/', '').trim());
         const found = mappedArticles.find(a => a.id === aId || a.id.toLowerCase() === aId.toLowerCase());
         setActiveTab('articles');
         if (found) {
           setSelectedArticle(found);
-          document.title = `${found.title} — ${profile.name} | Makaleler`;
+          document.title = activeLang === 'en'
+            ? `${found.title} — ${currentProfile.name} | Articles`
+            : `${found.title} — ${currentProfile.name} | Makaleler`;
         }
-      } else if (pathname === '/contact') {
+      } else if (cleanPath === '/contact') {
         setActiveTab('contact');
         setSelectedProject(null);
         setSelectedArticle(null);
-        document.title = `İletişim — ${profile.name}`;
-      } else if (pathname === '/' || pathname === '/profile') {
+        document.title = activeLang === 'en'
+          ? `Contact — ${currentProfile.name}`
+          : `İletişim — ${currentProfile.name}`;
+      } else if (cleanPath === '/' || cleanPath === '/profile') {
         setActiveTab('profile');
         setSelectedProject(null);
         setSelectedArticle(null);
-        document.title = `${profile.name} — ${profile.title}`;
+        document.title = `${currentProfile.name} — ${currentProfile.title}`;
       }
     };
 
@@ -1363,7 +1422,7 @@ export default function App() {
 
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, [mappedProjects, mappedArticles, isAdmin, profile.name, profile.title]);
+  }, [mappedProjects, mappedArticles, isAdmin, currentProfile.name, currentProfile.title, lang]);
 
   // 2. Continuous URL state synchronization on tab / detail changes
   useEffect(() => {
@@ -1374,28 +1433,40 @@ export default function App() {
       return;
     }
 
-    let targetPath = '/';
-    let targetTitle = `${profile.name} — ${profile.title}`;
+    let baseSubPath = '/';
+    let targetTitle = `${currentProfile.name} — ${currentProfile.title}`;
 
     if (selectedProject) {
-      targetPath = `/projects/${selectedProject.id}`;
-      targetTitle = `${selectedProject.title} — ${profile.name} | Projeler`;
+      baseSubPath = `/projects/${selectedProject.id}`;
+      targetTitle = lang === 'en'
+        ? `${selectedProject.title} — ${currentProfile.name} | Projects`
+        : `${selectedProject.title} — ${currentProfile.name} | Projeler`;
     } else if (selectedArticle) {
-      targetPath = `/articles/${selectedArticle.id}`;
-      targetTitle = `${selectedArticle.title} — ${profile.name} | Makaleler`;
+      baseSubPath = `/articles/${selectedArticle.id}`;
+      targetTitle = lang === 'en'
+        ? `${selectedArticle.title} — ${currentProfile.name} | Articles`
+        : `${selectedArticle.title} — ${currentProfile.name} | Makaleler`;
     } else if (activeTab === 'projects') {
-      targetPath = '/projects';
-      targetTitle = `Projeler — ${profile.name} | Portfolyo`;
+      baseSubPath = '/projects';
+      targetTitle = lang === 'en'
+        ? `Projects — ${currentProfile.name} | Portfolio`
+        : `Projeler — ${currentProfile.name} | Portfolyo`;
     } else if (activeTab === 'articles') {
-      targetPath = '/articles';
-      targetTitle = `Makaleler — ${profile.name}`;
+      baseSubPath = '/articles';
+      targetTitle = lang === 'en'
+        ? `Articles & Writings — ${currentProfile.name}`
+        : `Makaleler & Yazılar — ${currentProfile.name}`;
     } else if (activeTab === 'contact') {
-      targetPath = '/contact';
-      targetTitle = `İletişim — ${profile.name}`;
+      baseSubPath = '/contact';
+      targetTitle = lang === 'en'
+        ? `Contact — ${currentProfile.name}`
+        : `İletişim — ${currentProfile.name}`;
     } else {
-      targetPath = '/';
-      targetTitle = `${profile.name} — ${profile.title}`;
+      baseSubPath = '/';
+      targetTitle = `${currentProfile.name} — ${currentProfile.title}`;
     }
+
+    const targetPath = baseSubPath === '/' ? `/${lang}` : `/${lang}${baseSubPath}`;
 
     if (window.location.pathname !== targetPath) {
       window.history.pushState(null, '', targetPath);
@@ -1407,23 +1478,62 @@ export default function App() {
       const metaDesc = document.querySelector('meta[name="description"]');
       if (metaDesc) {
         if (selectedProject) {
-          metaDesc.setAttribute('content', `${selectedProject.title} — ${selectedProject.description} | ${profile.name}`);
+          metaDesc.setAttribute('content', `${selectedProject.title} — ${selectedProject.description} | ${currentProfile.name}`);
         } else if (selectedArticle) {
-          metaDesc.setAttribute('content', `${selectedArticle.title} — ${selectedArticle.excerpt} | ${profile.name}`);
+          metaDesc.setAttribute('content', `${selectedArticle.title} — ${selectedArticle.excerpt} | ${currentProfile.name}`);
         } else if (activeTab === 'projects') {
-          metaDesc.setAttribute('content', `${profile.name} — 30+ yazılım, yapay zeka (Gemini Vision), 3D Coğrafya ve Python otomasyon projesi.`);
+          metaDesc.setAttribute('content', lang === 'en'
+            ? `${currentProfile.name} — 30+ software, AI (Gemini Vision), 3D Geography, and Python automation projects.`
+            : `${currentProfile.name} — 30+ yazılım, yapay zeka (Gemini Vision), 3D Coğrafya ve Python otomasyon projesi.`);
         } else {
-          metaDesc.setAttribute('content', "Aksaray Üniversitesi PDR mezunu Emirhan Yılmaz'ın resmi portfolyosu. 3 yıllık özel eğitim saha deneyimini Google Gemini AI, Python otomasyonları, Three.js 3D web ve modern yazılımlarla birleştiren vizyoner geliştirici.");
+          metaDesc.setAttribute('content', lang === 'en'
+            ? `Official portfolio of Emirhan Yılmaz (Counselor & AI Developer). Bridging 3 years of special education with Google Gemini Vision AI, Python automation, and Three.js 3D web systems.`
+            : "Aksaray Üniversitesi PDR mezunu Emirhan Yılmaz'ın resmi portfolyosu. 3 yıllık özel eğitim saha deneyimini Google Gemini AI, Python otomasyonları, Three.js 3D web ve modern yazılımlarla birleştiren vizyoner geliştirici.");
         }
       }
+
       const canonicalLink = document.querySelector('link[rel="canonical"]');
       if (canonicalLink) {
         canonicalLink.setAttribute('href', `${window.location.origin}${targetPath}`);
       }
+
+      // Multi-language SEO: Hreflang alternates
+      const origin = window.location.origin;
+      const subSuffix = baseSubPath === '/' ? '' : baseSubPath;
+      const trHref = `${origin}/tr${subSuffix}`;
+      const enHref = `${origin}/en${subSuffix}`;
+
+      let trLink = document.querySelector('link[rel="alternate"][hreflang="tr"]');
+      if (!trLink) {
+        trLink = document.createElement('link');
+        trLink.setAttribute('rel', 'alternate');
+        trLink.setAttribute('hreflang', 'tr');
+        document.head.appendChild(trLink);
+      }
+      trLink.setAttribute('href', trHref);
+
+      let enLink = document.querySelector('link[rel="alternate"][hreflang="en"]');
+      if (!enLink) {
+        enLink = document.createElement('link');
+        enLink.setAttribute('rel', 'alternate');
+        enLink.setAttribute('hreflang', 'en');
+        document.head.appendChild(enLink);
+      }
+      enLink.setAttribute('href', enHref);
+
+      let xDefault = document.querySelector('link[rel="alternate"][hreflang="x-default"]');
+      if (!xDefault) {
+        xDefault = document.createElement('link');
+        xDefault.setAttribute('rel', 'alternate');
+        xDefault.setAttribute('hreflang', 'x-default');
+        document.head.appendChild(xDefault);
+      }
+      xDefault.setAttribute('href', trHref);
+
     } catch {
       // Ignore DOM errors in SSR or restricted environments
     }
-  }, [activeTab, selectedProject, selectedArticle, profile.name, profile.title]);
+  }, [activeTab, selectedProject, selectedArticle, currentProfile.name, currentProfile.title, lang]);
 
   const getPreparedMessage = () => {
     const parts: string[] = [];
@@ -2123,6 +2233,7 @@ export default function App() {
             >
               {navItems.map(item => {
                 const isActive = activeTab === item.id;
+                const isProjects = item.id === 'projects';
                 return (
                   <button
                     key={item.id}
@@ -2131,18 +2242,30 @@ export default function App() {
                       setActiveTab(item.id);
                       setMobileMenuOpen(false);
                     }}
-                    className={`px-2 sm:px-2.5 lg:px-3 py-1 rounded-full transition-all duration-200 font-medium cursor-pointer whitespace-nowrap text-[10.5px] sm:text-[11px] lg:text-xs shrink-0 ${
+                    className={`px-2.5 sm:px-3 lg:px-3.5 py-1 rounded-full transition-all duration-200 cursor-pointer whitespace-nowrap text-[11px] lg:text-xs shrink-0 flex items-center gap-1.5 ${
                       isActive 
                         ? (theme === 'terminal'
-                            ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/60 shadow-xs font-semibold'
-                            : 'bg-white/15 text-white font-semibold shadow-xs')
-                        : (theme === 'terminal'
-                            ? 'text-emerald-400/80 hover:text-emerald-300 hover:bg-emerald-950/30'
-                            : 'text-zinc-400 hover:text-white hover:bg-white/5')
+                            ? 'bg-emerald-500/25 text-emerald-300 border border-emerald-500/60 shadow-xs font-bold'
+                            : isProjects
+                              ? 'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 text-zinc-950 font-black shadow-md shadow-emerald-500/30'
+                              : 'bg-white/20 text-white font-bold shadow-xs')
+                        : isProjects
+                          ? 'text-emerald-300 bg-emerald-500/15 border border-emerald-500/35 hover:bg-emerald-500/25 hover:border-emerald-400 font-bold shadow-xs'
+                          : (theme === 'terminal'
+                              ? 'text-emerald-400/80 hover:text-emerald-300 hover:bg-emerald-950/30 font-medium'
+                              : 'text-zinc-400 hover:text-white hover:bg-white/5 font-medium')
                     }`}
                     id={`nav-btn-${item.id}`}
                   >
-                    {theme === 'terminal' ? (isActive ? `>${item.label}` : item.label) : item.label}
+                    {isProjects && (
+                      <span className={`w-1.5 h-1.5 rounded-full ${isActive ? 'bg-zinc-950' : 'bg-emerald-400 animate-pulse'}`} />
+                    )}
+                    <span>{theme === 'terminal' ? (isActive ? `>${item.label}` : item.label) : item.label}</span>
+                    {isProjects && (
+                      <span className={`text-[9.5px] font-mono px-1 py-0.2 rounded ${isActive ? 'bg-black/20 text-zinc-950' : 'bg-emerald-500/20 text-emerald-300'}`}>
+                        {mappedProjects.length}
+                      </span>
+                    )}
                   </button>
                 );
               })}
@@ -2220,7 +2343,6 @@ export default function App() {
                           </span>
                           <span>{theme === 'terminal' ? `> ${item.label.toUpperCase()}` : item.label}</span>
                         </span>
-                        <span className="text-[10px] text-emerald-400 font-extrabold">★</span>
                       </motion.button>
                     );
                   }
@@ -2273,19 +2395,39 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Mobile Socials Quick Strip */}
-                <div className="flex items-center justify-around py-1.5 px-2 bg-white/5 rounded-xl border border-white/10 text-zinc-300">
-                  <a href="https://github.com/Emirhan0008" target="_blank" rel="noopener noreferrer" className="p-1.5 hover:text-white" title="GitHub">
-                    <Github size={15} />
+                {/* Mobile Star Socials & Contact Strip */}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <a 
+                    href="https://github.com/Emirhan0008" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="py-2 px-3 rounded-xl bg-zinc-900/90 border border-white/25 hover:border-white/50 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all" 
+                    title="GitHub: Emirhan0008"
+                  >
+                    <Github size={15} className="text-white drop-shadow-[0_0_6px_rgba(255,255,255,0.8)]" />
+                    <span>GitHub</span>
                   </a>
-                  <a href="https://www.linkedin.com/in/emirhan-y%C4%B1lmaz-3357b5109" target="_blank" rel="noopener noreferrer" className="p-1.5 hover:text-blue-400" title="LinkedIn">
+                  <a 
+                    href="https://www.linkedin.com/in/emirhan-y%C4%B1lmaz-3357b5109" 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="py-2 px-3 rounded-xl bg-[#0a66c2]/25 border border-[#0a66c2]/60 text-sky-200 hover:text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all" 
+                    title="LinkedIn"
+                  >
                     <LinkedInIcon size={15} />
+                    <span>LinkedIn</span>
                   </a>
-                  <a href={`https://wa.me/?text=${encodeURIComponent(lang === 'tr' ? "Merhaba Emirhan Bey, sitenizden ulaşıyorum." : "Hello Emirhan, reaching out via your portfolio.")}`} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:text-emerald-400" title="WhatsApp">
-                    <WhatsAppIcon size={15} />
+                </div>
+
+                <div className="flex items-center justify-around py-1.5 px-2 bg-white/5 rounded-xl border border-white/10 text-zinc-300">
+                  <a href={`https://wa.me/?text=${encodeURIComponent(lang === 'tr' ? "Merhaba Emirhan Bey, sitenizden ulaşıyorum." : "Hello Emirhan, reaching out via your portfolio.")}`} target="_blank" rel="noopener noreferrer" className="p-1.5 hover:text-emerald-400 flex items-center gap-1.5 text-xs text-emerald-300 font-medium" title="WhatsApp">
+                    <WhatsAppIcon size={14} />
+                    <span>WhatsApp</span>
                   </a>
-                  <a href="mailto:emirhan0008@gmail.com" target="_blank" rel="noopener noreferrer" className="p-1.5 hover:text-rose-400" title="Gmail">
-                    <GmailIcon size={15} />
+                  <div className="w-[1px] h-3 bg-white/15" />
+                  <a href="mailto:emirhan0008@gmail.com" target="_blank" rel="noopener noreferrer" className="p-1.5 hover:text-rose-400 flex items-center gap-1.5 text-xs text-rose-300 font-medium" title="Gmail">
+                    <GmailIcon size={14} />
+                    <span>E-Posta</span>
                   </a>
                 </div>
 
@@ -2435,13 +2577,13 @@ export default function App() {
                       document.getElementById('projects-section-anchor')?.scrollIntoView({ behavior: 'smooth' });
                     }, 80);
                   }}
-                  className={`px-2 py-1.5 rounded-xl text-[10px] font-bold whitespace-nowrap active:scale-95 transition-all border ${
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold whitespace-nowrap active:scale-95 transition-all border ${
                     projectFilter === 'Öne Çıkanlar' && activeTab === 'projects'
-                      ? 'bg-emerald-500/25 text-emerald-300 border-emerald-400'
-                      : 'bg-zinc-900/80 text-emerald-300/90 border-emerald-500/30 hover:bg-emerald-500/10'
+                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/60 shadow-xs'
+                      : 'bg-zinc-900/80 text-zinc-300 border-white/10 hover:border-white/20 hover:text-white'
                   }`}
                 >
-                  ⭐ {lang === 'tr' ? 'Öne Çıkan' : 'Top'}
+                  {lang === 'tr' ? 'Öne Çıkan' : 'Top'}
                 </button>
                 <button
                   onClick={() => {
@@ -2454,13 +2596,13 @@ export default function App() {
                       document.getElementById('projects-section-anchor')?.scrollIntoView({ behavior: 'smooth' });
                     }, 80);
                   }}
-                  className={`px-2 py-1.5 rounded-xl text-[10px] font-bold whitespace-nowrap active:scale-95 transition-all border ${
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold whitespace-nowrap active:scale-95 transition-all border ${
                     projectFilter === 'Yapay Zeka' && activeTab === 'projects'
-                      ? 'bg-sky-500/25 text-sky-300 border-sky-400'
-                      : 'bg-zinc-900/80 text-sky-300/90 border-sky-500/30 hover:bg-sky-500/10'
+                      ? 'bg-sky-500/20 text-sky-300 border-sky-400/60 shadow-xs'
+                      : 'bg-zinc-900/80 text-zinc-300 border-white/10 hover:border-white/20 hover:text-white'
                   }`}
                 >
-                  🤖 AI
+                  AI
                 </button>
                 <button
                   onClick={() => {
@@ -2473,13 +2615,13 @@ export default function App() {
                       document.getElementById('projects-section-anchor')?.scrollIntoView({ behavior: 'smooth' });
                     }, 80);
                   }}
-                  className={`px-2 py-1.5 rounded-xl text-[10px] font-bold whitespace-nowrap active:scale-95 transition-all border ${
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold whitespace-nowrap active:scale-95 transition-all border ${
                     projectFilter === 'Python & Otomasyon' && activeTab === 'projects'
-                      ? 'bg-amber-500/25 text-amber-300 border-amber-400'
-                      : 'bg-zinc-900/80 text-amber-300/90 border-amber-500/30 hover:bg-amber-500/10'
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-400/60 shadow-xs'
+                      : 'bg-zinc-900/80 text-zinc-300 border-white/10 hover:border-white/20 hover:text-white'
                   }`}
                 >
-                  ⚡ Python
+                  Python
                 </button>
               </div>
             </div>
@@ -3189,13 +3331,13 @@ export default function App() {
                     {activeTab !== 'profile' && (
                       <div className="lg:hidden w-full p-2.5 rounded-xl bg-zinc-900/80 border border-emerald-500/30 flex items-center justify-between gap-2 shadow-md mb-2">
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
                           <div className="min-w-0">
-                            <p className="text-xs font-bold text-white truncate">
-                              {activeTab === 'projects' ? (lang === 'tr' ? '📁 Projeler Kataloğu' : '📁 Projects Catalog') :
-                               activeTab === 'articles' ? (lang === 'tr' ? '✍️ Makaleler & Yazılar' : '✍️ Articles') :
-                               activeTab === 'lab' ? (lang === 'tr' ? '🧪 AI Laboratuvarı' : '🧪 AI Lab') :
-                               (lang === 'tr' ? '✉️ İletişim & Randevu' : '✉️ Contact')}
+                            <p className="text-xs font-semibold text-white truncate">
+                              {activeTab === 'projects' ? (lang === 'tr' ? 'Projeler Kataloğu' : 'Projects Catalog') :
+                               activeTab === 'articles' ? (lang === 'tr' ? 'Makaleler & Yazılar' : 'Articles') :
+                               activeTab === 'lab' ? (lang === 'tr' ? 'AI Laboratuvarı' : 'AI Lab') :
+                               (lang === 'tr' ? 'İletişim & Randevu' : 'Contact')}
                             </p>
                             <p className="text-[10px] text-zinc-400 truncate">
                               {lang === 'tr' ? 'Aşağı kaydırarak inceleyebilirsiniz' : 'Scroll down to explore'}
@@ -3207,7 +3349,7 @@ export default function App() {
                             soundEngine.playTabSwitch();
                             setActiveTab('profile');
                           }}
-                          className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[10.5px] font-bold text-emerald-300 flex items-center gap-1 shrink-0 border border-emerald-500/25 cursor-pointer active:scale-95"
+                          className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[10.5px] font-medium text-emerald-300 flex items-center gap-1 shrink-0 border border-white/10 cursor-pointer active:scale-95"
                         >
                           <User size={11} />
                           <span>{lang === 'tr' ? 'Profil' : 'Profile'}</span>
@@ -3217,21 +3359,14 @@ export default function App() {
 
                     {/* Extended Profile Details & Bio (On mobile, only rendered when activeTab is profile) */}
                     <div className={`${activeTab !== 'profile' ? 'hidden lg:flex' : 'flex'} flex-col gap-3.5 lg:gap-4 w-full`}>
-                      {/* Compact Status Badges Strip (Avatar & Name are unified in top header row) */}
-                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full">
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 bg-zinc-900/80 rounded-full text-[11px] sm:text-xs text-emerald-400 font-medium border border-white/10 shadow-sm">
-                          <Brain size={12} className="text-emerald-400 shrink-0" />
-                          <span className="truncate">PDR (Psikolojik Danışmanlık) &amp; Yapay Zeka</span>
-                        </div>
-                        <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 bg-emerald-500/10 rounded-full text-[11px] sm:text-xs text-emerald-300 font-medium border border-emerald-500/25 select-none">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                          <span className="truncate">{lang === 'tr' ? 'Yeni Projeler İçin Müsait' : 'Available for Collaboration'}</span>
-                        </div>
-                      <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:py-1 bg-zinc-900/80 rounded-full text-[11px] sm:text-xs text-zinc-300 font-medium border border-white/10 shadow-sm">
-                        <GraduationCap size={12} className="text-sky-400 shrink-0" />
-                        <span className="truncate">{lang === 'tr' ? 'Aksaray Üniv. PDR · 3 Yıl Özel Eğitim' : 'Aksaray Univ. GPC · 3 Yrs Special Ed'}</span>
+                      {/* Quiet Typographic Metadata Strip (Zero-Pill Discipline) */}
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-zinc-400 font-normal select-none">
+                        <span className="text-emerald-400 font-medium">PDR &amp; Yapay Zeka Sistemleri</span>
+                        <span aria-hidden="true" className="text-zinc-600">·</span>
+                        <span className="text-zinc-300">{lang === 'tr' ? 'Aksaray Üniv. PDR · 3 Yıl Özel Eğitim' : 'Aksaray Univ. GPC · 3 Yrs Special Ed'}</span>
+                        <span aria-hidden="true" className="text-zinc-600">·</span>
+                        <span className="text-emerald-300/90">{lang === 'tr' ? 'Yeni Projeler İçin Müsait' : 'Available for Collaboration'}</span>
                       </div>
-                    </div>
 
                     <div className="space-y-3.5 w-full">
 
@@ -3310,42 +3445,63 @@ export default function App() {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                    <div className="flex flex-wrap items-center gap-2.5 pt-2 w-full">
+                      {/* Standout Primary CTA: Projelerimi İncele */}
                       <button 
                         onClick={() => {
                           soundEngine.playTabSwitch();
                           setActiveTab('projects');
                         }}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 rounded-xl text-xs sm:text-sm font-semibold transition-all group active:scale-98 cursor-pointer shadow-sm hover:scale-[1.02]"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-400 via-teal-300 to-emerald-400 hover:from-emerald-300 hover:to-teal-200 text-zinc-950 font-black text-xs sm:text-sm rounded-xl shadow-[0_0_24px_rgba(52,211,153,0.35)] hover:shadow-[0_0_32px_rgba(52,211,153,0.55)] hover:scale-[1.03] active:scale-95 transition-all cursor-pointer group"
                         id="cta-explore-projects"
                       >
-                        <Code2 size={14} className="text-zinc-950" />
-                        <span>{lang === 'tr' ? 'Projeleri İncele' : 'Explore Projects'}</span>
-                        <ArrowRight size={13} className="text-zinc-950 group-hover:translate-x-0.5 transition-transform" />
+                        <Code2 size={16} className="text-zinc-950 shrink-0" />
+                        <span>{lang === 'tr' ? 'Projelerimi İncele' : 'Explore My Projects'}</span>
+                        <span className="px-1.5 py-0.5 rounded-md bg-black/15 text-zinc-950 text-[10px] font-mono font-bold">
+                          {mappedProjects.length}+
+                        </span>
+                        <ArrowRight size={14} className="text-zinc-950 group-hover:translate-x-1 transition-transform shrink-0" />
                       </button>
 
+                      {/* Standout GitHub Button */}
+                      <a
+                        href={profile.github || "https://github.com/Emirhan0008"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => soundEngine.playGlassClick()}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900/90 hover:bg-zinc-800 text-white rounded-xl text-xs sm:text-sm font-semibold transition-all border border-white/20 hover:border-white/40 shadow-md hover:shadow-[0_0_18px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-95 group cursor-pointer"
+                        title={`GitHub: ${profile.name}`}
+                      >
+                        <Github size={15} className="text-white group-hover:scale-110 transition-transform shrink-0 drop-shadow-[0_0_6px_rgba(255,255,255,0.7)]" />
+                        <span>GitHub</span>
+                        <ExternalLink size={11} className="text-zinc-400 group-hover:text-white transition-colors opacity-70 shrink-0" />
+                      </a>
+
+                      {/* Standout LinkedIn Button */}
+                      <a
+                        href="https://www.linkedin.com/in/emirhan-y%C4%B1lmaz-3357b5109"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => soundEngine.playGlassClick()}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#0a66c2]/25 hover:bg-[#0a66c2]/40 text-sky-200 hover:text-white rounded-xl text-xs sm:text-sm font-semibold transition-all border border-[#0a66c2]/50 hover:border-sky-400 shadow-md hover:shadow-[0_0_20px_rgba(10,102,194,0.35)] hover:scale-[1.02] active:scale-95 group cursor-pointer"
+                        title="LinkedIn: Emirhan Yılmaz"
+                      >
+                        <LinkedInIcon size={16} className="text-sky-400 group-hover:text-white group-hover:scale-110 transition-transform shrink-0 drop-shadow-[0_0_8px_rgba(14,165,233,0.6)]" />
+                        <span>LinkedIn</span>
+                        <ExternalLink size={11} className="text-sky-300 group-hover:text-white transition-colors opacity-70 shrink-0" />
+                      </a>
+
+                      {/* Quick Contact CTA */}
                       <button 
                         onClick={() => {
                           soundEngine.playTabSwitch();
                           setActiveTab('contact');
                         }}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 bg-zinc-900 hover:bg-zinc-800 text-zinc-200 hover:text-white rounded-xl text-xs sm:text-sm font-medium transition-all active:scale-98 border border-white/10 hover:border-white/20 cursor-pointer"
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white rounded-xl text-xs sm:text-sm font-medium transition-all active:scale-98 border border-white/10 hover:border-white/20 cursor-pointer"
                       >
-                        <Mail size={13} className="text-emerald-400" />
-                        <span>{lang === 'tr' ? 'İletişime Geç' : 'Get in Touch'}</span>
+                        <Mail size={13} className="text-emerald-400 shrink-0" />
+                        <span>{lang === 'tr' ? 'İletişim' : 'Contact'}</span>
                       </button>
-
-                      <a
-                        href={profile.github || "https://github.com/Emirhan0008"}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-3.5 py-2.5 bg-zinc-900 hover:bg-zinc-800 rounded-xl text-xs font-mono text-zinc-300 hover:text-white transition-all border border-white/10 hover:border-white/20"
-                        title={`GitHub: ${profile.name}`}
-                      >
-                        <Github size={13} className="text-white/80" />
-                        <span>GitHub</span>
-                        <ExternalLink size={10} className="opacity-60" />
-                      </a>
                     </div>
                   </div>
                 </div>
@@ -3933,18 +4089,18 @@ export default function App() {
                             soundEngine.playTabSwitch();
                             setCaseStudyOnlyFilter(!caseStudyOnlyFilter);
                           }}
-                          className={`px-2.5 py-1 rounded-md transition-all font-bold cursor-pointer flex items-center gap-1 border shrink-0 ${
+                          className={`px-2.5 py-1 rounded-md transition-all font-bold cursor-pointer flex items-center gap-1.5 border shrink-0 ${
                             caseStudyOnlyFilter
                               ? 'bg-emerald-500 text-black border-emerald-400 font-extrabold shadow-sm'
                               : 'text-emerald-300 border-emerald-500/40 hover:text-white hover:bg-emerald-500/20'
                           }`}
                         >
-                          <Layers size={10} />
-                          <span>{lang === 'tr' ? '💎 Mimari Detaylı' : '💎 In-Depth Specs'}</span>
+                          <Layers size={11} className={caseStudyOnlyFilter ? 'text-black' : 'text-emerald-400'} />
+                          <span>{lang === 'tr' ? 'Mimari Çözümler' : 'Architecture & Specs'}</span>
                         </button>
                         {[
                           { id: 'Tümü', label: t.filter.categories.all },
-                          { id: 'Öne Çıkanlar', label: lang === 'tr' ? '⭐ Öne Çıkanlar' : '⭐ Highlights' },
+                          { id: 'Öne Çıkanlar', label: lang === 'tr' ? 'Öne Çıkanlar' : 'Highlights' },
                           { id: 'Web & Bulut', label: t.filter.categories.webCloud },
                           { id: 'Yapay Zeka', label: t.filter.categories.dataAi },
                           { id: 'Python & Otomasyon', label: t.filter.categories.automationScript },
@@ -4021,9 +4177,10 @@ export default function App() {
                             {lang === 'tr' ? 'Aktif Filtreler:' : 'Active Filters:'}
                           </span>
                           {caseStudyOnlyFilter && (
-                            <span className="px-2.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-[10px] font-bold text-emerald-300 flex items-center gap-1">
-                              💎 {lang === 'tr' ? 'Mimari Detaylı' : 'In-Depth Specs'}
-                              <button onClick={() => setCaseStudyOnlyFilter(false)} className="hover:text-red-400">×</button>
+                            <span className="px-2.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-[10px] font-semibold text-emerald-300 flex items-center gap-1.5">
+                              <Layers size={10} className="text-emerald-400" />
+                              <span>{lang === 'tr' ? 'Mimari Çözümler' : 'Case Studies'}</span>
+                              <button onClick={() => setCaseStudyOnlyFilter(false)} className="hover:text-red-400 ml-0.5">×</button>
                             </span>
                           )}
                           {projectFilter !== 'Tümü' && (
@@ -4118,12 +4275,12 @@ export default function App() {
                               setSelectedProject(project);
                               setProjectDetailTab('casestudy');
                             }}
-                            className={`project-catalog-card group cursor-pointer p-4 liquid-glass border ${
+                            className={`project-catalog-card group cursor-pointer p-4 rounded-2xl transition-all duration-300 border ${
                               currentSelectedProject?.id === project.id 
-                                ? 'ring-2 ring-emerald-400 border-emerald-400 bg-white/10 shadow-lg shadow-emerald-500/10' 
+                                ? 'ring-1 ring-emerald-400/80 border-emerald-400/80 bg-zinc-900/90 shadow-md shadow-emerald-950/40' 
                                 : project.isFeatured 
-                                  ? 'border-emerald-500/40 bg-emerald-950/25 hover:border-emerald-400/80 hover:shadow-lg hover:shadow-emerald-500/15'
-                                  : 'border-white/10 bg-black/40 hover:border-white/25 hover:bg-white/5'
+                                  ? 'border-emerald-500/30 bg-zinc-950/85 hover:border-emerald-400/60 hover:bg-zinc-900/60 shadow-xs'
+                                  : 'border-white/[0.08] bg-zinc-950/75 hover:border-white/20 hover:bg-zinc-900/50'
                             }`}
                           >
                             <div className="flex flex-col gap-3">
@@ -4144,8 +4301,8 @@ export default function App() {
                                 {/* Project Status Badge (Sadece Öne Çıkan) */}
                                 <div className="absolute top-2.5 left-2.5 z-10">
                                   {project.isFeatured && (
-                                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-black/80 text-emerald-300 border border-emerald-500/30 backdrop-blur-md">
-                                      <span className="text-emerald-400">★</span>
+                                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-semibold bg-zinc-950/80 text-emerald-300 border border-emerald-500/30 backdrop-blur-md">
+                                      <Sparkles size={10} className="text-emerald-400" />
                                       <span>{lang === 'tr' ? 'Öne Çıkan' : 'Featured'}</span>
                                     </span>
                                   )}
@@ -4217,44 +4374,55 @@ export default function App() {
 
                               {/* Content Header & Title */}
                               <div className="flex flex-col gap-1">
-                                <span className="text-[10px] uppercase font-mono tracking-wider text-emerald-400 font-bold truncate">
-                                  {project.category}
-                                </span>
-                                <h3 className="text-sm font-extrabold text-white group-hover:text-emerald-300 transition-colors leading-snug truncate">
+                                <div className="flex items-center justify-between text-[11px] font-mono">
+                                  <span className="uppercase tracking-wider text-emerald-400 font-medium truncate">
+                                    {project.category}
+                                  </span>
+                                  {project.caseStudy && (
+                                    <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                                      <Layers size={10} className="text-emerald-500/70" />
+                                      <span>{lang === 'tr' ? 'Mimari Çözüm' : 'Case Study'}</span>
+                                    </span>
+                                  )}
+                                </div>
+                                <h3 className="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors leading-snug tracking-tight truncate">
                                   <HighlightText text={project.title} query={searchQuery} />
                                 </h3>
-                                <p className="text-xs text-white/75 leading-relaxed line-clamp-2 mt-0.5">
+                                <p className="text-xs text-zinc-300 leading-relaxed line-clamp-2 mt-0.5">
                                   {project.description}
                                 </p>
                               </div>
                             </div>
 
-                            {/* Card Footer: Tech Chips + Quick Actions */}
+                            {/* Card Footer: Tech Stack (Unboxed Typographic Discipline) + Quick Actions */}
                             <div className="pt-3 mt-3 border-t border-white/10 flex items-center justify-between gap-2">
-                              {/* Tech Stack Chips */}
-                              <div className="flex flex-wrap gap-1 items-center overflow-hidden max-h-[24px]">
+                              {/* Tech Stack - Quiet Typographic Separators */}
+                              <div className="flex items-center gap-1.5 overflow-hidden text-[10.5px] font-mono text-zinc-400">
                                 {project.tech.slice(0, 3).map((tItem, tIdx) => {
                                   const isSelected = selectedTech === tItem;
                                   return (
-                                    <span 
-                                      key={tIdx} 
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        soundEngine.playGlassClick();
-                                        setSelectedTech(isSelected ? null : tItem);
-                                      }}
-                                      className={`text-[9px] font-mono px-1.5 py-0.5 rounded transition-all cursor-pointer ${
-                                        isSelected 
-                                          ? 'bg-emerald-500 text-black font-extrabold' 
-                                          : 'bg-white/5 text-white/70 hover:text-white hover:bg-white/15 border border-white/5'
-                                      }`}
-                                    >
-                                      {tItem}
+                                    <span key={tIdx} className="inline-flex items-center gap-1.5 shrink-0">
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          soundEngine.playGlassClick();
+                                          setSelectedTech(isSelected ? null : tItem);
+                                        }}
+                                        className={`hover:text-white transition-colors cursor-pointer ${
+                                          isSelected ? 'text-emerald-400 font-bold underline' : 'text-zinc-400'
+                                        }`}
+                                      >
+                                        {tItem}
+                                      </button>
+                                      {tIdx < Math.min(project.tech.length, 3) - 1 && (
+                                        <span aria-hidden="true" className="text-zinc-600">·</span>
+                                      )}
                                     </span>
                                   );
                                 })}
                                 {project.tech.length > 3 && (
-                                  <span className="text-[9px] text-white/40 font-mono">+{project.tech.length - 3}</span>
+                                  <span className="text-[9.5px] text-zinc-500 font-mono">+{project.tech.length - 3}</span>
                                 )}
                               </div>
 
@@ -4500,7 +4668,8 @@ export default function App() {
                             }}
                             className="text-emerald-400 hover:text-emerald-300 font-bold underline cursor-pointer flex items-center gap-1"
                           >
-                            <span>⚡ {lang === 'tr' ? 'Mimari Hesapla' : 'Estimator'}</span>
+                            <Wand2 size={11} className="text-emerald-400" />
+                            <span>{lang === 'tr' ? 'Mimari Hesapla' : 'Estimator'}</span>
                           </button>
                           <button
                             type="button"
@@ -4508,9 +4677,10 @@ export default function App() {
                               soundEngine.playGlassClick();
                               setShowMediaKitModal(true);
                             }}
-                            className="text-white/60 hover:text-white font-semibold underline cursor-pointer flex items-center gap-1"
+                            className="text-white/60 hover:text-white font-medium underline cursor-pointer flex items-center gap-1.5"
                           >
-                            <span>📁 {lang === 'tr' ? 'Medya Kiti' : 'Media Kit'}</span>
+                            <FileText size={11} className="text-zinc-400" />
+                            <span>{lang === 'tr' ? 'Medya Kiti' : 'Media Kit'}</span>
                           </button>
                         </div>
                       </div>
