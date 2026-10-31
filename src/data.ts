@@ -9,8 +9,8 @@ import projectSpecialEdu from './assets/images/project_special_edu_1782982504669
 export const profileData = {
   name: "Emirhan YILMAZ",
   title: "Psikolojik Danışman & AI/Yazılım Geliştirici",
-  avatar: "/profile-photo.jpg",
-  logo: "/logo.png",
+  avatar: "/profile-photo.webp",
+  logo: "/logo.webp",
   about: "Aksaray Üniversitesi PDR mezunuyum. İnsan psikolojisi ve 3 yıllık özel eğitim saha tecrübemi; modern yapay zeka (LLM / Multimodal Vision), mobil ve Python otomasyonlarıyla harmanlıyorum. Bilişsel yükü azaltan, insan odaklı dijital sağlık, eğitim teknolojileri ve sistem otomasyonları inşa ediyorum.",
   education: {
     school: "Aksaray Üniversitesi",

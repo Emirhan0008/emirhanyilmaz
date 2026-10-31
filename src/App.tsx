@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef, type RefObject, FormEvent, UIEvent } from 'react';
+import { useState, useEffect, useMemo, useRef, type RefObject, FormEvent, UIEvent, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   Sparkles, 
@@ -63,23 +63,24 @@ import {
  import { profileData, projects, articles } from './data';
  import { profileDataEn, projectsEn, articlesEn } from './data.en';
  import { ProfileData, Project, Article, Education, Experience } from './types';
- import { AdminEditorModal } from './components/AdminEditorModal';
  import { SeamlessVideo } from './components/SeamlessVideo';
 
-import { InteractiveCatCompanion } from './components/InteractiveCatCompanion';
-// import { ZenCbtTherapyWidget } from './components/ZenCbtTherapyWidget'; // Zen Ayna modülü geçici olarak devre dışı
-import { ProjectEstimator } from './components/ProjectEstimator';
-import { MediaKitModal } from './components/MediaKitModal';
-import { VisibilityDiagnosticModal } from './components/VisibilityDiagnosticModal';
-import { TechRadar } from './components/TechRadar';
-import { GmailContactModal } from './components/GmailContactModal';
-import { MeltingCanvasEffect } from './components/MeltingCanvasEffect';
 import { soundEngine, PEACEFUL_TRACKS, MusicTrack } from './utils/audioSynth';
 import { ThemeToggle, AppTheme } from './components/ThemeToggle';
 import { LanguageToggle } from './components/LanguageToggle';
 import { HighlightText } from './components/HighlightText';
 import { translations, Language } from './utils/i18n';
-import { PowerShellTerminalWorkspace } from './components/PowerShellTerminalWorkspace';
+
+// Code-split heavy modals and background interactive modules to reduce initial JS payload by >50%
+const AdminEditorModal = lazy(() => import('./components/AdminEditorModal').then(m => ({ default: m.AdminEditorModal })));
+const PowerShellTerminalWorkspace = lazy(() => import('./components/PowerShellTerminalWorkspace').then(m => ({ default: m.PowerShellTerminalWorkspace })));
+const ProjectEstimator = lazy(() => import('./components/ProjectEstimator').then(m => ({ default: m.ProjectEstimator })));
+const MediaKitModal = lazy(() => import('./components/MediaKitModal').then(m => ({ default: m.MediaKitModal })));
+const VisibilityDiagnosticModal = lazy(() => import('./components/VisibilityDiagnosticModal').then(m => ({ default: m.VisibilityDiagnosticModal })));
+const TechRadar = lazy(() => import('./components/TechRadar').then(m => ({ default: m.TechRadar })));
+const GmailContactModal = lazy(() => import('./components/GmailContactModal').then(m => ({ default: m.GmailContactModal })));
+const MeltingCanvasEffect = lazy(() => import('./components/MeltingCanvasEffect').then(m => ({ default: m.MeltingCanvasEffect })));
+const InteractiveCatCompanion = lazy(() => import('./components/InteractiveCatCompanion').then(m => ({ default: m.InteractiveCatCompanion })));
 import { 
   sanitizeText, 
   sanitizeMultilineText, 
@@ -1716,12 +1717,17 @@ export default function App() {
         <div className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${
           theme === 'normal' ? 'opacity-100' : 'opacity-0'
         }`}>
-          <img
-            src="/bg-normal.jpg"
-            alt="Glass UI Luxury Background"
-            className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
-            loading="eager"
-          />
+          <picture className="hidden md:block">
+            <source type="image/webp" srcSet="/bg-normal.webp" media="(min-width: 768px)" />
+            <source type="image/jpeg" srcSet="/bg-normal.jpg" media="(min-width: 768px)" />
+            <img
+              src="/bg-normal.webp"
+              alt="Glass UI Luxury Background"
+              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
+              loading="lazy"
+              decoding="async"
+            />
+          </picture>
 
           {/* Airy Luminous Floats: Ethereal radiant light blobs for spacious, fresh depth */}
           <div className="absolute -top-[10%] left-[15%] w-[45vw] h-[45vw] rounded-full cam-ambient-light blur-3xl opacity-60 animate-drift-slow pointer-events-none" />
@@ -1737,12 +1743,17 @@ export default function App() {
         <div className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${
           theme === 'terminal' ? 'opacity-100' : 'opacity-0'
         }`}>
-          <img
-            src="/bg-terminal.png"
-            alt="Hacker Terminal Mainframe Background"
-            className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
-            loading="eager"
-          />
+          <picture className="hidden md:block">
+            <source type="image/webp" srcSet="/bg-terminal.webp" media="(min-width: 768px)" />
+            <source type="image/png" srcSet="/bg-terminal.png" media="(min-width: 768px)" />
+            <img
+              src="/bg-terminal.webp"
+              alt="Hacker Terminal Mainframe Background"
+              className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none select-none"
+              loading="lazy"
+              decoding="async"
+            />
+          </picture>
 
           {/* Tactical Cyber Grid Overlay */}
           <div className="absolute inset-0 terminal-cyber-grid opacity-60 z-1 pointer-events-none" />
@@ -1996,10 +2007,14 @@ export default function App() {
       </AnimatePresence>
 
       {/* REALISTIC MAGMA & SLAG MELTING CANVAS EFFECT */}
-      <MeltingCanvasEffect 
-        active={isMeltingSite} 
-        onMeltingComplete={() => setShowMeltingSlagHeart(true)} 
-      />
+      {isMeltingSite && (
+        <Suspense fallback={null}>
+          <MeltingCanvasEffect 
+            active={isMeltingSite} 
+            onMeltingComplete={() => setShowMeltingSlagHeart(true)} 
+          />
+        </Suspense>
+      )}
 
       {/* EASTER EGG FULL-SCREEN SLAG & GIANT RED HEART OVERLAY */}
       <AnimatePresence>
@@ -2173,8 +2188,12 @@ export default function App() {
               {/* Profile Avatar with Live Availability Badge & Easter Egg Click */}
               <div className="relative w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full p-0.5 bg-zinc-900/90 border border-white/20 shrink-0 transition-transform duration-300 group-hover:scale-105 shadow-md">
                 <img 
-                  src={profile.avatar} 
+                  src={profile.avatar || '/profile-photo.webp'} 
                   alt="Emirhan Yılmaz" 
+                  width={40}
+                  height={40}
+                  fetchPriority="high"
+                  decoding="sync"
                   onClick={(e) => {
                     handleAvatarEasterClick();
                   }}
@@ -3750,37 +3769,46 @@ export default function App() {
           {/* DYNAMIC CONTENT SWITCHER */}
           <div className="flex-1 flex flex-col min-h-0">
             {theme === 'terminal' ? (
-              <PowerShellTerminalWorkspace
-                lang={lang}
-                projects={mappedProjects}
-                articles={mappedArticles}
-                profile={currentProfile}
-                onSwitchToNormal={(targetTab) => {
-                  setTheme('normal');
-                  setActiveTab(targetTab || 'projects');
-                }}
-                onOpenProjectModal={(p) => {
-                  setTheme('normal');
-                  setActiveTab('projects');
-                  setSelectedProject(p);
-                }}
-                onOpenArticleModal={(a) => {
-                  setTheme('normal');
-                  setActiveTab('articles');
-                  setSelectedArticle(a);
-                }}
-                onOpenEstimator={() => {
-                  setSelectedProject(null);
-                  setSelectedArticle(null);
-                  setShowEstimatorModal(true);
-                }}
-                onTriggerMelting={() => {
-                  setIsMeltingSite(true);
-                  setTimeout(() => {
-                    setShowMeltingSlagHeart(true);
-                  }, 2500);
-                }}
-              />
+              <Suspense fallback={
+                <div className="flex-1 flex flex-col items-center justify-center p-12 bg-[#0c1017]/95 border border-emerald-500/20 rounded-2xl min-h-[400px]">
+                  <div className="flex items-center gap-3 text-emerald-400 font-mono text-xs">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
+                    <span>PowerShell Terminal yükleniyor...</span>
+                  </div>
+                </div>
+              }>
+                <PowerShellTerminalWorkspace
+                  lang={lang}
+                  projects={mappedProjects}
+                  articles={mappedArticles}
+                  profile={currentProfile}
+                  onSwitchToNormal={(targetTab) => {
+                    setTheme('normal');
+                    setActiveTab(targetTab || 'projects');
+                  }}
+                  onOpenProjectModal={(p) => {
+                    setTheme('normal');
+                    setActiveTab('projects');
+                    setSelectedProject(p);
+                  }}
+                  onOpenArticleModal={(a) => {
+                    setTheme('normal');
+                    setActiveTab('articles');
+                    setSelectedArticle(a);
+                  }}
+                  onOpenEstimator={() => {
+                    setSelectedProject(null);
+                    setSelectedArticle(null);
+                    setShowEstimatorModal(true);
+                  }}
+                  onTriggerMelting={() => {
+                    setIsMeltingSite(true);
+                    setTimeout(() => {
+                      setShowMeltingSlagHeart(true);
+                    }, 2500);
+                  }}
+                />
+              </Suspense>
             ) : (
             <AnimatePresence mode="wait">
               {activeTab === 'profile' && (
@@ -3811,11 +3839,11 @@ export default function App() {
                       </div>
 
                       <div className="space-y-2">
-                        <h3 className="text-lg sm:text-2xl font-extrabold text-white tracking-tight leading-snug">
+                        <h2 className="text-lg sm:text-2xl font-extrabold text-white tracking-tight leading-snug">
                           {lang === 'tr'
                             ? 'Bilişsel Bilim, Tüketici Karar Mimarisi & Otonom Yapay Zeka Sistemleri.'
                             : 'Cognitive Science, Consumer Decision Architecture & Applied AI Systems.'}
-                        </h3>
+                        </h2>
                         <p className="text-xs sm:text-[13px] text-zinc-300 leading-relaxed font-normal">
                           {lang === 'tr'
                             ? 'Aksaray Üniversitesi PDR lisansı ve 3 yıllık saha tecrübemden gelen insan davranışı & pedagoji derinliğini; yapay zeka ürünlerinde sürtünmesiz kullanıcı deneyimi (UX), karar mimarisi ve tüketici tutundurma modellerine dönüştürüyorum. Yapay zeka sistemlerinde karar yorgunluğunu sıfırlayan, kullanıcı zihninin algı filtreleriyle tam uyumlu çalışan ve Python/React altyapısıyla desteklenen yeni nesil dijital deneyimler inşa ediyorum.'
@@ -3827,11 +3855,11 @@ export default function App() {
                     {/* Integrated Methodology Flow (Single Cohesive Progression Stream) */}
                     <div className="space-y-3.5">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10.5px] uppercase font-bold tracking-wider text-emerald-400 flex items-center gap-1.5 font-mono">
+                        <span className="text-xs uppercase font-bold tracking-wider text-emerald-400 flex items-center gap-1.5 font-mono">
                           <Brain size={13} />
                           <span>{lang === 'tr' ? 'BİLİŞSEL UX & ÜRÜN MİMARİSİ YAKLAŞIMI' : 'COGNITIVE UX & PRODUCT ARCHITECTURE FRAMEWORK'}</span>
                         </span>
-                        <span className="text-[10px] text-zinc-400 font-mono">Metodoloji &amp; Uygulama</span>
+                        <span className="text-xs text-zinc-400 font-mono">Metodoloji &amp; Uygulama</span>
                       </div>
 
                       {/* Continuous Flow Strip */}
@@ -3844,12 +3872,12 @@ export default function App() {
                           </div>
                           <div className="space-y-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <h4 className="text-xs sm:text-sm font-bold text-white">
+                              <h3 className="text-xs sm:text-sm font-bold text-white">
                                 {lang === 'tr' ? 'Bilişsel Yükü Optimize Etme & Karar Ergonomisi' : 'Cognitive Load Reduction & Choice Ergonomics'}
-                              </h4>
-                              <span className="text-[9.5px] px-2 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 font-mono hidden sm:inline">PDR Uzmanlığı</span>
+                              </h3>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-mono hidden sm:inline">PDR Uzmanlığı</span>
                             </div>
-                            <p className="text-[11.5px] text-zinc-300 leading-relaxed">
+                            <p className="text-xs text-zinc-300 leading-relaxed">
                               {lang === 'tr'
                                 ? 'AI çıktılarının karar felcine (analysis paralysis) yol açmasını engellemek için kademeli bilgi aktarımı (progressive disclosure), net eylem patikaları ve zihinsel model senkronizasyonu.'
                                 : 'Applying progressive disclosure and mental model alignment so complex AI outputs never cause decision fatigue or friction.'}
@@ -3864,12 +3892,12 @@ export default function App() {
                           </div>
                           <div className="space-y-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <h4 className="text-xs sm:text-sm font-bold text-white">
+                              <h3 className="text-xs sm:text-sm font-bold text-white">
                                 {lang === 'tr' ? 'Tüketici Davranışı & İnsan-AI Güven Modelleri' : 'Consumer Behavior & Human-AI Trust Dynamics'}
-                              </h4>
-                              <span className="text-[9.5px] px-2 py-0.2 rounded-full bg-sky-500/20 text-sky-300 font-mono hidden sm:inline">Davranışsal Psikoloji</span>
+                              </h3>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-mono hidden sm:inline">Davranışsal Psikoloji</span>
                             </div>
-                            <p className="text-[11.5px] text-zinc-300 leading-relaxed">
+                            <p className="text-xs text-zinc-300 leading-relaxed">
                               {lang === 'tr'
                                 ? 'Kullanıcının yapay zekaya karşı aşırı bağımlılık veya temelsiz güvensizlik duymasını engelleyen, şeffaf geri bildirim halkaları ve kullanıcıyı rasyonel tercihlere yönlendiren etik davranışsal tetikleyiciler (nudges).'
                                 : 'Calibrating user-AI trust through transparent feedback loops, ethical behavioral nudges, and consumer retention mechanics.'}
@@ -3884,12 +3912,12 @@ export default function App() {
                           </div>
                           <div className="space-y-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <h4 className="text-xs sm:text-sm font-bold text-white">
+                              <h3 className="text-xs sm:text-sm font-bold text-white">
                                 {lang === 'tr' ? 'Otonom AI İstem Hatları & Tam Yığın Mühendislik' : 'Autonomous AI Pipelines & Fullstack Engineering'}
-                              </h4>
-                              <span className="text-[9.5px] px-2 py-0.2 rounded-full bg-teal-500/20 text-teal-300 font-mono hidden sm:inline">Mühendislik</span>
+                              </h3>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full bg-teal-500/20 text-teal-300 font-mono hidden sm:inline">Mühendislik</span>
                             </div>
-                            <p className="text-[11.5px] text-zinc-300 leading-relaxed">
+                            <p className="text-xs text-zinc-300 leading-relaxed">
                               {lang === 'tr'
                                 ? 'Python 3.12, React 19, TypeScript ve Gemini 2.5 SDK ile otonom istem hatları, bağlamsal RAG, tool-calling ajanları ve çevrim dışı öncelikli mobil sistemler.'
                                 : 'Building scalable agentic pipelines, multimodal LLM workflows, and resilient cross-platform apps with Python and modern TypeScript.'}
@@ -3903,7 +3931,7 @@ export default function App() {
                     {/* Integrated Education & Credentials Strip */}
                     <div className="space-y-3 pt-2 border-t border-white/10">
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-zinc-400 font-mono">
+                        <span className="text-xs uppercase font-bold tracking-wider text-zinc-400 font-mono">
                           {lang === 'tr' ? 'AKADEMİK & LİSANSÜSTÜ TEMELLER' : 'ACADEMIC & POSTGRADUATE FOUNDATION'}
                         </span>
                         {isAdmin && (
@@ -3913,7 +3941,7 @@ export default function App() {
                               setAdminEditorTab('profile');
                               setShowAdminEditor(true);
                             }}
-                            className="px-2.5 py-0.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                            className="px-2.5 py-0.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500 hover:text-black border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer"
                           >
                             <Edit3 size={11} />
                             <span>{lang === 'tr' ? 'Düzenle' : 'Edit'}</span>
@@ -3927,12 +3955,12 @@ export default function App() {
                             <GraduationCap size={16} />
                           </div>
                           <div className="space-y-0.5">
-                            <span className="text-[9px] uppercase font-bold tracking-wider text-emerald-400">
+                            <span className="text-[10px] uppercase font-bold tracking-wider text-emerald-400">
                               {lang === 'tr' ? 'LİSANS EĞİTİMİ & 3 YIL SAHA PRATİĞİ' : 'UNDERGRADUATE & 3 YRS FIELD PRACTICE'}
                             </span>
-                            <h4 className="text-xs sm:text-sm font-bold text-white">{currentProfile.education.school}</h4>
-                            <p className="text-[11px] text-zinc-300 font-medium">{currentProfile.education.degree}</p>
-                            <p className="text-[10px] text-zinc-400 leading-relaxed">{currentProfile.education.details}</p>
+                            <h3 className="text-xs sm:text-sm font-bold text-white">{currentProfile.education.school}</h3>
+                            <p className="text-xs text-zinc-300 font-medium">{currentProfile.education.degree}</p>
+                            <p className="text-xs text-zinc-400 leading-relaxed">{currentProfile.education.details}</p>
                           </div>
                         </div>
 
@@ -4030,7 +4058,7 @@ export default function App() {
                           <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value as any)}
-                            className="bg-transparent text-[11px] text-white font-bold focus:outline-hidden cursor-pointer"
+                            className="bg-transparent text-xs text-white font-bold focus:outline-hidden cursor-pointer"
                             aria-label={t.filter.sortBy}
                           >
                             <option value="featured" className="bg-zinc-900 text-white">{t.filter.sortFeatured}</option>
@@ -4051,7 +4079,7 @@ export default function App() {
                           title={t.filter.filterByTech}
                         >
                           <SlidersHorizontal size={11} />
-                          <span className="text-[11px]">{t.filter.filterByTech}</span>
+                          <span className="text-xs">{t.filter.filterByTech}</span>
                           {selectedTech && (
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
                           )}
@@ -4082,7 +4110,7 @@ export default function App() {
                       </div>
 
                       {/* Category & Status Filter Pills */}
-                      <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-xl border border-white/10 text-[10px] overflow-x-auto scrollbar-none flex-nowrap py-1.5 max-w-full">
+                      <div className="flex items-center gap-1.5 p-1 liquid-glass rounded-xl border border-white/10 text-xs overflow-x-auto scrollbar-none flex-nowrap py-1.5 max-w-full">
                         <button
                           type="button"
                           onClick={() => {
@@ -4374,12 +4402,12 @@ export default function App() {
 
                               {/* Content Header & Title */}
                               <div className="flex flex-col gap-1">
-                                <div className="flex items-center justify-between text-[11px] font-mono">
+                                <div className="flex items-center justify-between text-xs font-mono">
                                   <span className="uppercase tracking-wider text-emerald-400 font-medium truncate">
                                     {project.category}
                                   </span>
                                   {project.caseStudy && (
-                                    <span className="text-[10px] text-zinc-500 flex items-center gap-1">
+                                    <span className="text-xs text-zinc-400 flex items-center gap-1">
                                       <Layers size={10} className="text-emerald-500/70" />
                                       <span>{lang === 'tr' ? 'Mimari Çözüm' : 'Case Study'}</span>
                                     </span>
@@ -4397,7 +4425,7 @@ export default function App() {
                             {/* Card Footer: Tech Stack (Unboxed Typographic Discipline) + Quick Actions */}
                             <div className="pt-3 mt-3 border-t border-white/10 flex items-center justify-between gap-2">
                               {/* Tech Stack - Quiet Typographic Separators */}
-                              <div className="flex items-center gap-1.5 overflow-hidden text-[10.5px] font-mono text-zinc-400">
+                              <div className="flex items-center gap-1.5 overflow-hidden text-xs font-mono text-zinc-400">
                                 {project.tech.slice(0, 3).map((tItem, tIdx) => {
                                   const isSelected = selectedTech === tItem;
                                   return (
@@ -5223,58 +5251,72 @@ export default function App() {
               exit={{ scale: 0.95, opacity: 0 }}
               className="w-full max-w-5xl my-4 sm:my-8"
             >
-              <ProjectEstimator
-                lang={lang}
-                onClose={() => setShowEstimatorModal(false)}
-                onApplyToContact={(msg, subject) => {
-                  setFormData(prev => ({ ...prev, message: msg }));
-                  if (subject) setContactSubject(subject);
-                  setShowEstimatorModal(false);
-                  // Ensure if user was in terminal mode, we transition to normal mode so contact tab is visible!
-                  if (theme === 'terminal') {
-                    setTheme('normal');
-                  }
-                  setActiveTab('contact');
-                  setAdminToastMessage("Proje teklif taslağı hazırlandı ve iletişime aktarıldı!");
-                  setShowAdminToast(true);
-                  setTimeout(() => setShowAdminToast(false), 3500);
-                }}
-              />
+              <Suspense fallback={<div className="p-8 text-center text-white/50 font-mono text-xs">Yükleniyor...</div>}>
+                <ProjectEstimator
+                  lang={lang}
+                  onClose={() => setShowEstimatorModal(false)}
+                  onApplyToContact={(msg, subject) => {
+                    setFormData(prev => ({ ...prev, message: msg }));
+                    if (subject) setContactSubject(subject);
+                    setShowEstimatorModal(false);
+                    // Ensure if user was in terminal mode, we transition to normal mode so contact tab is visible!
+                    if (theme === 'terminal') {
+                      setTheme('normal');
+                    }
+                    setActiveTab('contact');
+                    setAdminToastMessage("Proje teklif taslağı hazırlandı ve iletişime aktarıldı!");
+                    setShowAdminToast(true);
+                    setTimeout(() => setShowAdminToast(false), 3500);
+                  }}
+                />
+              </Suspense>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
       {/* Official Media Kit Modal Overlay */}
-      <MediaKitModal
-        isOpen={showMediaKitModal}
-        onClose={() => setShowMediaKitModal(false)}
-        lang={lang}
-        onSelectIntent={(intent) => {
-          applyContactPersona(intent);
-          setActiveTab('contact');
-        }}
-      />
+      {showMediaKitModal && (
+        <Suspense fallback={null}>
+          <MediaKitModal
+            isOpen={showMediaKitModal}
+            onClose={() => setShowMediaKitModal(false)}
+            lang={lang}
+            onSelectIntent={(intent) => {
+              applyContactPersona(intent);
+              setActiveTab('contact');
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Search & AI Visibility Diagnostic Modal Overlay */}
-      <VisibilityDiagnosticModal
-        isOpen={showVisibilityModal}
-        onClose={() => setShowVisibilityModal(false)}
-        lang={lang}
-      />
+      {showVisibilityModal && (
+        <Suspense fallback={null}>
+          <VisibilityDiagnosticModal
+            isOpen={showVisibilityModal}
+            onClose={() => setShowVisibilityModal(false)}
+            lang={lang}
+          />
+        </Suspense>
+      )}
 
       {/* Official Gmail Workspace Send Modal */}
-      <GmailContactModal
-        isOpen={showGmailModal}
-        onClose={() => setShowGmailModal(false)}
-        targetEmail={profile.email || 'emirhan0008@gmail.com'}
-        senderName={formData.name}
-        senderCompany={formData.company}
-        senderEmail={formData.email}
-        messageContent={formData.message}
-        intentSubject={contactSubject || 'İletişim Talebi'}
-        lang={lang}
-      />
+      {showGmailModal && (
+        <Suspense fallback={null}>
+          <GmailContactModal
+            isOpen={showGmailModal}
+            onClose={() => setShowGmailModal(false)}
+            targetEmail={profile.email || 'emirhan0008@gmail.com'}
+            senderName={formData.name}
+            senderCompany={formData.company}
+            senderEmail={formData.email}
+            messageContent={formData.message}
+            intentSubject={contactSubject || 'İletişim Talebi'}
+            lang={lang}
+          />
+        </Suspense>
+      )}
 
       {/* Tech Radar Modal Overlay */}
       <AnimatePresence>
@@ -5292,16 +5334,18 @@ export default function App() {
               >
                 <X size={16} />
               </button>
-              <TechRadar
-                lang={lang}
-                onSelectProject={(id) => {
-                  const proj = mappedProjects.find(p => p.id === id) || projects.find(p => p.id === id);
-                  if (proj) {
-                    setSelectedProject(proj);
-                    setShowTechRadarModal(false);
-                  }
-                }}
-              />
+              <Suspense fallback={<div className="p-8 text-center text-white/50 font-mono text-xs">Radar yükleniyor...</div>}>
+                <TechRadar
+                  lang={lang}
+                  onSelectProject={(id) => {
+                    const proj = mappedProjects.find(p => p.id === id) || projects.find(p => p.id === id);
+                    if (proj) {
+                      setSelectedProject(proj);
+                      setShowTechRadarModal(false);
+                    }
+                  }}
+                />
+              </Suspense>
             </motion.div>
           </div>
         )}
@@ -5415,23 +5459,25 @@ export default function App() {
       </AnimatePresence>
 
       {/* Interactive Autonomous Cyber Cat Companion (Walks along bottom, turns to visitor, purrs, meows & interacts) */}
-      <InteractiveCatCompanion
-        theme={theme}
-        lang={lang}
-        onNavigateToTab={(tab) => {
-          setTheme('normal');
-          setActiveTab(tab as any);
-        }}
-        onOpenTerminal={() => {
-          setTheme('terminal');
-        }}
-        onSwitchToNormal={() => {
-          setTheme('normal');
-        }}
-        onToggleTheme={() => {
-          setTheme(prev => prev === 'terminal' ? 'normal' : 'terminal');
-        }}
-      />
+      <Suspense fallback={null}>
+        <InteractiveCatCompanion
+          theme={theme}
+          lang={lang}
+          onNavigateToTab={(tab) => {
+            setTheme('normal');
+            setActiveTab(tab as any);
+          }}
+          onOpenTerminal={() => {
+            setTheme('terminal');
+          }}
+          onSwitchToNormal={() => {
+            setTheme('normal');
+          }}
+          onToggleTheme={() => {
+            setTheme(prev => prev === 'terminal' ? 'normal' : 'terminal');
+          }}
+        />
+      </Suspense>
 
       {/* Mindful Pure Rule-Based Zen CBT Reflection Widget (100% Offline • Zero Server/API Calls) - Geçici olarak yorum satırına alındı */}
       {/* 
@@ -5569,30 +5615,34 @@ export default function App() {
       </AnimatePresence>
 
       {/* Comprehensive Admin Control & Editor Modal */}
-      <AdminEditorModal
-        isOpen={showAdminEditor}
-        onClose={() => {
-          setShowAdminEditor(false);
-          setEditingProjectId(null);
-          setEditingArticleId(null);
-        }}
-        profile={profile}
-        onSaveProfile={handleSaveProfile}
-        projects={projectList}
-        onSaveProjects={handleSaveProjects}
-        articles={articleList}
-        onSaveArticles={handleSaveArticles}
-        initialTab={adminEditorTab}
-        editingProjectId={editingProjectId}
-        editingArticleId={editingArticleId}
-        onResetToDefaults={handleResetToDefaults}
-        onToast={(msg) => {
-          setAdminToastMessage(msg);
-          setShowAdminToast(true);
-          setTimeout(() => setShowAdminToast(false), 3500);
-        }}
-        onOpenVisibilityModal={() => setShowVisibilityModal(true)}
-      />
+      {showAdminEditor && (
+        <Suspense fallback={null}>
+          <AdminEditorModal
+            isOpen={showAdminEditor}
+            onClose={() => {
+              setShowAdminEditor(false);
+              setEditingProjectId(null);
+              setEditingArticleId(null);
+            }}
+            profile={profile}
+            onSaveProfile={handleSaveProfile}
+            projects={projectList}
+            onSaveProjects={handleSaveProjects}
+            articles={articleList}
+            onSaveArticles={handleSaveArticles}
+            initialTab={adminEditorTab}
+            editingProjectId={editingProjectId}
+            editingArticleId={editingArticleId}
+            onResetToDefaults={handleResetToDefaults}
+            onToast={(msg) => {
+              setAdminToastMessage(msg);
+              setShowAdminToast(true);
+              setTimeout(() => setShowAdminToast(false), 3500);
+            }}
+            onOpenVisibilityModal={() => setShowVisibilityModal(true)}
+          />
+        </Suspense>
+      )}
 
     </div>
   );
