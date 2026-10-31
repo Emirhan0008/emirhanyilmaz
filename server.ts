@@ -1300,7 +1300,12 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), "dist");
     app.use(express.static(distPath));
-    app.get("*", (_req, res) => {
+    app.get("*", (req, res) => {
+      const cleanPath = req.path.replace(/^\//, "");
+      const preRenderedPath = path.join(distPath, cleanPath, "index.html");
+      if (cleanPath && fs.existsSync(preRenderedPath)) {
+        return res.sendFile(preRenderedPath);
+      }
       res.sendFile(path.join(distPath, "index.html"));
     });
   }

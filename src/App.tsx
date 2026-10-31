@@ -1707,12 +1707,14 @@ export default function App() {
     <div className={`relative min-h-screen lg:h-screen lg:max-h-screen lg:overflow-hidden w-full bg-black text-white ${theme === 'terminal' ? 'theme-terminal font-mono' : 'theme-normal font-sans'} overflow-x-hidden antialiased select-none`}>
       
       {/* Accessibility Keyboard Skip Link (WCAG 2.1 AA) */}
-      <a href="#main-nav" className="skip-to-content">
-        {lang === 'tr' ? 'Navigasyona Atla (Klavye Gezintisi)' : 'Skip to Navigation (Keyboard Accessibility)'}
-      </a>
+      <nav aria-label={lang === 'tr' ? 'Erişilebilirlik Kısayolu' : 'Accessibility Shortcuts'}>
+        <a href="#main-content" className="skip-to-content">
+          {lang === 'tr' ? 'Ana İçeriğe Atla (Klavye Gezintisi)' : 'Skip to Main Content (Keyboard Navigation)'}
+        </a>
+      </nav>
       
       {/* IMMERSIVE THEME BACKGROUNDS & CRT SCANLINE EFFECTS */}
-      <div className="fixed inset-0 w-full h-full z-0 overflow-hidden select-none pointer-events-none bg-[#020408]">
+      <div aria-hidden="true" className="fixed inset-0 w-full h-full z-0 overflow-hidden select-none pointer-events-none bg-[#020408]">
         {/* Normal Mode Background (Premium Airy Glass Aura) */}
         <div className={`absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out ${
           theme === 'normal' ? 'opacity-100' : 'opacity-0'
@@ -2166,7 +2168,7 @@ export default function App() {
       )}
 
       {/* MAIN CONTAINER */}
-      <div className={`relative z-10 h-auto lg:h-screen lg:max-h-screen w-full max-w-full overflow-x-hidden flex flex-col lg:flex-row p-2.5 sm:p-4 lg:p-6 gap-4 lg:gap-6 lg:overflow-hidden transition-all duration-1000 ${isMeltingSite ? "melting-slag-site" : ""}`}>
+      <main id="main-content" className={`relative z-10 h-auto lg:h-screen lg:max-h-screen w-full max-w-full overflow-x-hidden flex flex-col lg:flex-row p-2.5 sm:p-4 lg:p-6 gap-4 lg:gap-6 lg:overflow-hidden transition-all duration-1000 ${isMeltingSite ? "melting-slag-site" : ""}`}>
         
         {/* LEFT PANEL: Dynamic Viewport & Primary Presenter (Hosts Profile or Active Project / Article Details) */}
         <motion.div 
@@ -5065,7 +5067,7 @@ export default function App() {
           </div>
         </motion.div>
 
-      </div>
+      </main>
 
 
 

@@ -1,0 +1,202 @@
+{
+  "timestamp": "2026-10-31T00:33:43.629Z",
+  "passesCount": 32,
+  "violationsCount": 0,
+  "incompleteCount": 4,
+  "violations": [],
+  "incomplete": [
+    {
+      "id": "color-contrast",
+      "impact": "serious",
+      "error": {
+        "message": "Cannot read properties of null (reading 'canvas') Skipping color-contrast rule.",
+        "stack": "TypeError: Cannot read properties of null (reading 'canvas')\n    at _isIconLigature (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:21242:34)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33157:54)\n    at Array.some (<anonymous>)\n    at hasRealTextChildren (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33156:35)\n    at Rule.colorContrastMatches [as matches] (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33118:12)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33796:26)\n    at Array.filter (<anonymous>)\n    at Rule.gatherAndMatchNodes (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33794:21)\n    at Rule.run2 [as run] (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33654:22)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:34373:14)",
+        "name": "TypeError",
+        "ruleId": "color-contrast",
+        "method": "#matches"
+      },
+      "tags": [
+        "cat.color",
+        "wcag2aa",
+        "wcag143",
+        "TTv5",
+        "TT13.c",
+        "EN-301-549",
+        "EN-9.1.4.3",
+        "ACT",
+        "RGAAv4",
+        "RGAA-3.2.1"
+      ],
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "help": "Elements must meet minimum color contrast ratio thresholds",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/color-contrast?application=axeAPI",
+      "nodes": [
+        {
+          "any": [],
+          "all": [],
+          "none": [
+            {
+              "id": "error-occurred",
+              "data": {
+                "message": "Cannot read properties of null (reading 'canvas') Skipping color-contrast rule.",
+                "stack": "TypeError: Cannot read properties of null (reading 'canvas')\n    at _isIconLigature (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:21242:34)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33157:54)\n    at Array.some (<anonymous>)\n    at hasRealTextChildren (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33156:35)\n    at Rule.colorContrastMatches [as matches] (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33118:12)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33796:26)\n    at Array.filter (<anonymous>)\n    at Rule.gatherAndMatchNodes (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33794:21)\n    at Rule.run2 [as run] (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33654:22)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:34373:14)",
+                "name": "TypeError",
+                "ruleId": "color-contrast",
+                "method": "#matches"
+              },
+              "relatedNodes": [],
+              "message": "Axe encountered an error; test the page for this type of problem manually",
+              "impact": "serious"
+            }
+          ],
+          "impact": "serious",
+          "html": "<a href=\"#main-content\" class=\"skip-to-content\">Ana İçeriğe Atla (Klavye Gezintisi)</a>",
+          "target": [
+            ".skip-to-content"
+          ],
+          "failureSummary": "Fix all of the following:\n  Axe encountered an error; test the page for this type of problem manually"
+        }
+      ]
+    },
+    {
+      "id": "label-content-name-mismatch",
+      "impact": "serious",
+      "error": {
+        "message": "Cannot read properties of null (reading 'canvas') Skipping label-content-name-mismatch rule.",
+        "stack": "TypeError: Cannot read properties of null (reading 'canvas')\n    at _isIconLigature (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:21242:34)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:21327:37)\n    at Array.map (<anonymous>)\n    at visibleVirtual (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:21321:35)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:21336:18)\n    at Array.map (<anonymous>)\n    at visibleVirtual (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:21321:35)\n    at Object.labelContentNameMismatchEvaluate (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:30866:25)\n    at Check.run (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33469:34)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33606:17)",
+        "name": "TypeError",
+        "ruleId": "label-content-name-mismatch",
+        "method": "label-content-name-mismatch#evaluate"
+      },
+      "tags": [
+        "cat.semantics",
+        "wcag21a",
+        "wcag253",
+        "EN-301-549",
+        "EN-9.2.5.3",
+        "RGAAv4",
+        "RGAA-6.1.5"
+      ],
+      "description": "Ensure that elements labelled through their content must have their visible text as part of their accessible name",
+      "help": "Elements must have their visible text as part of their accessible name",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/label-content-name-mismatch?application=axeAPI",
+      "nodes": [
+        {
+          "any": [],
+          "all": [],
+          "none": [
+            {
+              "id": "error-occurred",
+              "data": {
+                "message": "Cannot read properties of null (reading 'canvas') Skipping label-content-name-mismatch rule.",
+                "stack": "TypeError: Cannot read properties of null (reading 'canvas')\n    at _isIconLigature (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:21242:34)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:21327:37)\n    at Array.map (<anonymous>)\n    at visibleVirtual (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:21321:35)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:21336:18)\n    at Array.map (<anonymous>)\n    at visibleVirtual (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:21321:35)\n    at Object.labelContentNameMismatchEvaluate (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:30866:25)\n    at Check.run (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33469:34)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33606:17)",
+                "name": "TypeError",
+                "ruleId": "label-content-name-mismatch",
+                "method": "label-content-name-mismatch#evaluate"
+              },
+              "relatedNodes": [],
+              "message": "Axe encountered an error; test the page for this type of problem manually",
+              "impact": "serious"
+            }
+          ],
+          "impact": "serious",
+          "html": "<button type=\"button\" aria-label=\"TR - İngilizceye geç...\" title=\"TR - İngilizceye geç...\" class=\"relative inline-flex...\">",
+          "target": [
+            ".p-1.gap-1.overflow-x-auto > .hover\\:border-emerald-400\\/50.liquid-glass.duration-200"
+          ],
+          "failureSummary": "Fix all of the following:\n  Axe encountered an error; test the page for this type of problem manually"
+        }
+      ]
+    },
+    {
+      "id": "landmark-one-main",
+      "impact": "moderate",
+      "error": {
+        "message": "document.elementFromPoint is not a function Skipping landmark-one-main rule.",
+        "stack": "TypeError: document.elementFromPoint is not a function\n    at Proxy.eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:24339:36)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:22262:36)\n    at Array.map (<anonymous>)\n    at isModalOpen (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:22261:27)\n    at Object.hasDescendant (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:31297:35)\n    at Check.run (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33469:34)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33606:17)\n    at pop (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:15830:18)\n    at Object.defer (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:15852:11)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33605:20)",
+        "name": "TypeError",
+        "ruleId": "landmark-one-main",
+        "method": "page-has-main#evaluate"
+      },
+      "tags": [
+        "cat.semantics",
+        "best-practice"
+      ],
+      "description": "Ensure the document has a main landmark",
+      "help": "Document should have one main landmark",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/landmark-one-main?application=axeAPI",
+      "nodes": [
+        {
+          "any": [],
+          "all": [],
+          "none": [
+            {
+              "id": "error-occurred",
+              "data": {
+                "message": "document.elementFromPoint is not a function Skipping landmark-one-main rule.",
+                "stack": "TypeError: document.elementFromPoint is not a function\n    at Proxy.eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:24339:36)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:22262:36)\n    at Array.map (<anonymous>)\n    at isModalOpen (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:22261:27)\n    at Object.hasDescendant (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:31297:35)\n    at Check.run (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33469:34)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33606:17)\n    at pop (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:15830:18)\n    at Object.defer (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:15852:11)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33605:20)",
+                "name": "TypeError",
+                "ruleId": "landmark-one-main",
+                "method": "page-has-main#evaluate"
+              },
+              "relatedNodes": [],
+              "message": "Axe encountered an error; test the page for this type of problem manually",
+              "impact": "moderate"
+            }
+          ],
+          "impact": "moderate",
+          "html": "<html lang=\"tr\" prefix=\"og: https://ogp.me/ns#\">",
+          "target": [
+            "html"
+          ],
+          "failureSummary": "Fix all of the following:\n  Axe encountered an error; test the page for this type of problem manually"
+        }
+      ]
+    },
+    {
+      "id": "page-has-heading-one",
+      "impact": "moderate",
+      "error": {
+        "message": "document.elementFromPoint is not a function Skipping page-has-heading-one rule.",
+        "stack": "TypeError: document.elementFromPoint is not a function\n    at Proxy.eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:24339:36)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:22262:36)\n    at Array.map (<anonymous>)\n    at isModalOpen (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:22261:27)\n    at Object.hasDescendant (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:31297:35)\n    at Check.run (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33469:34)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33606:17)\n    at pop (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:15830:18)\n    at Object.defer (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:15852:11)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33605:20)",
+        "name": "TypeError",
+        "ruleId": "page-has-heading-one",
+        "method": "page-has-heading-one#evaluate"
+      },
+      "tags": [
+        "cat.semantics",
+        "best-practice"
+      ],
+      "description": "Ensure that the page, or at least one of its frames contains a level-one heading",
+      "help": "Page should contain a level-one heading",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.14/page-has-heading-one?application=axeAPI",
+      "nodes": [
+        {
+          "any": [],
+          "all": [],
+          "none": [
+            {
+              "id": "error-occurred",
+              "data": {
+                "message": "document.elementFromPoint is not a function Skipping page-has-heading-one rule.",
+                "stack": "TypeError: document.elementFromPoint is not a function\n    at Proxy.eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:24339:36)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:22262:36)\n    at Array.map (<anonymous>)\n    at isModalOpen (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:22261:27)\n    at Object.hasDescendant (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:31297:35)\n    at Check.run (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33469:34)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33606:17)\n    at pop (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:15830:18)\n    at Object.defer (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:15852:11)\n    at eval (eval at runAxeAudit (file:///app/applet/scripts/axe-audit.ts:1:1639), <anonymous>:33605:20)",
+                "name": "TypeError",
+                "ruleId": "page-has-heading-one",
+                "method": "page-has-heading-one#evaluate"
+              },
+              "relatedNodes": [],
+              "message": "Axe encountered an error; test the page for this type of problem manually",
+              "impact": "moderate"
+            }
+          ],
+          "impact": "moderate",
+          "html": "<html lang=\"tr\" prefix=\"og: https://ogp.me/ns#\">",
+          "target": [
+            "html"
+          ],
+          "failureSummary": "Fix all of the following:\n  Axe encountered an error; test the page for this type of problem manually"
+        }
+      ]
+    }
+  ]
+}

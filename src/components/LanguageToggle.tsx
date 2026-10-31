@@ -24,7 +24,7 @@ export const LanguageToggle: React.FC<LanguageToggleProps> = ({
       type="button"
       onClick={handleClick}
       aria-label={isTr ? 'TR - İngilizceye geç / Switch to English' : 'EN - Türkçe diline geç / Switch to Turkish'}
-      title={isTr ? 'TR - İngilizceye geç' : 'EN - Türkçe diline geç'}
+      title={isTr ? 'TR - İngilizceye geç / Switch to English' : 'EN - Türkçe diline geç / Switch to Turkish'}
       className={`relative inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full 
         liquid-glass border border-white/10 hover:border-emerald-400/50 
         text-white font-mono text-xs font-bold transition-all duration-200 
