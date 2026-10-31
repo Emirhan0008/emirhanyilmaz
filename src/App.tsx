@@ -299,6 +299,16 @@ export default function App() {
    const [copiedEmail, setCopiedEmail] = useState(false);
    const [inboxMessages, setInboxMessages] = useState<ContactMessage[]>([]);
 
+   // Performance: Defer heavy ambient companion until initial render and LCP have settled
+   const [showCompanion, setShowCompanion] = useState(false);
+   useEffect(() => {
+     if (typeof window === 'undefined') return;
+     const timer = setTimeout(() => {
+       setShowCompanion(true);
+     }, 2500);
+     return () => clearTimeout(timer);
+   }, []);
+
    // Scroll Viewport Refs for Elegant Scroll-Down Indicators
    const leftProfileScrollRef = useRef<HTMLDivElement>(null);
    const leftProjectDetailRef = useRef<HTMLDivElement>(null);
@@ -2190,7 +2200,8 @@ export default function App() {
               {/* Profile Avatar with Live Availability Badge & Easter Egg Click */}
               <div className="relative w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-full p-0.5 bg-zinc-900/90 border border-white/20 shrink-0 transition-transform duration-300 group-hover:scale-105 shadow-md">
                 <img 
-                  src={profile.avatar || '/profile-photo.webp'} 
+                  src={profile.avatar || '/profile-photo-96.webp'} 
+                  srcSet="/profile-photo-96.webp 1x, /profile-photo.webp 2x"
                   alt="Emirhan Yılmaz" 
                   width={40}
                   height={40}
@@ -2315,7 +2326,16 @@ export default function App() {
               >
                 <div className="flex items-center justify-between pb-2.5 mb-0.5 border-b border-white/10 px-2 select-none">
                   <div className="flex items-center gap-2">
-                    <img src={profile.logo} alt="Logo" className="w-5 h-5 object-contain drop-shadow-md" />
+                    <img 
+                      src={profile.logo || '/logo-64.webp'} 
+                      srcSet="/logo-64.webp 1x, /logo.webp 2x"
+                      alt="Logo" 
+                      width={20} 
+                      height={20} 
+                      loading="lazy" 
+                      decoding="async" 
+                      className="w-5 h-5 object-contain drop-shadow-md" 
+                    />
                     <span className="font-extrabold text-white text-xs tracking-wider uppercase">{profile.name}</span>
                   </div>
                   <button 
@@ -3537,7 +3557,16 @@ export default function App() {
                     </blockquote>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 w-full pt-1">
                       <div className="flex items-center gap-2">
-                        <img src={profile.logo} alt="Logo" className="w-4 h-4 object-contain opacity-80" />
+                        <img 
+                          src={profile.logo || '/logo-64.webp'} 
+                          srcSet="/logo-64.webp 1x, /logo.webp 2x"
+                          alt="Logo" 
+                          width={16} 
+                          height={16} 
+                          loading="lazy" 
+                          decoding="async" 
+                          className="w-4 h-4 object-contain opacity-80" 
+                        />
                         <span 
                           onClick={handleFooterClick}
                           className="text-[10px] tracking-widest text-white/90 uppercase font-bold select-none cursor-default hover:text-white transition-colors"
@@ -5461,25 +5490,27 @@ export default function App() {
       </AnimatePresence>
 
       {/* Interactive Autonomous Cyber Cat Companion (Walks along bottom, turns to visitor, purrs, meows & interacts) */}
-      <Suspense fallback={null}>
-        <InteractiveCatCompanion
-          theme={theme}
-          lang={lang}
-          onNavigateToTab={(tab) => {
-            setTheme('normal');
-            setActiveTab(tab as any);
-          }}
-          onOpenTerminal={() => {
-            setTheme('terminal');
-          }}
-          onSwitchToNormal={() => {
-            setTheme('normal');
-          }}
-          onToggleTheme={() => {
-            setTheme(prev => prev === 'terminal' ? 'normal' : 'terminal');
-          }}
-        />
-      </Suspense>
+      {showCompanion && (
+        <Suspense fallback={null}>
+          <InteractiveCatCompanion
+            theme={theme}
+            lang={lang}
+            onNavigateToTab={(tab) => {
+              setTheme('normal');
+              setActiveTab(tab as any);
+            }}
+            onOpenTerminal={() => {
+              setTheme('terminal');
+            }}
+            onSwitchToNormal={() => {
+              setTheme('normal');
+            }}
+            onToggleTheme={() => {
+              setTheme(prev => prev === 'terminal' ? 'normal' : 'terminal');
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Mindful Pure Rule-Based Zen CBT Reflection Widget (100% Offline • Zero Server/API Calls) - Geçici olarak yorum satırına alındı */}
       {/* 
